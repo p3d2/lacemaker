@@ -305,7 +305,7 @@ def main():
     yarn_id = np.array(yarn_id)
     yarns_bound = np.array(yarns_bound)
 
-    write_lammps_data(yarns_flat, yarn_id, yarns_bound, roi_bounds, dist_particles, mass, units, threshold, os.path.join('data_lammps',filename))
+    write_lammps_data(yarns_flat, yarn_id, yarns_bound, roi_bounds, dist_particles, mass, units, threshold, os.path.join('output','lammps_data',filename))
     
 if __name__ == "__main__":
     main()
