@@ -6,7 +6,7 @@ Created on Wed Jan 24 17:25:02 2024
 """
 
 import numpy as np
-import argparse, json
+import argparse, json, os
 from scipy.interpolate import splprep, splev
 import matplotlib.pyplot as plt
 
@@ -305,7 +305,7 @@ def main():
     yarn_id = np.array(yarn_id)
     yarns_bound = np.array(yarns_bound)
 
-    write_lammps_data(yarns_flat, yarn_id, yarns_bound, roi_bounds, dist_particles, mass, units, threshold, filename)
+    write_lammps_data(yarns_flat, yarn_id, yarns_bound, roi_bounds, dist_particles, mass, units, threshold, os.path.join('data_lammps',filename))
     
 if __name__ == "__main__":
     main()
