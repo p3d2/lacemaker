@@ -9,35 +9,36 @@ boundary        m m m  # Non-periodic boundary conditions in all directions
 read_data       yarns.txt
 
 # Force Field Settings
-pair_style soft 1.0
-pair_coeff * * 50.0
+#pair_style soft 1.0
+#pair_coeff * * 50.0
 
-#pair_style lj/expand 1.0
-#pair_coeff * * 0.25 0.5 0.5
-
+pair_style lj/cut 1.0
+pair_coeff * * 1.0 0.0
+pair_modify shift yes
 comm_modify cutoff 3.5
 
 bond_style      harmonic
-bond_coeff      1 30.0 0.5  # Bond type, k (energy/distance^2), r0 (distance)
-bond_coeff      2 30.0 0.5  # Bond type, k (energy/distance^2), r0 (distance)
-bond_coeff      3 100.0 1.0  # Bond type, k (energy/distance^2), r0 (distance)
-
 angle_style 	harmonic
-angle_coeff 	1 50.0 180.0  # Example - angle type, k (energy/degree^2), theta0 (degrees)
-angle_coeff 	2 50.0 180.0  # Example - angle type, k (energy/degree^2), theta0 (degrees)
-angle_coeff 	3 15.0 180.0  # Example - angle type, k (energy/degree^2), theta0 (degrees)
-
-group frame type 3
-group non_frame subtract all frame
 
 # Dump command to output atom positions to a file
 compute			perAtomPE all pe/atom
-dump myDump all custom 1000 output.lammpstrj id type x y z fx fy fz c_perAtomPE
+dump myDump all custom 1000 output/simulations/pattern1_0.25_1.0_2.5_30.0_50.0.lammpstrj id type x y z fx fy fz c_perAtomPE
 
 # Fixes
-fix freezef frame setforce 0.0 0.0 0.0
-fix dragU non_frame viscous 0.1
-fix nve_all non_frame nve
+variable dist equal 2.0
+region left_block block EDGE EDGE+xlo+${dist} EDGE EDGE EDGE EDGE units box
+region right_block block EDGE+xhi-${dist} EDGE EDGE EDGE EDGE EDGE units box
+region bottom_block block EDGE EDGE EDGE EDGE+ylo+${dist} EDGE EDGE units box
+region top_block block EDGE EDGE EDGE+yhi-${dist} EDGE EDGE EDGE units box
+group left_wall region left_block
+group right_wall region right_block
+group bottom_wall region bottom_block
+group top_wall region top_block
+group boundary union left_wall right_wall bottom_wall top_wall
+
+fix freezef boundary setforce 0.0 0.0 0.0
+fix dragU all viscous 0.1
+fix nve_all all nve
 
 # Minimization to relax initial configuration
 minimize 1.0e-6 1.0e-7 10000 100000
@@ -53,4 +54,4 @@ thermo_style    custom step temp pe ke etotal
 
 run 10000
 
-write_restart sim1.restart
+write_restart output/simulations/sim1.restart
