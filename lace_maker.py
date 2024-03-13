@@ -151,7 +151,19 @@ def save_pattern(p0, trs, filename):
     # Saving the plot to a file
     plt.savefig(filename)
 
-def calc_special(yb, threshold):
+def calculate_bonds(yarns, yarn_id, yarns_b, threshold, m_max):
+
+    # Calculate bonds
+    bonds = []
+    for k in range(1,len(yarns)):
+        if yarn_id[k] == yarn_id[k-1]:
+            bonds.append((yarns[k][0], k-1, k))
+
+    # Calculate special bonds -> connect extreme particles with other extreme particles
+    special_bonds = calc_special(yarns_b, threshold, m_max)
+    return bonds + special_bonds
+
+def calc_special(yb, threshold, mol):
     
     special = []
     
@@ -165,6 +177,7 @@ def calc_special(yb, threshold):
     m_id.append((c, len(yb)-1))
     
     # For the 2 ends of a yarn, check what are the closest points with other yarns that are at least closer than the threshold
+    mol += 1
     for i in range(len(m_id)-1):
         start_i, end_i = m_id[i]
         p0min = yb[start_i, 2:5]
@@ -188,41 +201,42 @@ def calc_special(yb, threshold):
                     dmax = dist_max
                     cmax = int(yb[m,0])
                     
-            if cmin is not None: special.append((int(yb[start_i,0]), cmin))
-            if cmax is not None: special.append((int(yb[end_i,0]), cmax))
+            if cmin is not None: 
+                special.append((mol, int(yb[start_i,0]), cmin, dmin))
+                mol += 1
+            if cmax is not None:
+                special.append((mol, int(yb[end_i,0]), cmax, dmax))
+                mol += 1
             
     return special
 
-def write_lammps_data(yarns, yarn_id, yarns_b, roi_bounds, dist, mass, units, threshold, filename="yarns.txt"):
+def calculate_angles(yarns, yarn_id):
+    # Calculate angles
+    angles = []
+    for k in range(2,len(yarns)):
+        if yarn_id[k] - yarn_id[k-1] - yarn_id[k-2] == 0:
+            angles.append((yarns[k][0], k-2, k-1, k))
+    return angles
+
+def write_lammps_data(yarns, yarn_id, bonds, angles, roi_bounds, dist, mass, units, ks1, ks2, kb, filename="yarns.txt"):
     with open(filename, 'w') as file:
-        
-        # Calculate bonds
-        bonds = []
-        for k in range(1,len(yarns)):
-            if yarn_id[k] == yarn_id[k-1]:
-                bonds.append((yarns[k][0], k-1, k))
-        
-        # Calculate special bonds -> connect extreme particles with other extreme particles
-        special_bonds = calc_special(yarns_b, threshold)
-        
-        # Calculate angles
-        angles = []
-        for k in range(2,len(yarns)):
-            if yarn_id[k] - yarn_id[k-1] - yarn_id[k-2] == 0:
-                angles.append((yarns[k][0], k-2, k-1, k))
         
         # Write headers
         num_atoms = len(yarns)
-        num_bonds = len(bonds) + len(special_bonds)
+        num_bonds = len(bonds)
         num_angles = len(angles)
-            
+        
+        num_atom_types = max(yarns, key=lambda x: x[0])[0]
+        num_bond_types = max(bonds, key=lambda x: x[0])[0]
+        num_angle_types = max(angles, key=lambda x: x[0])[0]
+
         file.write("LAMMPS data file via Python script\n\n")
         file.write(f"{num_atoms} atoms\n")
         file.write(f"{num_bonds} bonds\n")
         file.write(f"{num_angles} angles\n\n")
-        file.write("3 atom types\n")  # Assuming two types of atoms
-        file.write("3 bond types\n")
-        file.write("3 angle types\n\n")
+        file.write(f"{num_atom_types} atom types\n")  # Assuming two types of atoms
+        file.write(f"{num_bond_types} bond types\n")
+        file.write(f"{num_angle_types} angle types\n\n")
         
         # Box bounds based on ROI
         file.write(f"{(roi_bounds['x_min']-dist)*units} {(roi_bounds['x_max']+dist)*units} xlo xhi\n")
@@ -231,31 +245,43 @@ def write_lammps_data(yarns, yarn_id, yarns_b, roi_bounds, dist, mass, units, th
         
         # Masses section
         file.write("Masses\n\n")
-        file.write(f"1 {mass}  # Mass for atom type 1\n")
-        file.write(f"2 {mass}  # Mass for atom type 2\n")
-        file.write(f"3 {mass}  # Mass for atom type 3\n\n")
+        for k in range(num_atom_types):
+            file.write(f"{k+1} {mass}  # Mass for atom type {k+1}\n")
         
-
         # Atoms section
-        file.write("Atoms\n\n")
-        for k in range(len(yarns)):
-            atom_type, x, y, z = yarns[k]
+        file.write("\nAtoms\n\n")
+        for k, yarn in enumerate(yarns):
+            atom_type, x, y, z = yarn
             file.write(f"{k+1} {yarn_id[k]+1} {atom_type} {x*units} {y*units} {z*units}\n")
 
         # Bonds section
-        nb = len(bonds)
         file.write("\nBonds\n\n")
-        for k in range(nb):
-            file.write(f"{k+1} {bonds[k][0]} {bonds[k][1]+1} {bonds[k][2]+1}\n")  # Bond type 1
-        
-        for k in range(len(special_bonds)):
-            file.write(f"{nb+k+1} {3} {special_bonds[k][0]+1} {special_bonds[k][1]+1}\n")  # Bond type 1
-                
+        for k, bond in enumerate(bonds):
+            file.write(f"{k+1} {bond[0]} {bond[1]+1} {bond[2]+1}\n") 
+            
         # Angles section
         file.write("\nAngles\n\n")
-        for k in range(len(angles)):
-            file.write(f"{k+1} {angles[k][0]} {angles[k][1]+1} {angles[k][2]+1} {angles[k][3]+1}\n")
+        for k, angle in enumerate(angles):
+            file.write(f"{k+1} {angle[0]} {angle[1]+1} {angle[2]+1} {angle[3]+1}\n")
 
+        # Bond Coeffs section
+        file.write("\nBond Coeffs\n\n")
+        nb = 1
+        for k, bond in enumerate(bonds):
+            if bond[0] == nb:
+                nb += 1
+                if len(bond) < 4:
+                    file.write(f"{k+1} {ks1} {dist}\n")
+                else:
+                    file.write(f"{k+1} {ks2} {bond[3]}\n")
+
+        # Angle Coeffs section
+        file.write("\nAngle Coeffs\n\n")
+        na = 1
+        for k, angle in enumerate(angles):
+            if angle[0] == na:
+                na += 1
+                file.write(f"{k+1} {kb} {180.0}\n")
 def main():
     
     # Create argument parser
@@ -266,6 +292,9 @@ def main():
     parser.add_argument('--units', type=float, default=1.0, help='Units. Default: 1.0')
     parser.add_argument('--mass', type=float, default=1.0, help='Mass. Default: 1.0')
     parser.add_argument('--threshold', type=float, default=2.5, help='Threshold. Default: 2.5')
+    parser.add_argument('--ks1', type=float, default=30.0, help='Yarns stretching constant. Default: 30.0')
+    parser.add_argument('--ks2', type=float, default=10.0, help='Special yarns stretching constant. Default: 10.0')
+    parser.add_argument('--kb', type=float, default=50.0, help='Yarns bending constant. Default: 50.0')
 
     # Parse arguments
     args = parser.parse_args()
@@ -282,7 +311,10 @@ def main():
     units = args.units
     mass = args.mass
     threshold = args.threshold
-    filename = args.json_file.split('/')[-1].split('.')[0] + '_' + str(dist_particles) + '_' + str(units) + '_' + str(threshold) + '.png'
+    ks1 = args.ks1
+    ks2 = args.ks2
+    kb = args.kb
+    filename = args.json_file.split('/')[-1].split('.')[0] + '_' + str(dist_particles) + '_' + str(units) + '_' + str(threshold) + '_' + str(ks1) + '_' + str(kb)
     
     # Calculate translations between nodes of each path
     path_translations = []
@@ -292,6 +324,7 @@ def main():
     # Create yarns
     yarns = []
     path_trs = []
+    mol_max = 0
     for k in range(len(unit_yarns)):
         # Generate unit yarns
         yarn, translations = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)])
@@ -299,6 +332,7 @@ def main():
 
         # Extend unit yarns
         n1, vx1, vy1, n2, vx2, vy2, mol = unit_rep[str(k)]
+        if mol > mol_max: mol_max = mol
         yarn_ext = extend_points(yarn, n1, vx1, vy1)
         
         # Smooth and create fixed point to point distances
@@ -310,7 +344,7 @@ def main():
 
     # Save pattern
     p0 = [nodes[str(unit_yarns[str(k)][1])] for k in range(len(unit_yarns))]
-    save_pattern(p0, path_trs, os.path.join('output','patterns_data',filename))
+    save_pattern(p0, path_trs, os.path.join('output','patterns_data',filename + '.png'))
 
     # Crop yarns -> Cut rectangular section
     yarns = [filter_points(yarn, roi_bounds) for yarn in yarns]
@@ -336,7 +370,13 @@ def main():
     yarn_id = np.array(yarn_id)
     yarns_bound = np.array(yarns_bound)
 
-    write_lammps_data(yarns_flat, yarn_id, yarns_bound, roi_bounds, dist_particles, mass, units, threshold, os.path.join('output','lammps_data',filename))
+    # Calculate bonds (connect consecutive particles in the same yarn and ends of yarns within a threshold with other yarns)
+    bonds = calculate_bonds(yarns_flat, yarn_id, yarns_bound, threshold, mol_max)
+
+    # Calculate angles
+    angles = calculate_angles(yarns_flat, yarn_id)
+
+    write_lammps_data(yarns_flat, yarn_id, bonds, angles, roi_bounds, dist_particles, mass, units, ks1, ks2, kb, os.path.join('output','lammps_data', filename + '.data'))
     
 if __name__ == "__main__":
     main()
