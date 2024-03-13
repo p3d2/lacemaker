@@ -1,0 +1,27 @@
+# LAMMPS Input Script
+
+read_restart sim1.restart
+
+# Dump command to output atom positions to a file
+compute			perAtomPE all pe/atom
+dump myDump all custom 10000 output2.lammpstrj id type x y z fx fy fz c_perAtomPE
+
+# Integrator Settings
+timestep        0.005
+thermo          1000
+thermo_style    custom step temp pe ke etotal
+
+# Set force to zero on all atoms
+velocity all set 0.0 0.0 0.0
+neigh_modify exclude molecule/intra all
+comm_modify cutoff 3.5
+
+# Run NVE
+fix freezef frame setforce NULL NULL 0.0
+fix	myRigidGroup frame rigid/nve molecule torque * off off off
+fix dragU non_frame viscous 0.01 
+fix nve_all non_frame nve
+
+run 200000
+
+write_restart sim2.restart

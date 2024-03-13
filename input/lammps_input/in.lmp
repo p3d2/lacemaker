@@ -1,0 +1,56 @@
+# LAMMPS Input Script
+
+# Initialization
+units           lj
+atom_style      molecular
+boundary        m m m  # Non-periodic boundary conditions in all directions
+
+# Atom Definition
+read_data       yarns.txt
+
+# Force Field Settings
+pair_style soft 1.0
+pair_coeff * * 50.0
+
+#pair_style lj/expand 1.0
+#pair_coeff * * 0.25 0.5 0.5
+
+comm_modify cutoff 3.5
+
+bond_style      harmonic
+bond_coeff      1 30.0 0.5  # Bond type, k (energy/distance^2), r0 (distance)
+bond_coeff      2 30.0 0.5  # Bond type, k (energy/distance^2), r0 (distance)
+bond_coeff      3 100.0 1.0  # Bond type, k (energy/distance^2), r0 (distance)
+
+angle_style 	harmonic
+angle_coeff 	1 50.0 180.0  # Example - angle type, k (energy/degree^2), theta0 (degrees)
+angle_coeff 	2 50.0 180.0  # Example - angle type, k (energy/degree^2), theta0 (degrees)
+angle_coeff 	3 15.0 180.0  # Example - angle type, k (energy/degree^2), theta0 (degrees)
+
+group frame type 3
+group non_frame subtract all frame
+
+# Dump command to output atom positions to a file
+compute			perAtomPE all pe/atom
+dump myDump all custom 1000 output.lammpstrj id type x y z fx fy fz c_perAtomPE
+
+# Fixes
+fix freezef frame setforce 0.0 0.0 0.0
+fix dragU non_frame viscous 0.1
+fix nve_all non_frame nve
+
+# Minimization to relax initial configuration
+minimize 1.0e-6 1.0e-7 10000 100000
+
+neigh_modify every 100
+
+# Integrator Settings
+timestep        0.01
+thermo          1000
+thermo_style    custom step temp pe ke etotal
+
+# Run
+
+run 10000
+
+write_restart sim1.restart

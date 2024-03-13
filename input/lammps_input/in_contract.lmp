@@ -1,0 +1,39 @@
+# LAMMPS Input Script
+
+read_restart sim2.restart
+
+# Integrator Settings
+compute			perAtomPE all pe/atom
+timestep        0.002
+thermo          5000
+thermo_style    custom step temp pe ke etotal
+neigh_modify exclude molecule/intra all
+
+# Dump command to output atom positions to a file
+dump myDump all custom 100000 output_contract.lammpstrj id type x y z fx fy fz c_perAtomPE
+
+neigh_modify exclude molecule/intra all
+comm_modify cutoff 3.5
+
+# Run NVE
+fix freezef frame setforce NULL NULL 0.0
+fix	myRigidGroup frame rigid/nve molecule torque * off off off
+fix dragU non_frame viscous 0.01 
+fix nve_all non_frame nve
+
+variable r0 equal 0.25
+variable dr0 equal 0.0025  # Change per step to go from 1.0 to 0.8
+
+label loop
+
+variable i loop 100
+
+    # Update r0
+    variable r0 equal ${r0}-${dr0}
+    bond_coeff 1 30.0 ${r0}
+    
+    # Run for 10000 timesteps
+    run 100000
+
+next i
+jump in_contract.lmp loop
