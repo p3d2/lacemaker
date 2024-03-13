@@ -46,6 +46,7 @@ def generate_yarns(nodes, trs, u_yarns):
     path_t, start_n, start_l, crossing, z0 = u_yarns
 
     points = []
+    translations = []
     pt_x = nodes[str(start_n)][0]
     pt_y = nodes[str(start_n)][1]
     pt_z = crossing * z0
@@ -59,9 +60,10 @@ def generate_yarns(nodes, trs, u_yarns):
         pt_z = crossing * z0
         crossing = -crossing
         points.append((pt_x, pt_y, pt_z))
+        translations.append((trs[start_l][0], trs[start_l][1]))
         start_l += 1
     
-    return points
+    return points, translations
 
 def extend_points(points, n, vx, vy):
     extended_points = []
@@ -124,6 +126,30 @@ def is_close_to_boundary(x, y, x_min, y_min, x_max, y_max, margin):
     if (np.abs(x-x_min) <= margin or np.abs(x-x_max) <= margin): return True
     if (np.abs(y-y_min) <= margin or np.abs(y-y_max) <= margin): return True
     return False
+
+def save_pattern(p0, trs, filename):
+    
+    colors = ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3', '#FF7F00', '#FFFF33', '#A65628', '#F781BF', '#999999', '#66C2A5', '#FC8D62', '#8DA0CB', '#E78AC3', '#A6D854', '#FFD92F', '#E5C494']
+    coords = []
+    for (x0, y0), trans in zip(p0, trs):
+        x, y = [x0], [y0]  # Initialize with the starting point
+        for dx, dy in trans:
+            x.append(x[-1] + dx)
+            y.append(y[-1] + dy)
+        coords.append((x, y))
+
+    for idx, (x, y) in enumerate(coords):
+        # Select color in a cyclic manner
+        color = colors[idx % len(colors)]
+        plt.plot(x, y, marker='o', color=color, lw = 2)
+        
+    # Setting the x and y axis labels
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.axis('equal')
+    
+    # Saving the plot to a file
+    plt.savefig(filename)
 
 def calc_special(yb, threshold):
     
@@ -230,7 +256,6 @@ def write_lammps_data(yarns, yarn_id, yarns_b, roi_bounds, dist, mass, units, th
         for k in range(len(angles)):
             file.write(f"{k+1} {angles[k][0]} {angles[k][1]+1} {angles[k][2]+1} {angles[k][3]+1}\n")
 
-
 def main():
     
     # Create argument parser
@@ -257,7 +282,7 @@ def main():
     units = args.units
     mass = args.mass
     threshold = args.threshold
-    filename = args.json_file.split('/')[-1].split('.')[0] + '_' + str(dist_particles) + '_' + str(units) + '_' + str(threshold) + '.data'
+    filename = args.json_file.split('/')[-1].split('.')[0] + '_' + str(dist_particles) + '_' + str(units) + '_' + str(threshold) + '.png'
     
     # Calculate translations between nodes of each path
     path_translations = []
@@ -266,17 +291,15 @@ def main():
     
     # Create yarns
     yarns = []
+    path_trs = []
     for k in range(len(unit_yarns)):
         # Generate unit yarns
-        yarn = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)])
-        
-        
+        yarn, translations = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)])
+        path_trs.append(translations)
+
         # Extend unit yarns
         n1, vx1, vy1, n2, vx2, vy2, mol = unit_rep[str(k)]
         yarn_ext = extend_points(yarn, n1, vx1, vy1)
-        #col = ['k', 'r', 'g', 'b']
-        #for i in range(len(yarn_ext)):
-         #   plt.plot(yarn_ext[i][0],yarn_ext[i][1],'o', color=col[k])
         
         # Smooth and create fixed point to point distances
         yarn_sm = smooth_yarn(yarn_ext, arc_length=dist_particles/units)
@@ -284,7 +307,11 @@ def main():
         # Replicate yarns
         for l in range(n2+1):
             yarns.append(replicate_points(yarn_sm, mol, l*vx2, l*vy2))
-        
+
+    # Save pattern
+    p0 = [nodes[str(unit_yarns[str(k)][1])] for k in range(len(unit_yarns))]
+    save_pattern(p0, path_trs, os.path.join('output','patterns_data',filename))
+
     # Crop yarns -> Cut rectangular section
     yarns = [filter_points(yarn, roi_bounds) for yarn in yarns]
     
