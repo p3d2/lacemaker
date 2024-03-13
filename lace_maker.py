@@ -279,7 +279,7 @@ def main():
          #   plt.plot(yarn_ext[i][0],yarn_ext[i][1],'o', color=col[k])
         
         # Smooth and create fixed point to point distances
-        yarn_sm = smooth_yarn(yarn_ext, arc_length=dist_particles)
+        yarn_sm = smooth_yarn(yarn_ext, arc_length=dist_particles/units)
         
         # Replicate yarns
         for l in range(n2+1):
