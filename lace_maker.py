@@ -270,17 +270,21 @@ def main():
         # Generate unit yarns
         yarn = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)])
         
+        
         # Extend unit yarns
         n1, vx1, vy1, n2, vx2, vy2, mol = unit_rep[str(k)]
         yarn_ext = extend_points(yarn, n1, vx1, vy1)
+        #col = ['k', 'r', 'g', 'b']
+        #for i in range(len(yarn_ext)):
+         #   plt.plot(yarn_ext[i][0],yarn_ext[i][1],'o', color=col[k])
         
         # Smooth and create fixed point to point distances
         yarn_sm = smooth_yarn(yarn_ext, arc_length=dist_particles)
         
         # Replicate yarns
-        for l in range(n2):
+        for l in range(n2+1):
             yarns.append(replicate_points(yarn_sm, mol, l*vx2, l*vy2))
-    
+        
     # Crop yarns -> Cut rectangular section
     yarns = [filter_points(yarn, roi_bounds) for yarn in yarns]
     
