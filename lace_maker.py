@@ -269,8 +269,8 @@ def write_lammps_data(yarns, yarn_id, bonds, angles, roi_bounds, dist, mass, uni
         nb = 1
         for k, bond in enumerate(bonds):
             if bond[0] == nb:
-                if len(bond) < 4: file.write(f"{nb} {ks1} {dist*units}\n")
-                else: file.write(f"{nb} {ks2} {bond[3]}\n")
+                if len(bond) < 4: file.write(f"{nb} {ks1} {dist}\n")
+                else: file.write(f"{nb} {ks2} {bond[3]*units}\n")
                 nb += 1
 
         # Angle Coeffs section
