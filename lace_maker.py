@@ -214,7 +214,7 @@ def calculate_angles(yarns, yarn_id):
     # Calculate angles
     angles = []
     for k in range(2,len(yarns)):
-        if yarn_id[k] - yarn_id[k-1] - yarn_id[k-2] == 0:
+        if yarn_id[k] == yarn_id[k-1] == yarn_id[k-2]:
             angles.append((yarns[k][0], k-2, k-1, k))
     return angles
 
@@ -269,19 +269,17 @@ def write_lammps_data(yarns, yarn_id, bonds, angles, roi_bounds, dist, mass, uni
         nb = 1
         for k, bond in enumerate(bonds):
             if bond[0] == nb:
+                if len(bond) < 4: file.write(f"{nb} {ks1} {dist}\n")
+                else: file.write(f"{nb} {ks2} {bond[3]}\n")
                 nb += 1
-                if len(bond) < 4:
-                    file.write(f"{k+1} {ks1} {dist}\n")
-                else:
-                    file.write(f"{k+1} {ks2} {bond[3]}\n")
 
         # Angle Coeffs section
         file.write("\nAngle Coeffs\n\n")
         na = 1
         for k, angle in enumerate(angles):
             if angle[0] == na:
+                file.write(f"{na} {kb} {180.0}\n")
                 na += 1
-                file.write(f"{k+1} {kb} {180.0}\n")
 def main():
     
     # Create argument parser
