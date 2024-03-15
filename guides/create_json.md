@@ -68,7 +68,7 @@ and the paths section for each path (note that in the easy **approach 1** there 
 
 In this step, we will enhance the description of the yarns by adding several features that provide more detail about their structure and position. We will add five components to describe each one of the yarns:
 
-1. **Type of Yarn**: Each yarn gets an identifier which can be utilized to alter properties during simulations. 
+1. **Path selection**: Select which path describes the yarn. 
    
 2. **Starting Node**: Declare the starting node for each yarn. 
 
@@ -102,14 +102,43 @@ In this step, we'll identify and define two types of repetitions:
 
 2. **Repetition of yarns**: The second type of repetition involves repeating the yarns in the pattern. This way, multiple strands of the same yarn appear across the pattern. [Number of repeating units, vector x coordinate, vector y coordinate]
 
+3. **Type of Yarn** Each yarn gets an identifier which can be utilized to alter properties during simulations.
+
 ![Example of a lace with yarns repeating pattern](img/example_repeat_2.jpg)
 
 ```json
 	"unit_repetion":{
-		"0": [20, 12.0, 0, 15, 4.6188, 4.6188, 1],
-		"1": [20, -3.6906, 12.3095, 15, 4.6188, 4.6188, 1],
-		"2": [20, 4.6188, 4.6188, 9, -3.6906, 12.3095, 2]
+		"0": [20, 12.0, 0, 20, 6.0, 10.3923, 1],
+		"1": [20, 6.0, 10.3923, 20, 12.0, 0.0, 2],
+		"2": [20, -6.0, 10.3923, 20, 12.0, 0.0, 3]
 	},
 ```
 
 ---
+
+## Step 5: Define a Region of Interest (ROI)
+
+In this step, we'll use a Region of Interest (ROI) to crop out a portion of the pattern that we want to focus on.
+
+ROI is a selected subset of samples within the data set. It lets you concentrate on specific attributes by isolating them and removing unwanted areas. The repetion pattern is often not orthonormal, therefore the repetion number will likely need to be bigger. 
+
+1. **Defining a 1st ROI** 
+   Start by identifying the area in the pattern that you wish to concentrate on. This may involve specifying a certain range of x, y and z coordinates to restrict focus to. 
+
+   Example in markdown for defining an ROI:
+
+```json
+	"roi_bounds":{
+		"x_min": -0.5,
+		"x_max": 120.5,
+		"y_min": 30.0,
+		"y_max": 162.0,
+		"z_min": -2.0,
+		"z_max": 2.0
+	}
+```
+Here, the ROI is set to focus on x, y and z coordinates from 0 to 5, 0 to 5 and 0 to 1 respectively. These ranges define a 3D cube within the pattern which holds our region of interest.
+
+Defining an ROI in your JSON file allows for a more focused and targeted analysis of specific areas within your yarn pattern. It can help in studying specified details, isolating possible issues or examining attributes of particular interest. 
+
+This concludes the step-by-step type 1 process of creating a JSON file for a yarn pattern using the simple approach. Please move on to the more complex approach, or export your JSON file to LAMMPS for simulation.
