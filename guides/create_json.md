@@ -53,7 +53,7 @@ and the paths section for each path (note that in the easy **approach 1** there 
             "path": [1, 2, 1],
             "shifts": {
             }
-        }
+        },
         {
             "path": [0, 3, 0],
             "shifts": {
@@ -86,7 +86,7 @@ For previous example, the following json section can be filled as:
 	"unit_yarns": {
 		"0": [0, 0, 0, 1, 1.0],
 		"1": [1, 1, 0, 1, 1.0],
-		"2": [2, 0, 0,-1, 1.0],
+		"2": [2, 0, 0,-1, 1.0]
 	},
 ```
 
@@ -122,6 +122,8 @@ In this step, we'll use a Region of Interest (ROI) to crop out a portion of the 
 
 ROI is a selected subset of samples within the data set. It lets you concentrate on specific attributes by isolating them and removing unwanted areas. The repetion pattern is often not orthonormal, therefore the repetion number will likely need to be bigger. 
 
+![Example of a lace with yarns repeating pattern](img/example_roi.jpg)
+
 1. **Defining a 1st ROI** 
    Start by identifying the area in the pattern that you wish to concentrate on. This may involve specifying a certain range of x, y and z coordinates to restrict focus to. 
 
@@ -129,10 +131,10 @@ ROI is a selected subset of samples within the data set. It lets you concentrate
 
 ```json
 	"roi_bounds":{
-		"x_min": -0.5,
-		"x_max": 120.5,
-		"y_min": 30.0,
-		"y_max": 162.0,
+		"x_min": -30.5,
+		"x_max": 360.5,
+		"y_min": -0.5,
+		"y_max": 240.5,
 		"z_min": -2.0,
 		"z_max": 2.0
 	}
