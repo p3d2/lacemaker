@@ -9,7 +9,7 @@ bond_style      harmonic
 angle_style 	harmonic
 
 # Atom Definition
-variable filename string "pattern2_0.25_3.0_2.5_30.0_50.0"
+variable filename string "pattern2_v2_0.25_3.0_2.5_30.0_50.0"
 read_data       output/lammps_data/${filename}.data
 
 # Force Field Settings
@@ -22,10 +22,16 @@ compute			perAtomPE all pe/atom
 dump myDump all custom 10000 output/simulations/${filename}.lammpstrj id type x y z fx fy fz c_perAtomPE
 
 # Fixes
-region left_block block INF 0.75 INF INF INF INF units box
-region right_block block 149.25 INF INF INF INF INF units box
-region bottom_block block INF INF INF 150.75 INF INF units box
-region top_block block INF INF 299.25 INF INF INF units box
+#region left_block block INF 0.75 INF INF INF INF units box
+#region right_block block 149.25 INF INF INF INF INF units box
+#region bottom_block block INF INF INF 150.75 INF INF units box
+#region top_block block INF INF 299.25 INF INF INF units box
+
+region left_block block INF -168.75 INF INF INF INF units box
+region right_block block -20.25 INF INF INF INF INF units box
+region bottom_block block INF INF INF 563.25 INF INF units box
+region top_block block INF INF 711.55 INF INF INF units box
+
 group left_wall region left_block
 group right_wall region right_block
 group bottom_wall region bottom_block
