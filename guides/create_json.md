@@ -43,7 +43,6 @@ Assuming that the distance between `0` and `1` is equal to 6.0 units and the ang
 and the paths section for each path (note that in the easy **approach 1** there is no need to write the shifts section):
 
 ```json
-{
     "paths": [
         {
             "path": [0, 1, 0],
@@ -65,30 +64,45 @@ and the paths section for each path (note that in the easy **approach 1** there 
 
 ---
 
-Continue with the subsequent steps, providing instructions that expand on this approach and lead to the completion of the JSON file for the yarn mesh.
+## Step 3: Yarn features
 
-## Step 3: Determine Yarn Properties
+In this step, we will enhance the description of the yarns by adding several features that provide more detail about their structure and position. We will add five components to describe each one of the yarns:
 
-Next, identify the properties of the yarns that you want to include in the JSON file. This may include dimensions, density, thickness, and material properties. These properties will be used to define each yarn in the JSON file.
+1. **Type of Yarn**: Each yarn gets an identifier which can be utilized to alter properties during simulations. 
+   
+2. **Starting Node**: Declare the starting node for each yarn. 
+
+3. **Start Path Position**: Specify the starting position of the yarn's path (in the **approach 1** we are declaring 1 path per yarn and, therefore, this value is likely to be set to 0).
+   
+4. **Z Signal**: This feature declares if the yarn is positioned on the top or bottom at the crossing.
+   
+5. **Z Coordinate Variation**: The final feature describes how much the z coordinate varies between nodes. A small value for $Z_0$ may cause intersections at crossings, while a larger $Z_0$ could make the structure excessively wavy.
+
+For previous example, the following json section can be filled as:
+
+```json
+	"unit_yarns": {
+		"0": [0, 0, 0, 1, 1.0],
+		"1": [1, 1, 0, 1, 1.0],
+		"2": [2, 0, 0,-1, 1.0],
+	},
+```
+
+By adding these features to your yarn descriptions within the JSON file, you can provide a more detailed representation of each yarn, allowing for adjustments in simulation properties, variations in z-coordinate positioning and intricate navigation of yarn crossing points. 
+
+---
+
+Continue with the subsequent steps, providing instructions that expand on how these features can describe each yarn and lead to more precise simulations.
+
+Remember that the examples are just one way to represent these features, adjust them as necessary for your specific requirements.
+
+
+
+
 
 ## Step 4: Define JSON File Structure
 
 Based on the yarn pattern and properties, create the structure for the JSON file. Start with an outer object that represents the yarn mesh. This object will contain all the necessary properties and arrays for yarns.
-
-Example structure:
-
-```json
-{
-  "yarn_mesh": {
-    "dimensions": {
-      "width": 10,
-      "height": 10,
-      "depth": 10
-    },
-    "yarns": []
-  }
-}
-```
 
 In this example, we have a `yarn_mesh` object with `dimensions` and an empty array for `yarns`. We will populate this array in the following steps.
 
