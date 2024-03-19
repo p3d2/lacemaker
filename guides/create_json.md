@@ -23,6 +23,7 @@ In this step, we will identify the nodes necessary for describing the repetition
 To make it easier to identify the yarn pattern, it can be helpful to visualize it. You can sketch the pattern on a paper or use a software tool to draw it digitally. This will provide a clear understanding of how the yarns are arranged and repeated.
 
 Let's use the following lace example:
+
 ![Example of a lace](img/example.jpg)
 
 There are at least three yarns that repeat multiple times in this pattern. For instance, starting from the crossing at node `0`, follow the yarn path indicated by the red arrow. This yarn goes to node `1` and then repeats in a similar manner. Yarns described by green and blue paths repeat in a similar way.
