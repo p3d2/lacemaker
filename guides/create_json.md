@@ -62,6 +62,8 @@ and the paths section for each path (note that in the easy **approach 1** there 
     ],
 ```
 
+Special note: in **approach 1** it does not matter if you repeat nodes. In this example, nodes `2` and `3` correspond to equivalent crossings.
+
 ---
 
 ## Step 3: Yarn features
@@ -79,8 +81,6 @@ In this step, we will enhance the description of the yarns by adding several fea
 5. **Z Coordinate Variation**: The final feature describes how much the z coordinate varies between nodes. A small value for $Z_0$ may cause intersections at crossings, while a larger $Z_0$ could make the structure excessively wavy.
 
 For previous example, the following json section can be filled as:
-
-![Example of a lace with nodes highlighted](img/example_nodes.jpg)
 
 ```json
 	"unit_yarns": {
@@ -118,7 +118,7 @@ In this step, we'll identify and define two types of repetitions:
 
 ## Step 5: Define a Region of Interest (ROI)
 
-In this step, we'll use a Region of Interest (ROI) to crop out a portion of the pattern that we want to focus on.
+In this step, we'll use a Region of Interest (ROI) to crop out a portion of the pattern that we want to focus on. You can make the calculations to create the final ROI. However, a straightfoward alternative, explained here, is to create a first wider ROI, then vizualize the generate mesh, and generate a second ROI that will be the final desired lace.
 
 ROI is a selected subset of samples within the data set. It lets you concentrate on specific attributes by isolating them and removing unwanted areas. The repetion pattern is often not orthonormal, therefore the repetion number will likely need to be bigger. 
 
@@ -127,7 +127,7 @@ ROI is a selected subset of samples within the data set. It lets you concentrate
 1. **Defining a 1st ROI** 
    Start by identifying the area in the pattern that you wish to concentrate on. This may involve specifying a certain range of x, y and z coordinates to restrict focus to. 
 
-   Example in markdown for defining an ROI:
+   Example in markdown for defining an ROI (ROI 1):
 
 ```json
 	"roi_bounds":{
@@ -138,9 +138,31 @@ ROI is a selected subset of samples within the data set. It lets you concentrate
 		"z_min": -2.0,
 		"z_max": 2.0
 	}
+}
 ```
-Here, the ROI is set to focus on x, y and z coordinates from 0 to 5, 0 to 5 and 0 to 1 respectively. These ranges define a 3D cube within the pattern which holds our region of interest.
 
-Defining an ROI in your JSON file allows for a more focused and targeted analysis of specific areas within your yarn pattern. It can help in studying specified details, isolating possible issues or examining attributes of particular interest. 
+2. **Visualize and re-define the ROI**:
+    Run `lace_maker.py`:
+    
+    ```
+    python lace_maker.py input/json_patterns/pattern3.json --dist_particles=0.25 --units=1.0 --mass=1.0 --threshold=2.5
+    ```
 
-This concludes the step-by-step type 1 process of creating a JSON file for a yarn pattern using the simple approach. Please move on to the more complex approach, or export your JSON file to LAMMPS for simulation.
+    and visualize the data points. Since we are building input files to use on LAMMPS, you can use OVITO ([https://www.ovito.org/](https://www.ovito.org/)) or VMD ([https://www.ks.uiuc.edu/Research/vmd/](https://www.ks.uiuc.edu/Research/vmd/)). For example, using OVITO, you start by (1) loading the data file, (2) deselect the bonds so you have access to the info of Particles coordinates, and then (3) annotate the coordinates for the final ROI.
+
+3. **Update the ROI**:
+    After getting the coordinates, change the ROI in the json file:
+
+```json
+    	"roi_bounds":{
+		"x_min": 105.0,
+		"x_max": 255.0,
+		"y_min": 3.5,
+		"y_max": 150.5,
+		"z_min": -2.0,
+		"z_max": 2.0
+	}
+}
+```
+
+and regenerate the input file to be used by LAMMPS by running the previous script `lace_maker.py`.
