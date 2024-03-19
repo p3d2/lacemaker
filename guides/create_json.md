@@ -37,7 +37,7 @@ Assuming that the distance between `0` and `1` is equal to 6.0 units and the ang
         "0": [0.0, 0.0],
         "1": [6.0, 0.0],
         "2": [9.0, 5.196],
-        "3": [3.0, -5.196]
+        "3": [-3.0, 5.196]
     },
 ```
 and the paths section for each path (note that in the easy **approach 1** there is no need to write the shifts section):
