@@ -1,0 +1,33 @@
+# LAMMPS Input Script
+
+read_restart ${folderrestart}
+
+# Set force to zero on all atoms
+velocity all set 0.0 0.0 0.0
+
+# Ignore intra pair wise interactions
+neigh_modify exclude molecule/intra all
+neigh_modify every 100
+
+# Integrator Settings
+timestep        ${tstep}
+thermo          ${thermodump}
+thermo_style    custom step temp pe ke etotal
+
+# Dump command to output atom positions to a file
+variable filedump string "${folderdump}${filename}_contract_fix_${bond}.lammpstrj"
+variable logdump string "${folderdump}${filename}_contract_fix_${bond}.log"
+compute perAtomPE all pe/atom
+dump myDump all custom ${thermodump} ${filedump} id type x y z fx fy fz c_perAtomPE
+log ${logdump}
+
+# Run NVE
+fix freezef boundary setforce NULL NULL 0.0
+fix dragU all viscous ${visc}
+fix nve_all all nve
+
+# Run
+variable iter equal ${thermodump}*${nframes}
+variable filerestart string "${folderdump}sim2.restart"
+run ${iter}
+write_restart ${filerestart}
