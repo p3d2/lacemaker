@@ -1,4 +1,5 @@
 # LAMMPS Input Script
+# USING folderdata folderdump filename thermodump xmin xmax ymin ymax visc tstep nframes folderdump filerestart
 
 # Initialization
 units           lj
