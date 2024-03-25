@@ -20,7 +20,7 @@ comm_modify cutoff 3.5
 variable filedump string "${folderdump}${filename}.lammpstrj"
 variable logdump string "${folderdump}${filename}.log"
 compute perAtomPE all pe/atom
-dump myDump all custom ${thermodump} ${filedump} id type x y z fx fy fz c_perAtomPE
+dump myDump all custom ${thermodump} ${filedump} id mol type x y z fx fy fz c_perAtomPE
 log ${logdump}
 
 # Fixes

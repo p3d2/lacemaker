@@ -18,7 +18,7 @@ thermo_style    custom step temp pe ke etotal
 variable filedump string "${folderdump}${filename}_release.lammpstrj"
 variable logdump string "${folderdump}${filename}_release.log"
 compute perAtomPE all pe/atom
-dump myDump all custom ${thermodump} ${filedump} id type x y z fx fy fz c_perAtomPE
+dump myDump all custom ${thermodump} ${filedump} id mol type x y z fx fy fz c_perAtomPE
 log ${logdump}
 
 # Run NVE
