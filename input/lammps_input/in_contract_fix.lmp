@@ -34,3 +34,13 @@ variable i loop ${nframes}
 
 next i
 jump ${self} loop
+
+label loop2
+variable j loop ${nframes}
+
+    variable r0diff equal ${r0}-${nframes}*${dr0}+${j}*${dr0}
+    bond_coeff ${bond} ${k} ${r0diff}
+    run ${thermodump}
+
+next j
+jump ${self} loop2
