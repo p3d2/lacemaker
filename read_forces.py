@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from scipy.fft import fft
 from scipy.interpolate import interp1d
+from scipy.signal import find_peaks
 
 fg_color = 'white'
 bg_color = 'none'
@@ -121,36 +122,66 @@ for k in range(len(pe_data)):
     len_data.append(len_yarn)
     pe_sort.append(pe_yarn)  
 
+fig, ax = plt.subplots()
+peak_list = []
 
-f_l = np.cumsum([item for sublist in len_data[0][20:21] for item in sublist])
-f_p = [item for sublist in pe_sort[0][20:21] for item in sublist]
+all_x = []
+all_y = []
+for t in range(len(len_data)):
+    for k in [5,6,7,12,13,14]:
+        f_l = np.cumsum([item for sublist in len_data[t][k:k+1] for item in sublist])
+        f_p = [item for sublist in pe_sort[t][k:k+1] for item in sublist]
 
-f_linear = interp1d(f_l, f_p)
-xnew = np.linspace(f_l[0], f_l[-1], int(10e5+1))
-ynew = f_linear(xnew)
+        N = 1e4
+        f_linear = interp1d(f_l, f_p)
+        xnew = np.linspace(f_l[0], f_l[-1], int(N+1))
+        ynew = f_linear(xnew)
 
-fft_result = fft(ynew)
-# Get the power spectrum (magnitude of the FFT)
-power_spectrum = np.abs(fft_result)
-frequencies = np.fft.fftfreq(len(ynew), d=(f_l[-1]-f_l[0])/10e5)
+        # fft_result = fft(ynew)
+        # # Get the power spectrum (magnitude of the FFT)
+        # power_spectrum = np.abs(fft_result)
+        # frequencies = np.fft.fftfreq(len(ynew), d=(f_l[-1]-f_l[0])/N)
+
+        peaks, _ = find_peaks(ynew)
+        peak_list.append(np.diff(xnew[peaks]))
+        if t < 0:
+            ax.plot(xnew/xnew[-1],ynew/y0-0.1*t,alpha=0.4)
+        else:
+            y0 = ynew
+        #ax.plot(xnew[peaks],ynew[peaks],'rx')
+        all_x.append(xnew/xnew[-1])
+        all_y.append(ynew)
+
+all_x_flat = np.array(all_x).ravel()
+all_y_flat = np.array(all_y).ravel()
+
+H, xedges, yedges = np.histogram2d(all_x_flat, all_y_flat, bins=1000)
+ax.pcolormesh(xedges, yedges, H.T, shading='auto', cmap = 'turbo', vmax = 100.0)
+# peak_flat = np.array([item for sublist in peak_list for item in sublist]).reshape(49, -1)
+# histograms = [np.histogram(row, bins=50) for row in peak_flat]
+# counts = np.array([hist[0] for hist in histograms])
+# bin_edges = histograms[0][1]  # Assuming all histograms have the same bin edges
 
 # Contour plot
 #for q in range(20,30):
-fig, ax = plt.subplots()
+
+#ax.contourf(bin_edges[:-1], np.arange(len(peak_flat)), counts, cmap='turbo')
+#ax.imshow(counts, cmap='turbo')
+#ax.pcolormesh(bin_edges[:-1], np.arange(len(peak_flat)), counts, cmap='turbo')
+#ax.plot(peaks[0])
 
 #ax.plot(np.abs(ft_flat))
 #ax.plot(frequencies[1:], power_spectrum[1:])
-ax.plot(xnew, ynew)
-ax.plot(f_l, f_p, 'r.')
-#ax.contourf([lst[q] for lst in pe_sort], cmap='turbo', levels=100, vmin=0.0, vmax=0.4)  # Set color limits with vmin and vmax
+#ax.plot(xnew, ynew)
+#ax.hist(np.concatenate(peak_list), bins=100)
+#ax.contourf([lst[20] for lst in pe_sort], cmap='turbo', levels=100, vmin=0.0, vmax=1.0)  # Set color limits with vmin and vmax
 #ax.plot(pe_sort[:][30])  # Set color limits with vmin and vmax
 #ax.plot(frequencies, np.abs(fourier_transform))
 #plt.xlim(0,5)
 #plt.ylim(0,1000.0)
-plt.title('Potential Energy')
-plt.xlabel('Position')
-plt.ylabel('Time')
+plt.xlabel('Potential Energy')
+plt.ylabel('Position (normalized)')
 #plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '-' + str(q) + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
-plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
+plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '2.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
 
 plt.close('all')
