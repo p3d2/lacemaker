@@ -77,13 +77,73 @@ def read_lammps_dump(filename):
 
     return (forces, np.array(id_atom), np.array(pe_atom), np.array(pos_atom), coord_atoms)
 
+def save_plot_1(data1, data2, data3, mol_range, N, bin):
+
+    fig, ax = plt.subplots()
+    all_x = []
+    all_y = []
+    for t in range(len(data1)):
+        for k in range(len(data1[0])):
+            if data3[t][k][0] in mol_range:
+
+                f_l = np.cumsum(np.array(data1[t][k]).ravel())
+                f_p = np.array(data2[t][k]).ravel()
+
+                f_linear = interp1d(f_l, f_p)
+                xnew = np.linspace(f_l[0], f_l[-1], int(N+1))
+                ynew = f_linear(xnew)
+
+                all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
+                all_y.append(ynew)
+
+    all_x_flat = np.array(all_x).ravel()
+    all_y_flat = np.array(all_y).ravel()
+
+    H, xedges, yedges = np.histogram2d(all_x_flat, all_y_flat, bins=bin)
+    ax.pcolormesh(xedges, yedges, H.T, shading='auto', cmap='turbo', vmax=100.0)
+    
+    plt.xlabel('Position (normalized)')
+    plt.ylabel('Potential Energy')
+    plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '_' + str(bin) + '_' + '_'.join(map(str, mol_range)) + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
+    plt.close('all')
+
+def save_plot_2(data1, data2, data3, mol_range, N):
+
+    fig, ax = plt.subplots()
+    all_x = []
+    all_y = []
+    all_t = []
+    for t in range(len(data1)):
+        for k in range(len(data1[0])):
+            if data3[t][k][0] in mol_range:
+
+                f_l = np.cumsum(np.array(data1[t][k]).ravel())
+                f_p = np.array(data2[t][k]).ravel()
+
+                f_linear = interp1d(f_l, f_p)
+                xnew = np.linspace(f_l[0], f_l[-1], int(N+1))
+                ynew = f_linear(xnew)
+                
+                all_t.append(t * np.ones(int(N+1)))
+                all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
+                all_y.append(ynew)
+
+    ax.contourf(np.array(all_x), np.array(all_t), np.array(all_y), cmap='turbo', vmax = 0.5, levels=100)
+    
+    plt.xlabel('Position (normalized)')
+    plt.ylabel('Time (iterations)')
+    plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '_' + '_'.join(map(str, mol_range)) + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
+    plt.close('all')
+
 parser = argparse.ArgumentParser(description='Processing dump file name')
 parser.add_argument('folder', type=str, help='The name of the dump file to be processed')
 parser.add_argument('trj_file', type=str, help='The name of the dump file to be processed')
+parser.add_argument('mol_r', nargs="+", type=int, help='Select the yarns (mol id)')
 
 args = parser.parse_args()
 pattern_folder = args.folder
 dump_file = args.trj_file
+mol_r = args.mol_r
 
 (force_data, id_data, pe_data, pos, coord_atoms) = read_lammps_dump(os.path.join('output','simulations', pattern_folder, dump_file + '.lammpstrj'))
 
@@ -101,87 +161,34 @@ for k in range(len(pe_data)):
     pos[k] = id_flat[sort_indices]
     coord_atoms[k] = c_flat[sort_indices]
 
-len_data = []
-pe_sort = []
+len_data, pe_sort, id_new = [], [], []
 for k in range(len(pe_data)):
-    len_temp = []
-    len_yarn =[]
-    pe_temp = []
-    pe_yarn = []
+    len_temp, len_yarn = [], []
+    pe_temp, pe_yarn = [], []
+    id_temp, id_yarn = [], []
+
     for l in range(len(pe_data[k])-1):
         if id_data[k][l] != id_data[k][l+1]:
             len_yarn.append(len_temp)
             len_temp = []
             pe_yarn.append(pe_temp)
             pe_temp = []
+            id_yarn.append(id_temp)
+            id_temp = []
         else:
             p1 = coord_atoms[k][l]
             p2 = coord_atoms[k][l+1]
             len_temp.append(np.linalg.norm(p2-p1))
             pe_temp.append(pe_data[k][l])
+            id_temp.append(id_data[k][l])
     len_data.append(len_yarn)
     pe_sort.append(pe_yarn)  
+    id_new.append(id_yarn)
 
-fig, ax = plt.subplots()
-peak_list = []
+if len(mol_r) == 1:
+    save_plot_2(len_data, pe_sort, id_new, mol_r, 1e4)
 
-all_x = []
-all_y = []
-for t in range(len(len_data)):
-    for k in [5,6,7,12,13,14]:
-        f_l = np.cumsum([item for sublist in len_data[t][k:k+1] for item in sublist])
-        f_p = [item for sublist in pe_sort[t][k:k+1] for item in sublist]
-
-        N = 1e4
-        f_linear = interp1d(f_l, f_p)
-        xnew = np.linspace(f_l[0], f_l[-1], int(N+1))
-        ynew = f_linear(xnew)
-
-        # fft_result = fft(ynew)
-        # # Get the power spectrum (magnitude of the FFT)
-        # power_spectrum = np.abs(fft_result)
-        # frequencies = np.fft.fftfreq(len(ynew), d=(f_l[-1]-f_l[0])/N)
-
-        peaks, _ = find_peaks(ynew)
-        peak_list.append(np.diff(xnew[peaks]))
-        if t < 0:
-            ax.plot(xnew/xnew[-1],ynew/y0-0.1*t,alpha=0.4)
-        else:
-            y0 = ynew
-        #ax.plot(xnew[peaks],ynew[peaks],'rx')
-        all_x.append(xnew/xnew[-1])
-        all_y.append(ynew)
-
-all_x_flat = np.array(all_x).ravel()
-all_y_flat = np.array(all_y).ravel()
-
-H, xedges, yedges = np.histogram2d(all_x_flat, all_y_flat, bins=1000)
-ax.pcolormesh(xedges, yedges, H.T, shading='auto', cmap = 'turbo', vmax = 100.0)
-# peak_flat = np.array([item for sublist in peak_list for item in sublist]).reshape(49, -1)
-# histograms = [np.histogram(row, bins=50) for row in peak_flat]
-# counts = np.array([hist[0] for hist in histograms])
-# bin_edges = histograms[0][1]  # Assuming all histograms have the same bin edges
-
-# Contour plot
-#for q in range(20,30):
-
-#ax.contourf(bin_edges[:-1], np.arange(len(peak_flat)), counts, cmap='turbo')
-#ax.imshow(counts, cmap='turbo')
-#ax.pcolormesh(bin_edges[:-1], np.arange(len(peak_flat)), counts, cmap='turbo')
-#ax.plot(peaks[0])
-
-#ax.plot(np.abs(ft_flat))
-#ax.plot(frequencies[1:], power_spectrum[1:])
-#ax.plot(xnew, ynew)
-#ax.hist(np.concatenate(peak_list), bins=100)
-#ax.contourf([lst[20] for lst in pe_sort], cmap='turbo', levels=100, vmin=0.0, vmax=1.0)  # Set color limits with vmin and vmax
-#ax.plot(pe_sort[:][30])  # Set color limits with vmin and vmax
-#ax.plot(frequencies, np.abs(fourier_transform))
-#plt.xlim(0,5)
-#plt.ylim(0,1000.0)
-plt.xlabel('Potential Energy')
-plt.ylabel('Position (normalized)')
-#plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '-' + str(q) + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
-plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '2.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
-
-plt.close('all')
+if len(mol_r) > 1:
+    if len(mol_r) == 2:
+        mol_r = range(mol_r[0], mol_r[1]+1)
+    save_plot_1(len_data, pe_sort, id_new, mol_r, 1e4, 1000)
