@@ -94,13 +94,13 @@ def save_plot_1(data1, data2, data3, mol_range, N, bin):
                 ynew = f_linear(xnew)
 
                 all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
-                all_y.append(ynew)
+                all_y.append(ynew + 0.04*t)
 
     all_x_flat = np.array(all_x).ravel()
     all_y_flat = np.array(all_y).ravel()
 
     H, xedges, yedges = np.histogram2d(all_x_flat, all_y_flat, bins=bin)
-    ax.pcolormesh(xedges, yedges, H.T, shading='auto', cmap='turbo', vmax=100.0)
+    ax.pcolormesh(xedges, yedges, H.T, shading='auto', cmap='turbo')#, vmax=100.0)
     
     plt.xlabel('Position (normalized)')
     plt.ylabel('Potential Energy')
