@@ -141,7 +141,7 @@ def save_pattern(p0, trs, filename):
     for idx, (x, y) in enumerate(coords):
         # Select color in a cyclic manner
         color = colors[idx % len(colors)]
-        plt.plot(x, y, marker='o', color=color, lw = 2)
+        plt.plot(x, y, marker='o', color=color, lw = 2, alpha=0.5)
         
     # Setting the x and y axis labels
     plt.xlabel('X-axis')
