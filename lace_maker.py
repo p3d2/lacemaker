@@ -75,7 +75,7 @@ def extend_points(points, n, vx, vy):
             extended_points.append((new_x, new_y, point[2]))
     return extended_points
 
-def smooth_yarn(points, arc_length=1.0, smoothness=3, num_points=10000):
+def smooth_yarn(points, arc_length=1.0, smoothness=3, num_points=int(1e5)):
     # Convert points to numpy array
     points = np.array(points)
     x, y, z = points.T
@@ -87,10 +87,6 @@ def smooth_yarn(points, arc_length=1.0, smoothness=3, num_points=10000):
     u_even = np.linspace(0, 1, num_points)
     x_even, y_even, z_even = splev(u_even, tck)
 
-    # Function to compute the euclidean distance between two points
-    def euclidean(p1, p2):
-        return np.sqrt(np.sum((p1 - p2)**2))
-
     # Initialize parameters
     result_list = [tuple(splev(0, tck))]  # Start with the first point
     last_point = result_list[-1]
@@ -98,7 +94,7 @@ def smooth_yarn(points, arc_length=1.0, smoothness=3, num_points=10000):
     # Iterate over the evenly spaced spline points
     for i in range(1, num_points):
         current_point = (x_even[i], y_even[i], z_even[i])
-        if euclidean(np.array(last_point), np.array(current_point)) >= arc_length:
+        if np.linalg.norm(np.array(last_point) - np.array(current_point)) >= arc_length:
             result_list.append(current_point)
             last_point = current_point
 
