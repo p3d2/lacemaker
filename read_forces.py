@@ -94,7 +94,7 @@ def save_plot_1(data1, data2, data3, mol_range, N, bin):
                 ynew = f_linear(xnew)
 
                 all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
-                all_y.append(ynew + 0.04*t)
+                all_y.append(np.log(1+ynew) + 0.5*t)
 
     all_x_flat = np.array(all_x).ravel()
     all_y_flat = np.array(all_y).ravel()
@@ -104,7 +104,7 @@ def save_plot_1(data1, data2, data3, mol_range, N, bin):
     
     plt.xlabel('Position (normalized)')
     plt.ylabel('Potential Energy')
-    plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '_' + str(bin) + '_' + '_'.join(map(str, mol_range)) + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
+    plt.savefig(os.path.join('output','simulations', pattern_folder, dump_file + '_' + str(bin) + '_' + '_'.join(map(str, mol_range)) + '.png'), format='png', dpi=600, bbox_inches='tight',pad_inches=0)
     plt.close('all')
 
 def save_plot_2(data1, data2, data3, mol_range, N):
@@ -128,7 +128,7 @@ def save_plot_2(data1, data2, data3, mol_range, N):
                 all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
                 all_y.append(ynew)
 
-    ax.contourf(np.array(all_x), np.array(all_t), np.array(all_y), cmap='turbo', vmax = 0.5, levels=100)
+    ax.contourf(np.array(all_x), np.array(all_t), np.array(all_y), cmap='turbo', vmax = 1.0, levels=200)
     
     plt.xlabel('Position (normalized)')
     plt.ylabel('Time (iterations)')
