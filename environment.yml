@@ -1,0 +1,6 @@
+name: conda-lacemaker
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - ovito
