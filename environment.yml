@@ -1,6 +1,7 @@
 name: conda-lacemaker
 channels:
+  - https://conda.ovito.org
   - conda-forge
 dependencies:
+  - ovito=3.10.4
   - numpy
-  - ovito
