@@ -35,7 +35,7 @@ bonds_vis.width = 1.0
 
 for k in range(len(path_trj)):
 
-    if os.path.exists(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + 'gif')):
+    if os.path.exists(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + '.gif')):
         
         continue
 
@@ -115,5 +115,5 @@ for k in range(len(path_trj)):
 
     # Create GIF
     durations = [10] * (len(frames) - 1) + [1000]  # Last frame has duration of 1000.
-    frames[0].save(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + 'gif'), save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
+    frames[0].save(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + '.gif'), save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
     print(os.path.basename(path_trj[k]))
