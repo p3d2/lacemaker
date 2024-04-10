@@ -14,12 +14,13 @@ folder = 'Pattern_3023'
 file_pattern = '*lammpstrj' # lammps trajectories extension
 w, h = 800, 800 # resolution for rendering using OVITO
 g = 0.1 # Define gray border (0 is black and 1 is white, current implementation will render black as transparent so avoid use 0)
-border = 2 # Border size around non-transparent pixels
+border = 3 # Border size around non-transparent pixels (ex. 3x3), needs to be odd integer
 
 # Folders setup and file search
 path_data = os.path.join('/scratch','work','silvap1','lacemaker','output','lammps_data', pattern + '.data')
 path_trj = glob.glob(f"{os.path.join('/scratch','work','silvap1','lacemaker','output','simulations',folder)}/{file_pattern}")
 path_temp = os.path.join('/scratch','work','silvap1','lacemaker','temp')
+os.makedirs(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs'), exist_ok=True)
 
 # Initial loading
 # Create a new ovito.pipeline.FileSource to load data from a LAMMPS dump file
@@ -34,6 +35,10 @@ bonds_vis.width = 1.0
 
 for k in range(len(path_trj)):
 
+    if os.path.exists(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + 'gif')):
+        
+        continue
+
     # Clean temp folder
     files = os.listdir(path_temp)
 
@@ -44,14 +49,19 @@ for k in range(len(path_trj)):
             os.remove(file_path)
 
     # Load a lammps trajectory file using the modifier
-    traj_mod = LoadTrajectoryModifier()
-    traj_mod.source.load(path_trj[k])
-    pipeline.modifiers.append(traj_mod)
+    #traj_mod = LoadTrajectoryModifier()
+    #traj_mod.source.load(path_trj[k])
+    #pipeline.modifiers.append(traj_mod)
+    pipeline.source.load(path_trj[k])
+    particles_vis = pipeline.source.data.particles.vis
+    particles_vis.radius = 0.5  # Set the default radius for particles
 
     # Add AssignColorModifier to the pipeline that colors particles based on potential energy
     color_mod = ColorCodingModifier(
-        property='c_peratompe',
-        gradient = ColorCodingModifier.Gradient(turbo_cmap)
+        property = 'c_peratompe',
+        gradient = ColorCodingModifier.Gradient(turbo_cmap),
+        start_value = 0.0,
+        end_value = 0.2
     )
     pipeline.modifiers.append(color_mod)
 
@@ -64,7 +74,8 @@ for k in range(len(path_trj)):
     viewport.zoom_all()  # Ensure we are viewing all particles
 
     # Access the number of frames
-    n_frames = traj_mod.source.num_frames
+    #n_frames = traj_mod.source.num_frames
+    n_frames = pipeline.source.num_frames
 
     for frame in range(n_frames):
         # Specify the output image file path for this frame
@@ -104,5 +115,5 @@ for k in range(len(path_trj)):
 
     # Create GIF
     durations = [10] * (len(frames) - 1) + [1000]  # Last frame has duration of 1000.
-    frames[0].save(os.path.join(path_temp, 'file_' + str(k) + 'gif'), save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
+    frames[0].save(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + 'gif'), save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
     print(os.path.basename(path_trj[k]))
