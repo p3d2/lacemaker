@@ -33,10 +33,19 @@ particles_vis.radius = 0.5  # Set the default radius for particles
 bonds_vis = pipeline.source.data.particles.bonds.vis
 bonds_vis.width = 1.0
 
+# Add AssignColorModifier to the pipeline that colors particles based on potential energy
+color_mod = ColorCodingModifier(
+    property = 'c_peratompe',
+    gradient = ColorCodingModifier.Gradient(turbo_cmap),
+    start_value = 0.0,
+    end_value = 0.2
+)
+pipeline.modifiers.append(color_mod)
+
 for k in range(len(path_trj)):
 
-    if os.path.exists(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + '.gif')):
-        
+    # Check if gif exists already (to redo the gif, delete it first)
+    if os.path.exists(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', os.path.splitext(os.path.basename(path_trj[k]))[0] + '.gif')):
         continue
 
     # Clean temp folder
@@ -45,28 +54,24 @@ for k in range(len(path_trj)):
     # Iterate over each file and delete them
     for file in files:
         file_path = os.path.join(path_temp, file)
-        if os.path.isfile(file_path):
-            os.remove(file_path)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except FileNotFoundError:
+            print(f"File {file_path} was not found, moving on.")
 
     # Load a lammps trajectory file using the modifier
     #traj_mod = LoadTrajectoryModifier()
     #traj_mod.source.load(path_trj[k])
     #pipeline.modifiers.append(traj_mod)
     pipeline.source.load(path_trj[k])
-    particles_vis = pipeline.source.data.particles.vis
-    particles_vis.radius = 0.5  # Set the default radius for particles
-
-    # Add AssignColorModifier to the pipeline that colors particles based on potential energy
-    color_mod = ColorCodingModifier(
-        property = 'c_peratompe',
-        gradient = ColorCodingModifier.Gradient(turbo_cmap),
-        start_value = 0.0,
-        end_value = 0.2
-    )
-    pipeline.modifiers.append(color_mod)
 
     # Pipeline computation
     pipeline.compute()  # This ensures the pipeline is updated with the loaded trajectory
+
+    # Set the particles radius
+    particles_vis = pipeline.source.data.particles.vis
+    particles_vis.radius = 0.5  # Set the default radius for particles
 
     # Create a viewport
     viewport = Viewport()
@@ -84,11 +89,9 @@ for k in range(len(path_trj)):
         # Render and save the image
         viewport.render_image(filename=image_file_path, size=(w, h), alpha=True, renderer=rend_engine, frame=frame)
 
-    pipeline.modifiers.clear()
-
-    ##############
-    # Create GIF #
-    ##############
+    # ##############
+    # # Create GIF #
+    # ##############
 
     frames = []
     file_list = sorted([f for f in os.listdir(path_temp) if f.endswith('.png')])
@@ -115,5 +118,5 @@ for k in range(len(path_trj)):
 
     # Create GIF
     durations = [10] * (len(frames) - 1) + [1000]  # Last frame has duration of 1000.
-    frames[0].save(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', 'gif_' + os.path.splitext(os.path.basename(path_trj[k]))[0] + '.gif'), save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
+    frames[0].save(os.path.join('/scratch', 'work', 'silvap1', 'lacemaker', 'output', 'simulations', folder,'gifs', os.path.splitext(os.path.basename(path_trj[k]))[0] + '.gif'), save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
     print(os.path.basename(path_trj[k]))
