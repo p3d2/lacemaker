@@ -65,14 +65,14 @@ def process_lammps_data(folder, pattern, file_pattern, w, h, g, border, e_min, e
 
 def process_frame(img, frames, g, border):
     pixels = np.array(img)
-    pixels[..., :3][pixels[..., 3] > 0] = [int(g*255), int(g*255), int(g*255)]
+    pixels[..., :3][pixels[..., 3] > 0] = [int(g*255), int(g*255), int(g*255)] # Set non transparent pixels to (g * 255) gray and transparent ones black
     result = Image.fromarray(pixels, 'RGBA')
-    result = result.filter(ImageFilter.MaxFilter(border))
+    result = result.filter(ImageFilter.MaxFilter(border)) # Expand non transparent pixels
     final_img = Image.alpha_composite(result, img).convert('RGB').convert('P', palette=Image.ADAPTIVE)
     frames.append(final_img)
 
 def save_gif(frames, path):
-    durations = [10] * (len(frames) - 1) + [1000]
+    durations = [10] * (len(frames) - 1) + [1000] # Add a delay of 1 s (1000 ms) to the last frame
     frames[0].save(path, save_all=True, append_images=frames[1:], transparency=255, disposal=2, loop=0, duration=durations)
 
 def main():
