@@ -6,3 +6,4 @@ dependencies:
   - ovito=3.10.4
   - numpy
   - pillow
+  - opencv
