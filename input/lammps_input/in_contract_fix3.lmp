@@ -15,7 +15,7 @@ thermo          ${thermodump}
 thermo_style    custom step temp pe ke etotal
 
 # Dump command to output atom positions to a file
-variable filedump string "${folderdump}${filename}_contract_fix_${bond1}_${bond2}__${bond3}.lammpstrj"
+variable filedump string "${folderdump}${filename}_contract_fix_${bond1}_${bond2}_${bond3}.lammpstrj"
 variable logdump string "${folderdump}${filename}_contract_fix_${bond1}_${bond2}_${bond3}.log"
 compute perAtomPE all pe/atom
 dump myDump all custom ${thermodump} ${filedump} id mol type x y z fx fy fz c_perAtomPE
