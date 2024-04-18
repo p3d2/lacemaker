@@ -288,7 +288,7 @@ def main():
     parser.add_argument('--threshold', type=float, default=2.5, help='Threshold. Default: 2.5')
     parser.add_argument('--ks1', type=float, default=30.0, help='Yarns stretching constant. Default: 30.0')
     parser.add_argument('--ks2', type=float, default=10.0, help='Special yarns stretching constant. Default: 10.0')
-    parser.add_argument('--kb', type=float, default=50.0, help='Yarns bending constant. Default: 50.0')
+    parser.add_argument('--kb', type=float, default=5.0, help='Yarns bending constant. Default: 50.0')
 
     # Parse arguments
     args = parser.parse_args()
