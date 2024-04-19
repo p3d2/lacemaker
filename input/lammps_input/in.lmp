@@ -12,8 +12,8 @@ angle_style 	harmonic
 read_data ${folderdata}
 
 # Force Field Settings
-pair_style soft 1.0
-pair_coeff * * 200.0
+pair_style soft_exclude 1.0
+pair_coeff * * 200.0 8
 comm_modify cutoff 3.5
 
 # Dump command to output atom positions to a file
@@ -41,7 +41,6 @@ fix nve_all all nve
 
 # Minimization to relax initial configuration
 minimize 1.0e-6 1.0e-7 10000 100000
-neigh_modify exclude molecule/intra all
 neigh_modify every 100
 
 # Integrator Settings
