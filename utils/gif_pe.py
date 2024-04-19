@@ -147,7 +147,7 @@ def main():
         e_min=args.emin,
         e_max=args.emax,
         particles_r=args.radius,
-        gradient
+        gradient=gradient
     )
 
 if __name__ == "__main__":
