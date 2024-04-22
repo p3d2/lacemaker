@@ -24,14 +24,12 @@
 #include "memory.h"
 #include "error.h"
 
-
 using namespace LAMMPS_NS;
 using namespace MathConst;
 
 /* ---------------------------------------------------------------------- */
 
-PairSoftExclude::PairSoftExclude(LAMMPS *lmp) : Pair(lmp)
-{
+PairSoftExclude::PairSoftExclude(LAMMPS *lmp) : Pair(lmp), N_ignore(0) {
   writedata = 1;
 }
 
@@ -40,11 +38,11 @@ PairSoftExclude::PairSoftExclude(LAMMPS *lmp) : Pair(lmp)
 PairSoftExclude::~PairSoftExclude()
 {
   if (allocated) {
-    memory->destroy(setflag);
-    memory->destroy(cutsq);
-
-    memory->destroy(prefactor);
-    memory->destroy(cut);
+    memory->destroy(setflag); setflag = nullptr;
+    memory->destroy(cutsq); cutsq = nullptr;
+    memory->destroy(prefactor); prefactor = nullptr;
+    memory->destroy(cut); cut = nullptr;
+    allocated = false;  // Ensure allocated is set to false after memory deallocation
   }
 }
 
@@ -72,6 +70,8 @@ void PairSoftExclude::compute(int eflag, int vflag)
   numneigh = list->numneigh;
   firstneigh = list->firstneigh;
 
+  // fprintf(stderr, "Using N_ignore in compute, address = %p, N_ignore is %d\n", this, N_ignore);
+
   // loop over neighbors of my atoms
 
   for (ii = 0; ii < inum; ii++) {
@@ -85,22 +85,20 @@ void PairSoftExclude::compute(int eflag, int vflag)
 
     for (jj = 0; jj < jnum; jj++) {
       j = jlist[jj];
+      j &= NEIGHMASK;
 
-      if ((atom->molecule[i] == atom->molecule[j]) && (abs(i-j) < N_ignore)) {
-      // if the two atoms are in the same molecule 
-      // and their indexes distance is less than N_ignore
-        // Skip this pair
+      if ((atom->molecule[i] == atom->molecule[j]) && (abs(atom->tag[i] - atom->tag[j]) <= N_ignore)) {
         continue;
       }
 
       factor_lj = special_lj[sbmask(j)];
-      j &= NEIGHMASK;
 
       delx = xtmp - x[j][0];
       dely = ytmp - x[j][1];
       delz = ztmp - x[j][2];
       rsq = delx*delx + dely*dely + delz*delz;
       jtype = type[j];
+
 
       if (rsq < cutsq[itype][jtype]) {
         r = sqrt(rsq);
@@ -156,9 +154,22 @@ void PairSoftExclude::allocate()
 
 void PairSoftExclude::settings(int narg, char **arg)
 {
-  if (narg != 1) error->all(FLERR,"Illegal pair_style command");
+  if (narg != 2)  // Expect exactly two arguments
+        error->all(FLERR, "Illegal pair_style command, expected syntax: pair_style soft_exclude <cut_global> <N_ignore>");
 
-  cut_global = utils::numeric(FLERR,arg[0],false,lmp);
+    // Parse global cutoff from the first argument
+    cut_global = utils::numeric(FLERR, arg[0], false, lmp);
+
+    // Parse N_ignore from the second argument
+    N_ignore = utils::inumeric(FLERR, arg[1], false, lmp);
+
+    // Optionally, add error checking for the values
+    if (cut_global <= 0.0) {
+        error->all(FLERR, "Invalid cut_global value; must be positive");
+    }
+    if (N_ignore < 0) {
+        error->all(FLERR, "Invalid N_ignore value; must be non-negative");
+    }
 
   // reset cutoffs that have been explicitly set
 
@@ -176,7 +187,7 @@ void PairSoftExclude::settings(int narg, char **arg)
 
 void PairSoftExclude::coeff(int narg, char **arg)
 {
-  if (narg != 5)
+  if (narg < 3 || narg > 4)
     error->all(FLERR,"Incorrect args for pair coefficients");
   if (!allocated) allocate();
 
@@ -185,9 +196,8 @@ void PairSoftExclude::coeff(int narg, char **arg)
   utils::bounds(FLERR,arg[1],1,atom->ntypes,jlo,jhi,error);
 
   double prefactor_one = utils::numeric(FLERR,arg[2],false,lmp);
-  double cut_one = cut_global;
-  N_ignore = atoi(arg[4]);  
 
+  double cut_one = cut_global;
   if (narg == 4) cut_one = utils::numeric(FLERR,arg[3],false,lmp);
 
   int count = 0;
@@ -276,7 +286,9 @@ void PairSoftExclude::write_restart_settings(FILE *fp)
 {
   fwrite(&cut_global,sizeof(double),1,fp);
   fwrite(&mix_flag,sizeof(int),1,fp);
+  fwrite(&N_ignore, sizeof(int), 1, fp);
 }
+
 
 /* ----------------------------------------------------------------------
    proc 0 reads from restart file, bcasts
@@ -287,9 +299,11 @@ void PairSoftExclude::read_restart_settings(FILE *fp)
   if (comm->me == 0) {
     utils::sfread(FLERR,&cut_global,sizeof(double),1,fp,nullptr,error);
     utils::sfread(FLERR,&mix_flag,sizeof(int),1,fp,nullptr,error);
+    utils::sfread(FLERR,&N_ignore,sizeof(int),1,fp,nullptr,error); 
   }
   MPI_Bcast(&cut_global,1,MPI_DOUBLE,0,world);
   MPI_Bcast(&mix_flag,1,MPI_INT,0,world);
+  MPI_Bcast(&N_ignore,1,MPI_INT,0,world);
 }
 
 /* ----------------------------------------------------------------------
