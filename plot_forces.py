@@ -88,10 +88,9 @@ def read_lammps_dump(filename, xmin, xmax, ymin, ymax):
 
     return (forces, np.array(id_atom), np.array(atom_type), np.array(pe_atom), np.array(pos_atom), coord_atoms)
 
-def save_plot_1(data1, data2, data3, mol_range, N, bin):
+def save_plot_1(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
 
-    all_x = []
-    all_y = []
+    ylen = []
 
     lq = []
     med = []
@@ -102,13 +101,19 @@ def save_plot_1(data1, data2, data3, mol_range, N, bin):
         for k in range(len(data1[0])):
             if data3[t][k][0] in mol_range:
 
-                f_l = np.cumsum(np.array(data1[t][k]).ravel())
-                f_p = np.array(data2[t][k]).ravel()
 
-                lq.append((data3[t][k][0],np.percentile(f_p,25)))
-                med.append((data3[t][k][0],np.percentile(f_p,50)))
-                uq.append((data3[t][k][0],np.percentile(f_p,75)))
-                maxq.append((data3[t][k][0],np.percentile(f_p,99)))
+                f_l0 = np.sum(np.array(data1[0][k]).ravel())
+                f_l = np.sum(np.array(data1[t][k]).ravel())
+
+                ylen.append((data3[t][k][0],(f_l-f_l0)/f_l0))
+
+                f_p = np.array(data2[t][k]).ravel()
+                f_p0 = np.percentile(np.array(data2[0][k]).ravel(),50)
+
+                lq.append((data3[t][k][0],np.percentile(f_p,25)-f_p0))
+                med.append((data3[t][k][0],np.percentile(f_p,50)-f_p0))
+                uq.append((data3[t][k][0],np.percentile(f_p,75)-f_p0))
+                maxq.append((data3[t][k][0],np.percentile(f_p,99)-f_p0))
 
     labels = sorted(set(x for x, _ in lq))
 
@@ -121,27 +126,34 @@ def save_plot_1(data1, data2, data3, mol_range, N, bin):
     # Iterate over each label to create its subplot
     for ax, label in zip(axes, labels):
         # Extract data for the current label
+        
+        x_ylen, y_ylen = zip(*[(x, y) for x, y in ylen if x == label])
+
         x_lq, y_lq = zip(*[(x, y) for x, y in lq if x == label])
         x_med, y_med = zip(*[(x, y) for x, y in med if x == label])
         x_uq, y_uq = zip(*[(x, y) for x, y in uq if x == label])
         x_max, y_max = zip(*[(x, y) for x, y in maxq if x == label])
 
+        t = np.arange(1,len(y_ylen)+1)
         # Plot the data in the current axis
-        ax.plot(np.arange(len(data1))+1, y_max, color='red', zorder=2)
-        ax.plot(np.arange(len(data1))+1, y_med, color='orange', zorder=2)
-        ax.fill_between(np.arange(len(data1))+1, y_lq, y_uq, alpha=0.5, zorder=1)
+        ax.plot(t, y_ylen, '--', color='blue', zorder=2)
+        #ax.plot(t, y_max, color='red', zorder=2)
+        ax.plot(t, y_med, color='black', zorder=2)
+        ax.fill_between(t, y_lq, y_uq, alpha=0.5, zorder=1, color='gray')
 
         # Optional: set a title or a legend for each subplot
         ax.set_title(f"MolID: {label}")
-        ax.set_xlim(0, len(data1))
-
+        ax.set_xlim(1.0, np.max(t))
+        ax.set_ylim(yax_min, yax_max)
+        
         if label == labels[0]:
-            ax.set_ylabel('Potential Energy')
+            ax.set_ylabel('PE-PE(0)')
 
-    fig.text(0.5, 0.0,'Position (normalized)', va='top')  # Set x-axis label for each subplot or you can move this to only the bottom subplot        
+    fig.text(0.5, 0.0,'Iterations', va='top')  # Set x-axis label for each subplot or you can move this to only the bottom subplot        
     
+    plt.subplots_adjust(wspace=0.0)
     # Save the entire figure
-    plt.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_combined.png'), format='png', dpi=600, bbox_inches='tight', pad_inches=0)
+    plt.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_combined.png'), format='png', dpi=150, bbox_inches='tight', pad_inches=0)
 
     # Close the figure to free up memory
     plt.close(fig)
@@ -200,12 +212,14 @@ parser.add_argument('folder', type=str, help='The name of the dump file to be pr
 parser.add_argument('trj_file', type=str, help='The name of the dump file to be processed')
 parser.add_argument('--mol_r', nargs="+", type=int, help='Select the yarns (mol id)')
 parser.add_argument('--roi', nargs="+", type=float, help='Roi to consider PE')
+parser.add_argument('--yrange', nargs="+", type=float, help='Range for y plots')
 
 args = parser.parse_args()
 pattern_folder = args.folder
 dump_file = args.trj_file
 mol_r = args.mol_r
 xmin, xmax, ymin, ymax = args.roi
+yax_min, yax_max = args.yrange
 
 (force_data, id_data, atom_type, pe_data, pos, coord_atoms) = read_lammps_dump(os.path.join('output','simulations', pattern_folder, dump_file + '.lammpstrj'), xmin, xmax, ymin, ymax)
 
@@ -255,4 +269,5 @@ if len(mol_r) == 1:
 if len(mol_r) > 1:
     if len(mol_r) == 2:
         mol_r = range(mol_r[0], mol_r[1]+1)
-    save_plot_1(len_data, pe_sort, id_new, mol_r, 1e4, 1000)
+
+    save_plot_1(len_data, pe_sort, id_new, mol_r, 1e4, 1000, yax_min, yax_max)
