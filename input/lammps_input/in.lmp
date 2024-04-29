@@ -12,8 +12,8 @@ angle_style 	harmonic
 read_data ${folderdata}
 
 # Force Field Settings
-pair_style soft_exclude 1.0
-pair_coeff * * 200.0 8
+pair_style soft_exclude 1.0 16
+pair_coeff * * 200.0
 comm_modify cutoff 3.5
 
 # Dump command to output atom positions to a file
