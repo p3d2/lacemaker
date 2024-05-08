@@ -17,7 +17,7 @@ pair_coeff * * 200.0
 comm_modify cutoff 3.5
 
 # CHANGE BONDS
-bond_coeff ${bond1} ${k} ${r0}
+bond_coeff ${bond1} ${k1} ${r01}
 
 # Dump command to output atom positions to a file
 variable filedump string "${folderdump}${filename}.lammpstrj"
