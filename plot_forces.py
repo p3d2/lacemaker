@@ -9,9 +9,14 @@ import argparse, json, os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.colors as mcolors
+import matplotlib.gridspec as gridspec
 from scipy.fft import fft
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, RectBivariateSpline, RBFInterpolator
 from scipy.signal import find_peaks
+from scipy.stats import gaussian_kde
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 fg_color = 'black'
 bg_color = 'none'
@@ -30,6 +35,15 @@ mpl.rcParams['axes.edgecolor'] = fg_color  # Changes the edge color of the axes
 # Optionally, set a dark background for better contrast
 mpl.rcParams['figure.facecolor'] = bg_color
 mpl.rcParams['axes.facecolor'] = bg_color
+
+# Create the colormap
+cmap = plt.cm.turbo
+
+# Function to normalize and get color
+def get_color(value, vmin=0, vmax=0.675):
+    # Normalize value
+    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+    return cmap(norm(value))
 
 def read_lammps_dump(filename, xmin, xmax, ymin, ymax):
     with open(filename, 'r') as file:
@@ -158,53 +172,181 @@ def save_plot_1(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
     # Close the figure to free up memory
     plt.close(fig)
 
-def save_plot_2(data1, data2, data3, mol_range, N):
+def fill_between_3d(ax, X, Y, Z1, Z2, where=None, color='grey', alpha=0.5):
+    verts = []
+    for i in range(len(X)-1):
+        if where is None or (where[i] and where[i+1]):  # Check condition at each step
+            verts.append([
+                (X[i], Y[i], Z1[i]), (X[i], Y[i], Z2[i]),
+                (X[i+1], Y[i+1], Z2[i+1]), (X[i+1], Y[i+1], Z1[i+1])
+            ])
+    
+    # Create the PolyCollection object with the specified vertices
+    poly = Poly3DCollection(verts, facecolors=color, alpha=alpha)
+    ax.add_collection3d(poly)
 
-    fig, ax = plt.subplots()
+def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
+
+    Nbins = 100
+    bin_edges = np.linspace(0, 0.675, Nbins-1)  # 99 bins between 0 and 0.675
+    bin_edges = np.append(bin_edges, np.inf)
+
+    n_labels = len(mol_range)
+    #fig, axes = plt.subplots(nrows=1, ncols=n_labels, sharex=False, sharey=True, figsize=(5 * n_labels, 5))
+    fig = plt.figure(figsize=(5 * n_labels, 5))
     all_x = []
     all_y = []
     all_t = []
     
+    ylen = []
+
     lq = []
     med = []
     uq = []
+    maxq = []
 
+    pe_data = []
+    e_vec = np.linspace(0,0.675,1000)
     for t in range(len(data1)):
         for k in range(len(data1[0])):
             if data3[t][k][0] in mol_range:
-
-                f_l = np.cumsum(np.array(data1[t][k]).ravel())
+                f_l0 = np.sum(np.array(data1[0][k]).ravel())
+                f_l = np.sum(np.array(data1[t][k]).ravel())
                 f_p = np.array(data2[t][k]).ravel()
+                f_p = f_p[f_p > 0]
 
-                f_linear = interp1d(f_l, f_p)
-                xnew = np.linspace(f_l[0], f_l[-1], int(N+1))
-                ynew = f_linear(xnew)
+                #f_linear = interp1d(f_l, f_p)
+                #xnew = np.linspace(f_l[0], f_l[-1], int(N+1))
+                #ynew = f_linear(xnew)
 
-                all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
-                all_y.append(ynew + 0.01*t)
-
+                #all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
+                #all_y.append(ynew + 0.01*t)
+                ylen.append((data3[t][k][0],(f_l-f_l0)/f_l0))
                 lq.append((data3[t][k][0],np.percentile(f_p,25)))
                 med.append((data3[t][k][0],np.percentile(f_p,50)))
                 uq.append((data3[t][k][0],np.percentile(f_p,75)))
 
-    all_x_flat = np.array(all_x).ravel()
-    all_y_flat = np.array(all_y).ravel()
+                #hist, edges = np.histogram(np.array(data2[t][k]).ravel(), bins=bin_edges)
+                #pe_hist.append((data3[t][k][0], hist))
 
+                #density = gaussian_kde(np.array(data2[t][k]).ravel())
+                #density.covariance_factor = lambda: .1  # Smaller bandwidth makes the curve smoother
+                #density._compute_covariance()
+
+                density = gaussian_kde(f_p)
+                density.covariance_factor = lambda: .25  # Smaller bandwidth makes the curve smoother
+                density._compute_covariance()
+                
+                pe_data.append((data3[t][k][0].T, t+1, density(e_vec)))
+            
+                #mol_index = mol_range.index(data3[t][k][0])
+                #for q in range(len(f_p)):
+                #    axes[mol_index].plot(t, f_p[q], 'ko', alpha=0.05, markeredgecolor='none', markersize=2)
+
+    #all_x_flat = np.array(all_x).ravel()
+    #all_y_flat = np.array(all_y).ravel()
     #H, xedges, yedges = np.histogram2d(all_x_flat, all_y_flat, bins=bin)
     #ax.pcolormesh(xedges, yedges, H.T, shading='auto', cmap='turbo')#, vmax=100.0)
 
-    labels = set(x for x, _ in lq) 
-    for label in labels:
-        x_lq, y_lq = zip(*[(x, y) for x, y in lq if x == label])
-        x_med, y_med = zip(*[(x, y) for x, y in med if x == label])
-        x_uq, y_uq = zip(*[(x, y) for x, y in uq if x == label])
+    labels = sorted(set(x for x, _ in lq))
 
-        ax.plot(np.arange(len(data1)), y_med, color='black', zorder=2)  # Plotting the median line
-        ax.fill_between(np.arange(len(data1)), y_lq, y_uq, label = str(x_lq), alpha=0.5, zorder=1) 
+    if n_labels == 1:
+        axes = [axes]  # make it a list for consistent handling below
 
-    plt.xlabel('Time (iterations)')
-    plt.ylabel('PE')
-    plt.savefig(os.path.join(dump_file + '_' + '_'.join(map(str, mol_range)) + '.png'), format='png', dpi=300, bbox_inches='tight',pad_inches=0)
+    # # Iterate over each label to create its subplot
+    time_range = np.linspace(1,len(data1)+1, len(data1))
+
+    # for ax, label in zip(axes, labels):
+    # #     x_lq, y_lq = zip(*[(x, y) for x, y in lq if x == label])
+    #     x_med, y_med = zip(*[(x, y) for x, y in med if x == label])
+    #     x_uq, y_uq = zip(*[(x, y) for x, y in uq if x == label])
+
+    #     x_ylen, y_ylen = zip(*[(x, y) for x, y in ylen if x == label])
+
+    #     subsets = [(t, pes) for l, t, pes in pe_data if l == label]
+
+    #     t_pe = np.concatenate([[t] * len(pes) for t, pes in subsets])  # Time values repeated
+    #     z_pe = np.concatenate([pes for _, pes in subsets])
+    #     data = np.vstack([t_pe, z_pe])
+    #     kde = gaussian_kde(data, bw_method=[0.5, 0.1])
+    #     time_grid, energy_grid = np.meshgrid(time_range, pe_range)
+    #     kde_values = kde(np.vstack([time_grid.ravel(), energy_grid.ravel()])).reshape(time_grid.shape)
+
+    #     ax.pcolormesh(time_grid, energy_grid, kde_values, shading='nearest', cmap='turbo')
+    #     ax.plot(np.linspace(1,len(data1)+1,len(data1)), y_med, 'w--', alpha=0.1)
+    # #     ax.plot(np.arange(len(data1)), y_med, color='black', zorder=2)  # Plotting the median line
+    # #     ax.fill_between(np.arange(len(data1)), y_lq, y_uq, label = str(x_lq), alpha=0.5, zorder=1) 
+    #     ax.set_title(f"MolID: {label}")
+    #     #ax.set_xlim(1.0, np.max(t))
+    #     #ax.set_ylim(yax_min, yax_max)
+        
+    #     if label == labels[0]:
+    #         ax.set_ylabel('PE')
+
+    ###############################################################################################################
+    # Calculate KDE for each time and plot
+    new_t = np.linspace(time_range.min(), time_range.max(), 100)
+    interpolated_kdes = np.zeros((len(new_t), len(e_vec)))
+    gs = gridspec.GridSpec(1, n_labels, figure=fig)
+
+    #for ax, label in zip(axes, labels):
+    for i in range(n_labels):
+
+        _, _, kde_values = zip(*[(x, y, z) for x, y, z in pe_data if x == labels[i]])
+        _, y_med = zip(*[(x, y) for x, y in med if x == labels[i]])
+        _, y_uq = zip(*[(x, y) for x, y in uq if x == labels[i]])
+
+        kdes = np.array(kde_values)
+        #spline = RectBivariateSpline(time_range, e_vec, kdes, kx=1, ky=1)
+        #kde_interp = spline(new_t, e_vec).T
+        
+        #rbf = RBFInterpolator(np.array(np.meshgrid(time_range, e_vec)).reshape(2, -1).T, kdes.ravel(), kernel='gaussian', epsilon=3.0)
+        #kde_interp = rbf(np.array(np.meshgrid(new_t, e_vec)).reshape(2, -1).T).reshape(len(new_t), len(e_vec))
+
+        #for i, kde_values_at_pe in enumerate(np.array(kde_values)):  # Transpose to work along potential energy dimension
+        #    interp_func = interp1d(new_t, kde_values_at_pe, kind='cubic')  # Cubic interpolation
+        #    interpolated_kdes[i] = interp_func(e_vec)
+        
+        #ax.remove()  # Remove the 2D axis
+        #ax = fig.add_subplot(1, n_labels, np.where(axes == ax)[0][0] + 1, projection='3d')
+
+        ax = fig.add_subplot(gs[i], projection='3d')
+
+        for k in range(len(time_range)):
+            xl = np.full(len(e_vec), time_range[k])
+            yl = e_vec
+            zl = kdes[k]/np.amax(kdes[k])
+            ax.plot(xl, yl, zl, color='k', linewidth=0.5)
+            fill_between_3d(ax, xl, yl, zl*0, zl, color=get_color(y_med[k]), alpha=0.5)
+        ax.view_init(elev=75, azim=0)
+        ax.tick_params(axis='z', labelleft=False)
+
+        # Plot
+        #X, Y = np.meshgrid(time_range, e_vec)
+        #kde_interp = bisplev(X, Y, tck)
+        #ax.pcolormesh(X, Y, kdes.T, shading='nearest', cmap='turbo')
+        
+        #ax.plot(time_range, y_med, 'w', alpha=0.5, linewidth=2, zorder=2)
+        #x_positions = time_range[1:]-.5
+        #for xpos in x_positions:
+        #    ax.axvline(x=xpos, color='k', linewidth=1, zorder=1)  # Customize the line style as needed
+        ax.set_title(f"MolID: {labels[i]}")
+        ax.set_xlabel('')  # Label only the last subplot
+        ax.invert_xaxis()  # Optional: Invert y-axis if you prefer that format
+        # Turn off the grid
+        ax.grid(False)
+
+        # Set the limits of the plot
+        ax.set_xlim(1, max(time_range)+1)
+        ax.set_ylim(0, 0.675)
+        ax.set_zlim(0, 1)
+
+        ax.set_box_aspect([1, 1, 1], zoom=1.25)
+    # Label the shared y-axis
+    #axes[0].set_ylabel('Potential Energy')
+   
+    plt.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01, wspace=0.0, hspace=0.0)
+    plt.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_combined.png'), format='png', dpi=150, bbox_inches='tight', pad_inches=0)
     plt.close('all')
 
 parser = argparse.ArgumentParser(description='Processing dump file name')
@@ -263,11 +405,11 @@ for k in range(len(pe_data)):
     pe_sort.append(pe_yarn)  
     id_new.append(id_yarn)
 
-if len(mol_r) == 1:
-    save_plot_2(len_data, pe_sort, id_new, mol_r, 1e4)
+#if len(mol_r) == 1:
+save_plot_2(len_data, pe_sort, id_new, mol_r, 1e4, 1000, yax_min, yax_max)
 
-if len(mol_r) > 1:
-    if len(mol_r) == 2:
-        mol_r = range(mol_r[0], mol_r[1]+1)
-
-    save_plot_1(len_data, pe_sort, id_new, mol_r, 1e4, 1000, yax_min, yax_max)
+#if len(mol_r) > 1:
+#    if len(mol_r) == 2:
+#        mol_r = range(mol_r[0], mol_r[1]+1)
+#
+#    save_plot_1(len_data, pe_sort, id_new, mol_r, 1e4, 1000, yax_min, yax_max)
