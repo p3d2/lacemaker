@@ -18,6 +18,18 @@ from scipy.stats import gaussian_kde
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
+###patch start###
+from mpl_toolkits.mplot3d.axis3d import Axis
+if not hasattr(Axis, "_get_coord_info_old"):
+    def _get_coord_info_new(self, renderer):
+        mins, maxs, centers, deltas, tc, highs = self._get_coord_info_old(renderer)
+        mins += deltas / 4
+        maxs -= deltas / 4
+        return mins, maxs, centers, deltas, tc, highs
+    Axis._get_coord_info_old = Axis._get_coord_info  
+    Axis._get_coord_info = _get_coord_info_new
+###patch end###
+
 fg_color = 'black'
 bg_color = 'none'
 
@@ -193,7 +205,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
 
     n_labels = len(mol_range)
     #fig, axes = plt.subplots(nrows=1, ncols=n_labels, sharex=False, sharey=True, figsize=(5 * n_labels, 5))
-    fig = plt.figure(figsize=(5 * n_labels, 5))
+    fig = plt.figure(figsize=(5 * n_labels, 10))
     all_x = []
     all_y = []
     all_t = []
@@ -221,7 +233,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
 
                 #all_x.append((xnew-xnew[0])/(xnew[-1]-xnew[0]))
                 #all_y.append(ynew + 0.01*t)
-                ylen.append((data3[t][k][0],(f_l-f_l0)/f_l0))
+                ylen.append((data3[t][k][0],(np.mean(np.array(data1[t][k]).ravel())-0.25)/0.25))
                 lq.append((data3[t][k][0],np.percentile(f_p,25)))
                 med.append((data3[t][k][0],np.percentile(f_p,50)))
                 uq.append((data3[t][k][0],np.percentile(f_p,75)))
@@ -254,8 +266,8 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         axes = [axes]  # make it a list for consistent handling below
 
     # # Iterate over each label to create its subplot
-    time_range = np.linspace(1,len(data1)+1, len(data1))
-
+    time_range = np.linspace(1,len(data1), len(data1))
+   
     # for ax, label in zip(axes, labels):
     # #     x_lq, y_lq = zip(*[(x, y) for x, y in lq if x == label])
     #     x_med, y_med = zip(*[(x, y) for x, y in med if x == label])
@@ -287,7 +299,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
     # Calculate KDE for each time and plot
     new_t = np.linspace(time_range.min(), time_range.max(), 100)
     interpolated_kdes = np.zeros((len(new_t), len(e_vec)))
-    gs = gridspec.GridSpec(1, n_labels, figure=fig)
+    gs = gridspec.GridSpec(2, n_labels, figure=fig)
 
     #for ax, label in zip(axes, labels):
     for i in range(n_labels):
@@ -295,6 +307,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         _, _, kde_values = zip(*[(x, y, z) for x, y, z in pe_data if x == labels[i]])
         _, y_med = zip(*[(x, y) for x, y in med if x == labels[i]])
         _, y_uq = zip(*[(x, y) for x, y in uq if x == labels[i]])
+        _, y_ylen = zip(*[(x, y) for x, y in ylen if x == labels[i]])
 
         kdes = np.array(kde_values)
         #spline = RectBivariateSpline(time_range, e_vec, kdes, kx=1, ky=1)
@@ -310,16 +323,47 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         #ax.remove()  # Remove the 2D axis
         #ax = fig.add_subplot(1, n_labels, np.where(axes == ax)[0][0] + 1, projection='3d')
 
-        ax = fig.add_subplot(gs[i], projection='3d')
+        ax = fig.add_subplot(gs[0,i], projection='3d')
 
+        ax.patch.set_facecolor('none')
         for k in range(len(time_range)):
             xl = np.full(len(e_vec), time_range[k])
             yl = e_vec
             zl = kdes[k]/np.amax(kdes[k])
             ax.plot(xl, yl, zl, color='k', linewidth=0.5)
             fill_between_3d(ax, xl, yl, zl*0, zl, color=get_color(y_med[k]), alpha=0.5)
-        ax.view_init(elev=75, azim=0)
+        ax.view_init(86, -4, 86)
         ax.tick_params(axis='z', labelleft=False)
+
+        xmin, xmax = [1.0, max(time_range)]
+        ymin, ymax = [0.0, 0.675]
+        zmin, zmax = [0.0, 1.0]
+        xb = np.array([xmin, xmax, xmax, xmin, xmin])
+        yb = np.array([ymin, ymin, ymax, ymax, ymin]) 
+        zb = np.array([zmin, zmin, zmin, zmin, zmax])
+        edges_kw = dict(color='0.0', linewidth=0.5, linestyle='--', zorder=1e3)
+                
+        # for j in range(len(xb)-1):
+        #     ax.plot([xb[j], xb[j+1]], [yb[j], yb[j+1]], [zmax, zmax], **edges_kw)
+        #     ax.plot([xb[j], xb[j+1]], [yb[j], yb[j+1]], [zmin, zmin], **edges_kw)
+        #     ax.plot([xb[j], xb[j]], [yb[j], yb[j]], [zmin, zmax], **edges_kw)
+
+        # ax.plot([xb[-2], xb[-2]], [yb[-2], yb[-2]], [zmin, zmax], **edges_kw)
+        # Bottom face
+        ax.plot_surface(np.array([[xmin, xmin], [xmax, xmax]]),
+                np.array([[ymin, ymax], [ymin, ymax]]),
+                np.array([[zmin, zmin], [zmin, zmin]]),
+                color='0.0', alpha=0.1)
+
+        ax.plot_surface(np.array([[xmin, xmax], [xmin, xmax]]),
+                np.array([[ymax, ymax], [ymax, ymax]]),
+                np.array([[zmin, zmin], [zmax, zmax]]),
+                color='0.0', alpha=0.5)
+
+        ax.plot_surface(np.array([[xmax, xmax], [xmax, xmax]]),
+                np.array([[ymin, ymin], [ymax, ymax]]),
+                np.array([[zmin, zmax], [zmin, zmax]]),
+                color='0.0', alpha=0.3)
 
         # Plot
         #X, Y = np.meshgrid(time_range, e_vec)
@@ -332,16 +376,30 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         #    ax.axvline(x=xpos, color='k', linewidth=1, zorder=1)  # Customize the line style as needed
         ax.set_title(f"MolID: {labels[i]}")
         ax.set_xlabel('')  # Label only the last subplot
-        ax.invert_xaxis()  # Optional: Invert y-axis if you prefer that format
+        #ax.invert_xaxis()  # Optional: Invert y-axis if you prefer that format
         # Turn off the grid
         ax.grid(False)
-
+        ax.set_proj_type('ortho')
+        ax.autoscale(False)
         # Set the limits of the plot
-        ax.set_xlim(1, max(time_range)+1)
-        ax.set_ylim(0, 0.675)
-        ax.set_zlim(0, 1)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        ax.set_zlim(zmin, zmax)
 
         ax.set_box_aspect([1, 1, 1], zoom=1.25)
+
+        ax = fig.add_subplot(gs[1,i])
+        norm = mcolors.Normalize(vmin=0, vmax=0.675)
+        ax.plot(time_range, y_ylen, 'k')
+        ax.plot((xmin-1, xmax+1), (0,0), linestyle = '--', linewidth=0.5, color='gray')
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(yax_min, yax_max)
+
+        if i==0: ax.set_ylabel('$\Delta L$')
+        else:
+            ax.set_ylabel('')
+            ax.set_yticks([], [])
     # Label the shared y-axis
     #axes[0].set_ylabel('Potential Energy')
    
