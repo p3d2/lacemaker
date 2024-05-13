@@ -11,12 +11,15 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.gridspec as gridspec
+import matplotlib.ticker as ticker
 from scipy.fft import fft
 from scipy.interpolate import interp1d, RectBivariateSpline, RBFInterpolator
 from scipy.signal import find_peaks
 from scipy.stats import gaussian_kde
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from KDEpy import FFTKDE
+from scipy.stats import norm
 
 ###patch start###
 from mpl_toolkits.mplot3d.axis3d import Axis
@@ -197,10 +200,10 @@ def fill_between_3d(ax, X, Y, Z1, Z2, where=None, color='grey', alpha=0.5):
     poly = Poly3DCollection(verts, facecolors=color, alpha=alpha)
     ax.add_collection3d(poly)
 
-def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
+def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, yax_max, pemax):
 
     Nbins = 100
-    bin_edges = np.linspace(0, 0.675, Nbins-1)  # 99 bins between 0 and 0.675
+    bin_edges = np.linspace(0, pemax, Nbins-1)  # 99 bins between 0 and 0.675
     bin_edges = np.append(bin_edges, np.inf)
 
     n_labels = len(mol_range)
@@ -218,7 +221,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
     maxq = []
 
     pe_data = []
-    e_vec = np.linspace(0,0.675,1000)
+    e_vec = np.linspace(0,pemax,128)
     for t in range(len(data1)):
         for k in range(len(data1[0])):
             if data3[t][k][0] in mol_range:
@@ -235,8 +238,8 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
                 #all_y.append(ynew + 0.01*t)
                 ylen.append((data3[t][k][0],(np.mean(np.array(data1[t][k]).ravel())-0.25)/0.25))
                 lq.append((data3[t][k][0],np.percentile(f_p,25)))
-                med.append((data3[t][k][0],np.percentile(f_p,50)))
-                uq.append((data3[t][k][0],np.percentile(f_p,75)))
+                med.append((data3[t][k][0],np.median(f_p)))
+                uq.append((data3[t][k][0],np.max(f_p)))
 
                 #hist, edges = np.histogram(np.array(data2[t][k]).ravel(), bins=bin_edges)
                 #pe_hist.append((data3[t][k][0], hist))
@@ -245,11 +248,12 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
                 #density.covariance_factor = lambda: .1  # Smaller bandwidth makes the curve smoother
                 #density._compute_covariance()
 
-                density = gaussian_kde(f_p)
-                density.covariance_factor = lambda: .25  # Smaller bandwidth makes the curve smoother
-                density._compute_covariance()
-                
-                pe_data.append((data3[t][k][0].T, t+1, density(e_vec)))
+                #density = gaussian_kde(f_p, bw_method='silverman')
+                kde = FFTKDE(kernel='gaussian', bw='ISJ')
+                kde_values = kde.fit(f_p).evaluate(e_vec)
+
+                #pe_data.append((data3[t][k][0].T, t+1, density(e_vec)))
+                pe_data.append((data3[t][k][0].T, t+1, kde_values))
             
                 #mol_index = mol_range.index(data3[t][k][0])
                 #for q in range(len(f_p)):
@@ -310,6 +314,9 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         _, y_ylen = zip(*[(x, y) for x, y in ylen if x == labels[i]])
 
         kdes = np.array(kde_values)
+        xmin, xmax = [1.0, max(time_range)]
+        ymin, ymax = [0.0, pemax]
+        zmin, zmax = [0.0, 1.0]
         #spline = RectBivariateSpline(time_range, e_vec, kdes, kx=1, ky=1)
         #kde_interp = spline(new_t, e_vec).T
         
@@ -323,25 +330,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         #ax.remove()  # Remove the 2D axis
         #ax = fig.add_subplot(1, n_labels, np.where(axes == ax)[0][0] + 1, projection='3d')
 
-        ax = fig.add_subplot(gs[0,i], projection='3d')
 
-        ax.patch.set_facecolor('none')
-        for k in range(len(time_range)):
-            xl = np.full(len(e_vec), time_range[k])
-            yl = e_vec
-            zl = kdes[k]/np.amax(kdes[k])
-            ax.plot(xl, yl, zl, color='k', linewidth=0.5)
-            fill_between_3d(ax, xl, yl, zl*0, zl, color=get_color(y_med[k]), alpha=0.5)
-        ax.view_init(86, -4, 86)
-        ax.tick_params(axis='z', labelleft=False)
-
-        xmin, xmax = [1.0, max(time_range)]
-        ymin, ymax = [0.0, 0.675]
-        zmin, zmax = [0.0, 1.0]
-        xb = np.array([xmin, xmax, xmax, xmin, xmin])
-        yb = np.array([ymin, ymin, ymax, ymax, ymin]) 
-        zb = np.array([zmin, zmin, zmin, zmin, zmax])
-        edges_kw = dict(color='0.0', linewidth=0.5, linestyle='--', zorder=1e3)
                 
         # for j in range(len(xb)-1):
         #     ax.plot([xb[j], xb[j+1]], [yb[j], yb[j+1]], [zmax, zmax], **edges_kw)
@@ -349,61 +338,109 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, y_axmax):
         #     ax.plot([xb[j], xb[j]], [yb[j], yb[j]], [zmin, zmax], **edges_kw)
 
         # ax.plot([xb[-2], xb[-2]], [yb[-2], yb[-2]], [zmin, zmax], **edges_kw)
-        # Bottom face
-        ax.plot_surface(np.array([[xmin, xmin], [xmax, xmax]]),
-                np.array([[ymin, ymax], [ymin, ymax]]),
-                np.array([[zmin, zmin], [zmin, zmin]]),
-                color='0.0', alpha=0.1)
-
-        ax.plot_surface(np.array([[xmin, xmax], [xmin, xmax]]),
-                np.array([[ymax, ymax], [ymax, ymax]]),
-                np.array([[zmin, zmin], [zmax, zmax]]),
-                color='0.0', alpha=0.5)
-
-        ax.plot_surface(np.array([[xmax, xmax], [xmax, xmax]]),
-                np.array([[ymin, ymin], [ymax, ymax]]),
-                np.array([[zmin, zmax], [zmin, zmax]]),
-                color='0.0', alpha=0.3)
-
-        # Plot
-        #X, Y = np.meshgrid(time_range, e_vec)
-        #kde_interp = bisplev(X, Y, tck)
-        #ax.pcolormesh(X, Y, kdes.T, shading='nearest', cmap='turbo')
         
-        #ax.plot(time_range, y_med, 'w', alpha=0.5, linewidth=2, zorder=2)
-        #x_positions = time_range[1:]-.5
-        #for xpos in x_positions:
-        #    ax.axvline(x=xpos, color='k', linewidth=1, zorder=1)  # Customize the line style as needed
-        ax.set_title(f"MolID: {labels[i]}")
-        ax.set_xlabel('')  # Label only the last subplot
-        #ax.invert_xaxis()  # Optional: Invert y-axis if you prefer that format
-        # Turn off the grid
-        ax.grid(False)
-        ax.set_proj_type('ortho')
-        ax.autoscale(False)
-        # Set the limits of the plot
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
-        ax.set_zlim(zmin, zmax)
+        if 1==1:
+            ax = fig.add_subplot(gs[0,i])
+            X, Y = np.meshgrid(time_range, e_vec)
+        #kde_interp = bisplev(X, Y, tck)
+            zl = kdes
+            for k in range(len(time_range)):
+                zl[k] = kdes[k]/np.amax(kdes[k])
+            ax.pcolormesh(X, Y, zl.T, shading='nearest', cmap='turbo')
+            ax.plot(time_range, y_med, linestyle='--', color='w', linewidth=1, zorder=2, alpha=0.75)
+            #ax.scatter(time_range, y_med, s=16, facecolors='none', edgecolors='white', marker='o')
+            ax.scatter(time_range, y_med, s=10, facecolors='white', marker='o', zorder=3)
+            
+            x_positions = time_range[1:]-.5
+            for xpos in x_positions:
+                ax.axvline(x=xpos, color='k', linewidth=2, zorder=1)  # Customize the line style as needed
 
-        ax.set_box_aspect([1, 1, 1], zoom=1.25)
+            y2 = pemax
+            ax.set_title(f"MolID: {labels[i]}")
+            ax.set_xticks(np.arange(xmin, xmax, 10))
+            ax.set_xticks(np.arange(xmin, xmax, 2), minor=True)
+            ax.set_yticks(np.arange(0, y2+0.01, 0.1))
+            ax.set_yticks(np.arange(0, y2+0.01, 0.02), minor=True)
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(0, y2)
+            ax.set_xlabel('')
+            if i==0:
+                ax.set_ylabel(r'PE (KDE -> ISJ algorithm)')
+            else:
+                ax.set_ylabel(r'')
+                ax.set_yticks([], [])
 
+
+        # METHOD 2 waterfall style
+        if 1==2:
+            
+            ax = fig.add_subplot(gs[0,i], projection='3d')
+            ax.patch.set_facecolor('none')
+            for k in range(len(time_range)):
+                xl = np.full(len(e_vec), time_range[k])
+                yl = e_vec
+                zl = kdes[k]/np.amax(kdes[k])
+                ax.plot(xl, yl, zl, color='k', linewidth=0.5)
+                fill_between_3d(ax, xl, yl, zl*0, zl, color=get_color(y_med[k]), alpha=0.5)
+            ang_delta = 30
+            ax.view_init(elev=96, azim=ang_delta, roll=90+ang_delta)
+            ax.tick_params(axis='z', labelleft=False)
+
+            xb = np.array([xmin, xmax, xmax, xmin, xmin])
+            yb = np.array([ymin, ymin, ymax, ymax, ymin]) 
+            zb = np.array([zmin, zmin, zmin, zmin, zmax])
+            edges_kw = dict(color='0.0', linewidth=0.5, linestyle='--', zorder=1e3)
+            ax.plot_surface(np.array([[xmin, xmin], [xmax, xmax]]),
+                    np.array([[ymin, ymax], [ymin, ymax]]),
+                    np.array([[zmin, zmin], [zmin, zmin]]),
+                    color='0.0', alpha=0.1)
+                # ax.plot_surface(np.array([[xmin, xmax], [xmin, xmax]]),
+            #         np.array([[ymax, ymax], [ymax, ymax]]),
+            #         np.array([[zmin, zmin], [zmax, zmax]]),
+            #         color='0.0', alpha=0.5)
+
+            # ax.plot_surface(np.array([[xmax, xmax], [xmax, xmax]]),
+            #         np.array([[ymin, ymin], [ymax, ymax]]),
+            #         np.array([[zmin, zmax], [zmin, zmax]]),
+            #         color='0.0', alpha=0.3)
+            ax.set_title(f"MolID: {labels[i]}")
+            ax.set_xlabel(r'')  # Label only the last subplot
+            #ax.invert_xaxis()  # Optional: Invert y-axis if you prefer that format
+            # Turn off the grid
+            ax.grid(False)
+            ax.set_proj_type('ortho')
+            #ax.zaxis._axinfo['juggled'] = (1,2,2)
+            # Set the limits of the plot
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
+            ax.set_zlim(zmin, zmax)
+
+            ax.set_box_aspect([1, 1, 1], zoom=1.5)
+                
+
+        ## BOTTOM PLOTS ######################################
         ax = fig.add_subplot(gs[1,i])
-        norm = mcolors.Normalize(vmin=0, vmax=0.675)
+        norm = mcolors.Normalize(vmin=0, vmax=pemax)
         ax.plot(time_range, y_ylen, 'k')
         ax.plot((xmin-1, xmax+1), (0,0), linestyle = '--', linewidth=0.5, color='gray')
 
+        ax.set_xticks(np.arange(xmin, xmax+0.01, 10))
+        ax.set_xticks(np.arange(xmin, xmax+0.01, 2), minor=True)
+        ax.set_yticks(np.arange(yax_min, yax_max+0.01, 0.1))
+        ax.set_yticks(np.arange(yax_min, yax_max+0.01, 0.05), minor=True)
+
+
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(yax_min, yax_max)
+        ax.set_xlabel(r'Iterations')
 
-        if i==0: ax.set_ylabel('$\Delta L$')
+        if i==0:
+            ax.set_ylabel(r'$\Delta l/l_0, l_0=0.25$')
         else:
             ax.set_ylabel('')
             ax.set_yticks([], [])
-    # Label the shared y-axis
-    #axes[0].set_ylabel('Potential Energy')
    
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01, wspace=0.0, hspace=0.0)
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
     plt.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_combined.png'), format='png', dpi=150, bbox_inches='tight', pad_inches=0)
     plt.close('all')
 
@@ -419,7 +456,7 @@ pattern_folder = args.folder
 dump_file = args.trj_file
 mol_r = args.mol_r
 xmin, xmax, ymin, ymax = args.roi
-yax_min, yax_max = args.yrange
+yax_min, yax_max, pemax = args.yrange
 
 (force_data, id_data, atom_type, pe_data, pos, coord_atoms) = read_lammps_dump(os.path.join('output','simulations', pattern_folder, dump_file + '.lammpstrj'), xmin, xmax, ymin, ymax)
 
@@ -464,7 +501,7 @@ for k in range(len(pe_data)):
     id_new.append(id_yarn)
 
 #if len(mol_r) == 1:
-save_plot_2(len_data, pe_sort, id_new, mol_r, 1e4, 1000, yax_min, yax_max)
+save_plot_2(len_data, pe_sort, id_new, mol_r, 1e4, 1000, yax_min, yax_max, pemax)
 
 #if len(mol_r) > 1:
 #    if len(mol_r) == 2:
