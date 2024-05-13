@@ -5,6 +5,8 @@ channels:
 dependencies:
   - ovito=3.10.4
   - numpy
-  - pillow
-  - wand
-  - matplotlib
+  - scipy=1.13.0
+  - pillow=10.3.0
+  - wand=0.6.10
+  - matplotlib=3.8.4
+  - kdepy=1.1.9
