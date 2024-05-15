@@ -368,7 +368,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, yax_max, pemax)
                 ax.set_ylabel(r'PE (KDE -> ISJ algorithm)')
             else:
                 ax.set_ylabel(r'')
-                ax.set_yticks([], [])
+                ax.set_yticks([], minor=False)
 
 
         # METHOD 2 waterfall style
@@ -438,7 +438,7 @@ def save_plot_2(data1, data2, data3, mol_range, N, bin, yax_min, yax_max, pemax)
             ax.set_ylabel(r'$\Delta l/l_0, l_0=0.25$')
         else:
             ax.set_ylabel('')
-            ax.set_yticks([], [])
+            ax.set_yticks([], minor=False)
    
     plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
     plt.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_combined.png'), format='png', dpi=150, bbox_inches='tight', pad_inches=0)
