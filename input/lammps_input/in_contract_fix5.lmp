@@ -1,0 +1,52 @@
+# LAMMPS Input Script
+
+read_restart ${folderrestart}
+
+# Set force to zero on all atoms
+velocity all set 0.0 0.0 0.0
+
+neigh_modify every 100
+
+# Integrator Settings
+timestep        ${tstep}
+thermo          ${thermodump}
+thermo_style    custom step temp pe ke etotal
+
+# Dump command to output atom positions to a file
+variable filedump string "${folderdump}${filename}_contract_fix_${bond1}_${bond2}_${bond3}_${bond4}_${bond5}.lammpstrj"
+variable logdump string "${folderdump}${filename}_contract_fix_${bond1}_${bond2}_${bond3}_${bond4}_${bond5}.log"
+compute perAtomPE all pe/atom
+dump myDump all custom ${thermodump} ${filedump} id mol type x y z fx fy fz c_perAtomPE
+log ${logdump}
+
+# Run NVE
+fix freezef boundary setforce 0.0 0.0 0.0
+fix dragU all viscous ${visc}
+fix nve_all all nve
+label loop
+variable i loop ${nframes}
+
+    variable r0diff equal ${r0}-${i}*${dr0}
+    bond_coeff ${bond1} ${k} ${r0diff}
+    bond_coeff ${bond2} ${k} ${r0diff}
+    bond_coeff ${bond3} ${k} ${r0diff}
+    bond_coeff ${bond4} ${k} ${r0diff}
+    bond_coeff ${bond5} ${k} ${r0diff}
+    run ${thermodump}
+
+next i
+jump ${self} loop
+
+label loop2
+variable j loop ${nframes}
+
+    variable r0diff equal ${r0}-${nframes}*${dr0}+${j}*${dr0}
+    bond_coeff ${bond1} ${k} ${r0diff}
+    bond_coeff ${bond2} ${k} ${r0diff}    
+    bond_coeff ${bond3} ${k} ${r0diff}
+    bond_coeff ${bond4} ${k} ${r0diff}
+    bond_coeff ${bond5} ${k} ${r0diff}
+    run ${thermodump}
+
+next j
+jump ${self} loop2
