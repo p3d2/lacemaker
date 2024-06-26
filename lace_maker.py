@@ -27,19 +27,21 @@ def lr(value):
 def twist_points(tw_val):
     points = []
     twist = np.abs(tw_val)
-    if tw_val < 0:
-        # Generate points in a grid with twist as the maximum x and y values
-        for x in range(-twist, twist+1, twist):
-            for y in range(-twist, twist+1, twist):
-                if abs(x) + abs(y) == twist:  # Selecting perimeter points of a square grid
-                    points.append((x, y))
-    elif tw_val > 0:
-        # Generate points similarly but with x and y values switched
-        for x in range(-twist, twist+1, twist):
-            for y in range(-twist, twist+1, twist):
-                if abs(x) + abs(y) == twist:  # Selecting perimeter points of a square grid
-                    points.append((y, x))  # Switch x and y for 'r' label
-    return points
+    
+    theta = np.pi/4
+
+    x = -twist
+    y = -twist
+
+    for k in range(2*twist+1):
+        points.append((x, y))
+        if int( ((k-np.sign(tw_val))%4)/2 ) < 1:
+            y += 2
+        else:
+            x += 2
+            
+    rotated_points = [(x * np.cos(theta) - y * np.sin(theta), x * np.sin(theta) + y * np.cos(theta)) for x, y in points]
+    return rotated_points
 
 # Function to load unit pattern from json file
 def load_data(filepath):
