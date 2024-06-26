@@ -99,8 +99,7 @@ def generate_yarns(nodes, trs, u_yarns, rad):
         pt_z = crossing * z0
         
         if twists != 0:
-            print("not supposed")
-            aux_pts = twist_points(trs[2])
+            aux_pts = twist_points(twists)
             for k in range(len(aux_pts)):
                 px = pt_x + aux_pts[k][0]*rad
                 py = pt_y + aux_pts[k][1]*rad
@@ -109,7 +108,7 @@ def generate_yarns(nodes, trs, u_yarns, rad):
         else:
             points.append((pt_x, pt_y, pt_z))
 
-        if twists % 2: crossing = -crossing
+        if twists % 2 == 0: crossing = -crossing
         
         translations.append((trs[start_l][0], trs[start_l][1]))
         start_l += 1
@@ -397,7 +396,7 @@ def main():
 
     # Save pattern
     p0 = [nodes[str(unit_yarns[str(k)][1])] for k in range(len(unit_yarns))]
-    save_pattern(p0, path_trs, os.path.join('output','patterns_data',filename + '.png'))
+    #save_pattern(p0, path_trs, os.path.join('output','patterns_data',filename + '.png'))
 
     # Crop yarns -> Cut rectangular section
     yarns = [filter_points(yarn, roi_bounds) for yarn in yarns]
