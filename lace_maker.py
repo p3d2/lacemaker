@@ -6,7 +6,7 @@ Created on Wed Jan 24 17:25:02 2024
 """
 
 import numpy as np
-import argparse, json, os
+import argparse, json, os, math
 from scipy.interpolate import splprep, splev
 import matplotlib.pyplot as plt
 
@@ -26,7 +26,7 @@ def lr(value):
 # Function to generate auxiliary points for twisting
 def twist_points(tw_val):
     points = []
-    twist = abs(tw_val)
+    twist = np.abs(tw_val)
     if tw_val < 0:
         # Generate points in a grid with twist as the maximum x and y values
         for x in range(-twist, twist+1, twist):
@@ -70,7 +70,7 @@ def calc_translations(nodes, path_list):
 
         # Calculate twist value
         tw_val = lr(path[i + 1]) * nodes[str(next_crossing)][2]
-        
+    
         spatial_shifts.append((shift_x, shift_y, tw_val))
 
     return spatial_shifts
@@ -92,12 +92,14 @@ def generate_yarns(nodes, trs, u_yarns, rad):
         
         dx = trs[start_l][0]
         dy = trs[start_l][1]
+        twists = trs[start_l][2]
 
         pt_x += dx
         pt_y += dy
         pt_z = crossing * z0
         
-        if trs[2] != 0:
+        if twists != 0:
+            print("not supposed")
             aux_pts = twist_points(trs[2])
             for k in range(len(aux_pts)):
                 px = pt_x + aux_pts[k][0]*rad
@@ -107,9 +109,8 @@ def generate_yarns(nodes, trs, u_yarns, rad):
         else:
             points.append((pt_x, pt_y, pt_z))
 
-        if trs[2] % 0: crossing = -crossing
+        if twists % 2: crossing = -crossing
         
-        points.append((pt_x, pt_y, pt_z))
         translations.append((trs[start_l][0], trs[start_l][1]))
         start_l += 1
     
@@ -131,7 +132,7 @@ def smooth_yarn(points, arc_length=1.0, smoothness=3, num_points=int(1e5)):
     x, y, z = points.T
     
     # Create the spline
-    tck, u = splprep([x, y, z], s=smoothness)
+    tck, _ = splprep([x, y, z], s=smoothness)
 
     # Evaluate the spline at evenly spaced points
     u_even = np.linspace(0, 1, num_points)
@@ -381,7 +382,7 @@ def main():
         # Generate unit yarns
         yarn, translations = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)], r_tw)
         path_trs.append(translations)
-
+        
         # Extend unit yarns
         n1, vx1, vy1, n2, vx2, vy2, mol = unit_rep[str(k)]
         if mol > mol_max: mol_max = mol
