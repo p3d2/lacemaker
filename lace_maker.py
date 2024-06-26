@@ -22,15 +22,16 @@ def lr(value):
     return {'l': -1, 'r': 1}.get(value[-1], 0)
 
 # Function to generate auxiliary points for twisting
-def twist_points(label, twist):
+def twist_points(tw_val):
     points = []
-    if label == 'l':
+    twist = abs(tw_val)
+    if tw_val < 0:
         # Generate points in a grid with twist as the maximum x and y values
         for x in range(-twist, twist+1, twist):
             for y in range(-twist, twist+1, twist):
                 if abs(x) + abs(y) == twist:  # Selecting perimeter points of a square grid
                     points.append((x, y))
-    elif label == 'r':
+    elif tw_val > 0:
         # Generate points similarly but with x and y values switched
         for x in range(-twist, twist+1, twist):
             for y in range(-twist, twist+1, twist):
@@ -65,11 +66,14 @@ def calc_translations(nodes, path_list):
             shift_x += path_list['shifts'][str(pair_shift)][0]
             shift_y += path_list['shifts'][str(pair_shift)][1]
 
-        spatial_shifts.append((shift_x, shift_y, lr(path[i + 1])))
+        # Calculate twist value
+        tw_val = lr(path[i + 1]) * nodes[str(next_crossing)][2]
+        
+        spatial_shifts.append((shift_x, shift_y, tw_val))
 
     return spatial_shifts
 
-def generate_yarns(nodes, trs, u_yarns):
+def generate_yarns(nodes, trs, u_yarns, r):
     # Initialize the list of points with the starting node coordinates
     _, start_n, start_l, crossing, z0 = u_yarns
 
@@ -83,14 +87,24 @@ def generate_yarns(nodes, trs, u_yarns):
 
     for i in range(len(trs)-1):
         if start_l > (len(trs)-1): start_l = 0
-        pt_x += trs[start_l][0]
-        pt_y += trs[start_l][1]
-        pt_z = crossing * z0
-        crossing = -crossing
-
+        
         dx = trs[start_l][0]
         dy = trs[start_l][1]
 
+        if trs[2] != 0:
+            aux_pts = twist_points(trs[2])
+            for k in range(len(aux_pts)):
+                px = pt_x + dx + aux_pts[k][0]*r
+                py = pt_y + dy + aux_pts[k][1]*r
+                pz = crossing * z0
+                points.append((px, py, pz))
+
+        pt_x += dx
+        pt_y += dy
+        pt_z = crossing * z0
+        crossing = -crossing
+
+        
         points.append((pt_x, pt_y, pt_z))
         translations.append((trs[start_l][0], trs[start_l][1]))
         start_l += 1
@@ -321,6 +335,7 @@ def main():
     parser.add_argument('--ks1', type=float, default=30.0, help='Yarns stretching constant. Default: 30.0')
     parser.add_argument('--ks2', type=float, default=10.0, help='Special yarns stretching constant. Default: 10.0')
     parser.add_argument('--kb', type=float, default=5.0, help='Yarns bending constant. Default: 50.0')
+    parser.add_argument('--twist_distance', type=float, default=1.0, help='Distance between auxiliary points when twisting two yarns. Default: 1.0')
 
     # Parse arguments
     args = parser.parse_args()
@@ -346,6 +361,7 @@ def main():
     ks1 = args.ks1
     ks2 = args.ks2
     kb = args.kb
+    r_tw = args.twist_distance
     filename = args.json_file.split('/')[-1].split('.')[0] + '_' + str(dist_particles) + '_' + str(units) + '_' + str(threshold) + '_' + str(ks1) + '_' + str(kb)
     
     # Calculate translations between nodes of each path
@@ -359,7 +375,7 @@ def main():
     mol_max = 0
     for k in range(len(unit_yarns)):
         # Generate unit yarns
-        yarn, translations = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)])
+        yarn, translations = generate_yarns(nodes, path_translations[unit_yarns[str(k)][0]], unit_yarns[str(k)], r_tw)
         path_trs.append(translations)
 
         # Extend unit yarns
