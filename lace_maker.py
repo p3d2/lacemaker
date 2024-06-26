@@ -73,7 +73,7 @@ def calc_translations(nodes, path_list):
 
     return spatial_shifts
 
-def generate_yarns(nodes, trs, u_yarns, r):
+def generate_yarns(nodes, trs, u_yarns, rad):
     # Initialize the list of points with the starting node coordinates
     _, start_n, start_l, crossing, z0 = u_yarns
 
@@ -91,19 +91,21 @@ def generate_yarns(nodes, trs, u_yarns, r):
         dx = trs[start_l][0]
         dy = trs[start_l][1]
 
-        if trs[2] != 0:
-            aux_pts = twist_points(trs[2])
-            for k in range(len(aux_pts)):
-                px = pt_x + dx + aux_pts[k][0]*r
-                py = pt_y + dy + aux_pts[k][1]*r
-                pz = crossing * z0
-                points.append((px, py, pz))
-
         pt_x += dx
         pt_y += dy
         pt_z = crossing * z0
-        crossing = -crossing
+        
+        if trs[2] != 0:
+            aux_pts = twist_points(trs[2])
+            for k in range(len(aux_pts)):
+                px = pt_x + aux_pts[k][0]*rad
+                py = pt_y + aux_pts[k][1]*rad
+                pz = crossing * z0 * math.cos(k * math.pi / 2) # the cosine cycles over 1, 0, -1, 0, and so on
+                points.append((px, py, pz))        
+        else:
+            points.append((pt_x, pt_y, pt_z))
 
+        if trs[2] % 0: crossing = -crossing
         
         points.append((pt_x, pt_y, pt_z))
         translations.append((trs[start_l][0], trs[start_l][1]))
