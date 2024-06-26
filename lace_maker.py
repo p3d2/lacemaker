@@ -12,10 +12,9 @@ import matplotlib.pyplot as plt
 
 # Function to convert path nodes that have 'l' or 'r' to integer value
 def to_int(value):
-    # Remove last character if it's 'l' or 'r'
-    if value[-1] in 'lr':
-        return int(value[:-1])
-    return int(value)
+    if isinstance(value, str) and value[-1] in 'lr':
+        value = value[:-1]  # Modify string if it ends with 'l' or 'r'
+    return int(value) 
 
 # Function to check for 'l' or 'r' at the end
 def lr(value):
