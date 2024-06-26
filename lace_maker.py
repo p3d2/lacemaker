@@ -12,13 +12,16 @@ import matplotlib.pyplot as plt
 
 # Function to convert path nodes that have 'l' or 'r' to integer value
 def to_int(value):
-    if isinstance(value, str) and value[-1] in 'lr':
-        value = value[:-1]  # Modify string if it ends with 'l' or 'r'
-    return int(value) 
+    # Remove last character if it's 'l' or 'r'
+    val = str(value)
+    if val[-1] in 'lr':
+        return int(val[:-1])
+    return int(val)
 
 # Function to check for 'l' or 'r' at the end
 def lr(value):
-    return {'l': -1, 'r': 1}.get(value[-1], 0)
+    val = str(value)
+    return {'l': -1, 'r': 1}.get(val[-1], 0)
 
 # Function to generate auxiliary points for twisting
 def twist_points(tw_val):
