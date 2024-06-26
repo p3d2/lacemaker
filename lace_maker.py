@@ -21,6 +21,23 @@ def to_int(value):
 def lr(value):
     return {'l': -1, 'r': 1}.get(value[-1], 0)
 
+# Function to generate auxiliary points for twisting
+def twist_points(label, twist):
+    points = []
+    if label == 'l':
+        # Generate points in a grid with twist as the maximum x and y values
+        for x in range(-twist, twist+1, twist):
+            for y in range(-twist, twist+1, twist):
+                if abs(x) + abs(y) == twist:  # Selecting perimeter points of a square grid
+                    points.append((x, y))
+    elif label == 'r':
+        # Generate points similarly but with x and y values switched
+        for x in range(-twist, twist+1, twist):
+            for y in range(-twist, twist+1, twist):
+                if abs(x) + abs(y) == twist:  # Selecting perimeter points of a square grid
+                    points.append((y, x))  # Switch x and y for 'r' label
+    return points
+
 # Function to load unit pattern from json file
 def load_data(filepath):
     with open(filepath, 'r') as file:
@@ -54,7 +71,7 @@ def calc_translations(nodes, path_list):
 
 def generate_yarns(nodes, trs, u_yarns):
     # Initialize the list of points with the starting node coordinates
-    path_t, start_n, start_l, crossing, z0 = u_yarns
+    _, start_n, start_l, crossing, z0 = u_yarns
 
     points = []
     translations = []
@@ -70,6 +87,10 @@ def generate_yarns(nodes, trs, u_yarns):
         pt_y += trs[start_l][1]
         pt_z = crossing * z0
         crossing = -crossing
+
+        dx = trs[start_l][0]
+        dy = trs[start_l][1]
+
         points.append((pt_x, pt_y, pt_z))
         translations.append((trs[start_l][0], trs[start_l][1]))
         start_l += 1
