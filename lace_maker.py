@@ -10,6 +10,17 @@ import argparse, json, os
 from scipy.interpolate import splprep, splev
 import matplotlib.pyplot as plt
 
+# Function to convert path nodes that have 'l' or 'r' to integer value
+def to_int(value):
+    # Remove last character if it's 'l' or 'r'
+    if value[-1] in 'lr':
+        return int(value[:-1])
+    return int(value)
+
+# Function to check for 'l' or 'r' at the end
+def lr(value):
+    return {'l': -1, 'r': 1}.get(value[-1], 0)
+
 # Function to load unit pattern from json file
 def load_data(filepath):
     with open(filepath, 'r') as file:
@@ -23,8 +34,8 @@ def calc_translations(nodes, path_list):
     
     spatial_shifts = []
     for i in range(len(path) - 1):
-        current_crossing = path[i]
-        next_crossing = path[i + 1]
+        current_crossing = to_int(path[i])
+        next_crossing = to_int(path[i + 1])
         
         # Calculate the basic spatial shift
         shift_x = nodes[str(next_crossing)][0] - nodes[str(current_crossing)][0]
@@ -37,7 +48,7 @@ def calc_translations(nodes, path_list):
             shift_x += path_list['shifts'][str(pair_shift)][0]
             shift_y += path_list['shifts'][str(pair_shift)][1]
 
-        spatial_shifts.append((shift_x, shift_y))
+        spatial_shifts.append((shift_x, shift_y, lr(path[i + 1])))
 
     return spatial_shifts
 
@@ -296,6 +307,12 @@ def main():
     # Load data from the specified JSON file
     data = load_data(args.json_file)
     nodes = data['nodes']
+
+    # Load default value to type of crossing (0 is simple crossing)
+    for key, values in nodes.items():
+        if len(values) == 2:
+            values.append(0)
+
     paths = data['paths']
     unit_yarns = data['unit_yarns']
     unit_rep = data['unit_repetion']
