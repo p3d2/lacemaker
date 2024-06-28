@@ -24,11 +24,11 @@ def lr(value):
     return {'l': -1, 'r': 1}.get(val[-1], 0)
 
 # Function to generate auxiliary points for twisting
-def twist_points(tw_val):
+def twist_points(tw_val, ang):
     points = []
     twist = np.abs(tw_val)
     
-    theta = np.pi/4
+    theta = ang - np.pi/4
 
     x = -twist
     y = -twist
@@ -39,7 +39,7 @@ def twist_points(tw_val):
             y += 2
         else:
             x += 2
-            
+
     rotated_points = [(x * np.cos(theta) - y * np.sin(theta), x * np.sin(theta) + y * np.cos(theta)) for x, y in points]
     return rotated_points
 
@@ -73,9 +73,46 @@ def calc_translations(nodes, path_list):
         # Calculate twist value
         tw_val = lr(path[i + 1]) * nodes[str(next_crossing)][2]
     
-        spatial_shifts.append((shift_x, shift_y, tw_val))
+        spatial_shifts.append((shift_x, shift_y, tw_val, 0))
 
     return spatial_shifts
+
+# Calculate angles for special nodes
+def node_angle(trs, paths):
+    
+    special_node_indices = {}
+    seen_nodes = set()
+
+    # Iterate over each path and its content
+    for path_index, path_dict in enumerate(paths):
+        path = path_dict['path']
+        for node_index, node in enumerate(path):
+            if isinstance(node, str) and (node.endswith('l') or node.endswith('r')):  # Check for special node
+                numeric_key = node[:-1]  # Strip the last character to get the numeric prefix
+                if node in seen_nodes:
+                    raise ValueError(f"Duplicate node '{node}' found in paths, which is not allowed.")
+                seen_nodes.add(node)  # Add node to the set to track that it's been processed
+                
+                if numeric_key not in special_node_indices:
+                    special_node_indices[numeric_key] = []
+                special_node_indices[numeric_key].append((path_index, node_index))
+    
+    # Validate the count of indices per key
+    for key, indices in special_node_indices.items():
+        if len(indices) != 2:
+            raise ValueError(f"Special node '{key}' does not have exactly one 'l' and one 'r' entries, which is required to represent the twist between two yarns.")
+
+    for _, indices in special_node_indices.items():
+        (l1, u1), (l2, u2) = indices
+        # Angle in respect to (0,1) vector
+        angle = math.atan2(
+            trs[l1][u1-1][1] + trs[l2][u2-1][1],
+            trs[l1][u1-1][0] + trs[l2][u2-1][0]
+        )
+        trs[l1][u1-1] = trs[l1][u1-1][:3] + (angle,)
+        trs[l2][u2-1] = trs[l2][u2-1][:3] + (angle,)
+
+    return trs
 
 def generate_yarns(nodes, trs, u_yarns, rad):
     # Initialize the list of points with the starting node coordinates
@@ -87,9 +124,9 @@ def generate_yarns(nodes, trs, u_yarns, rad):
     pt_y = nodes[str(start_n)][1]
     pt_z = crossing * z0
     crossing = -crossing
-    points.append((pt_x, pt_y, pt_z))
+    #points.append((pt_x, pt_y, pt_z))
 
-    for i in range(len(trs)-1):
+    for i in range(len(trs)):
         if start_l > (len(trs)-1): start_l = 0
         
         dx = trs[start_l][0]
@@ -101,7 +138,8 @@ def generate_yarns(nodes, trs, u_yarns, rad):
         pt_z = crossing * z0
         
         if twists != 0:
-            aux_pts = twist_points(twists)
+            angle = trs[start_l][3]
+            aux_pts = twist_points(twists, angle)
             for k in range(len(aux_pts)):
                 px = pt_x + aux_pts[k][0]*rad
                 py = pt_y + aux_pts[k][1]*rad
@@ -111,7 +149,7 @@ def generate_yarns(nodes, trs, u_yarns, rad):
             points.append((pt_x, pt_y, pt_z))
 
         if twists % 2 == 0: crossing = -crossing
-        
+
         translations.append((trs[start_l][0], trs[start_l][1]))
         start_l += 1
     
@@ -341,7 +379,7 @@ def main():
     parser.add_argument('--ks1', type=float, default=30.0, help='Yarns stretching constant. Default: 30.0')
     parser.add_argument('--ks2', type=float, default=10.0, help='Special yarns stretching constant. Default: 10.0')
     parser.add_argument('--kb', type=float, default=5.0, help='Yarns bending constant. Default: 50.0')
-    parser.add_argument('--twist_distance', type=float, default=1.0, help='Distance between auxiliary points when twisting two yarns. Default: 1.0')
+    parser.add_argument('--twist_distance', type=float, default=0.5, help='Distance between auxiliary points when twisting two yarns. Default: 0.5')
 
     # Parse arguments
     args = parser.parse_args()
@@ -374,6 +412,8 @@ def main():
     path_translations = []
     for k in range(len(paths)):
         path_translations.append(calc_translations(nodes, paths[k]))
+    
+    path_translations = node_angle(path_translations, paths)
     
     # Create yarns
     yarns = []
