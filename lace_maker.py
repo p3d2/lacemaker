@@ -104,13 +104,19 @@ def node_angle(trs, paths):
 
     for _, indices in special_node_indices.items():
         (l1, u1), (l2, u2) = indices
+        size1 = len(trs[l1])
+        size2 = len(trs[l2])
         # Angle in respect to (0,1) vector
-        angle = math.atan2(
+        angle1 = math.atan2(
             trs[l1][u1-1][1] + trs[l2][u2-1][1],
             trs[l1][u1-1][0] + trs[l2][u2-1][0]
         )
-        trs[l1][u1-1] = trs[l1][u1-1][:3] + (angle,)
-        trs[l2][u2-1] = trs[l2][u2-1][:3] + (angle,)
+        angle2 = math.atan2(
+            trs[l1][u1 % size1][1] + trs[l2][u2 % size2][1],
+            trs[l1][u1 % size1][0] + trs[l2][u2 % size2][0]
+        ) # the mod operator ensures cyclic calculation of the 2 vectors
+        trs[l1][u1-1] = trs[l1][u1-1][:3] + ((angle1+angle2)/2,)
+        trs[l2][u2-1] = trs[l2][u2-1][:3] + ((angle1+angle2)/2,)
 
     return trs
 
