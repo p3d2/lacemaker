@@ -28,7 +28,7 @@ def twist_points(tw_val, ang):
     points = []
     twist = np.abs(tw_val)
     
-    theta = ang - np.pi/4
+    theta = ang - math.pi/4
 
     x = -twist
     y = -twist
@@ -171,7 +171,7 @@ def extend_points(points, n, vx, vy):
             extended_points.append((new_x, new_y, point[2]))
     return extended_points
 
-def smooth_yarn(points, arc_length=1.0, smoothness=3, num_points=int(1e5)):
+def smooth_yarn(points, arc_length=1.0, smoothness=0.01, num_points=int(2e5)):
     # Convert points to numpy array
     points = np.array(points)
     x, y, z = points.T
@@ -386,16 +386,16 @@ def main():
     parser.add_argument('--ks2', type=float, default=10.0, help='Special yarns stretching constant. Default: 10.0')
     parser.add_argument('--kb', type=float, default=5.0, help='Yarns bending constant. Default: 50.0')
     parser.add_argument('--twist_distance', type=float, default=0.5, help='Distance between auxiliary points when twisting two yarns. Default: 0.5')
-
+    parser.add_argument('--invert_y', type=float, default=-1.0, help='Invert the y axis. Default: -1.0 (invert)')
+    
     # Parse arguments
     args = parser.parse_args()
     
     # Load data from the specified JSON file
     data = load_data(args.json_file)
     nodes = data['nodes']
-
     # Load default value to type of crossing (0 is simple crossing)
-    for key, values in nodes.items():
+    for _, values in nodes.items():        
         if len(values) == 2:
             values.append(0)
 
@@ -412,8 +412,35 @@ def main():
     ks2 = args.ks2
     kb = args.kb
     r_tw = args.twist_distance
+    invert = args.invert_y
     filename = args.json_file.split('/')[-1].split('.')[0] + '_' + str(dist_particles) + '_' + str(units) + '_' + str(threshold) + '_' + str(ks1) + '_' + str(kb)
-    
+
+    # Invert y-axis
+    if invert < 0:
+        for key, values in nodes.items():
+            nodes[key] = [values[0], -values[1], values[2]]
+
+        for path in paths:
+            updated_path = []
+            for item in path["path"]:
+                if isinstance(item, str) and 'l' in item:
+                    updated_path.append(item.replace('l', 'r'))
+                elif isinstance(item, str) and 'r' in item:
+                    updated_path.append(item.replace('r', 'l'))
+                else:
+                    updated_path.append(item)
+            path["path"] = updated_path
+
+            for key, values in path["shifts"].items():
+                path["shifts"][key] = [values[0], -values[1]]
+        
+        for key, values in unit_rep.items():
+            values[2] = -values[2]  # Invert the 3rd element
+            values[5] = -values[5]  # Invert the 6th element
+            unit_rep[key] = values  # Assign the modified list back to the dictionary
+
+        roi_bounds['y_min'], roi_bounds['y_max'] = -roi_bounds['y_max'], -roi_bounds['y_min']
+
     # Calculate translations between nodes of each path
     path_translations = []
     for k in range(len(paths)):
@@ -447,6 +474,7 @@ def main():
     #save_pattern(p0, path_trs, os.path.join('output','patterns_data',filename + '.png'))
 
     # Crop yarns -> Cut rectangular section
+
     yarns = [filter_points(yarn, roi_bounds) for yarn in yarns]
     
     # Flatten the list of yarns
