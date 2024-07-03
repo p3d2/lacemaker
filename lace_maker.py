@@ -171,7 +171,7 @@ def extend_points(points, n, vx, vy):
             extended_points.append((new_x, new_y, point[2]))
     return extended_points
 
-def smooth_yarn(points, arc_length=1.0, smoothness=0.01, num_points=int(2e5)):
+def smooth_yarn(points, arc_length=1.0, smoothness=0.1, num_points=int(2e5)):
     # Convert points to numpy array
     points = np.array(points)
     x, y, z = points.T
