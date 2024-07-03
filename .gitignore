@@ -2,6 +2,7 @@ output/
 temp/
 log.lammps
 log.out
+old_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
