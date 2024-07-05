@@ -72,7 +72,7 @@ def calc_translations(nodes, path_list):
 
         # Calculate twist value
         tw_val = lr(path[i + 1]) * nodes[str(next_crossing)][2]
-    
+
         spatial_shifts.append((shift_x, shift_y, tw_val, 0))
 
     return spatial_shifts
@@ -117,7 +117,7 @@ def node_angle(trs, paths):
         ) # the mod operator ensures cyclic calculation of the 2 vectors
         trs[l1][u1-1] = trs[l1][u1-1][:3] + ((angle1+angle2)/2,)
         trs[l2][u2-1] = trs[l2][u2-1][:3] + ((angle1+angle2)/2,)
-
+        print(indices)
     return trs
 
 def generate_yarns(nodes, trs, u_yarns, rad):
@@ -447,7 +447,6 @@ def main():
         path_translations.append(calc_translations(nodes, paths[k]))
     
     path_translations = node_angle(path_translations, paths)
-    
     # Create yarns
     yarns = []
     path_trs = []
