@@ -117,13 +117,12 @@ def node_angle(trs, paths):
         ) # the mod operator ensures cyclic calculation of the 2 vectors
         trs[l1][u1-1] = trs[l1][u1-1][:3] + ((angle1+angle2)/2,)
         trs[l2][u2-1] = trs[l2][u2-1][:3] + ((angle1+angle2)/2,)
-        print(indices)
+
     return trs
 
 def generate_yarns(nodes, trs, u_yarns, rad):
     # Initialize the list of points with the starting node coordinates
     _, start_n, start_l, crossing, z0 = u_yarns
-
     points = []
     translations = []
     pt_x = nodes[str(start_n)][0]
@@ -138,6 +137,10 @@ def generate_yarns(nodes, trs, u_yarns, rad):
         dx = trs[start_l][0]
         dy = trs[start_l][1]
         twists = trs[start_l][2]
+
+        # Check if the fist node is a special node. If it is a special % 2 == 1, then there is no cross inversion
+        if i == 0 and abs(nodes[str(start_n)][2]) > 0 and nodes[str(start_n)][2] % 2 != 0:
+            crossing = -crossing
 
         pt_x += dx
         pt_y += dy
