@@ -36,8 +36,6 @@ Lacemaker is released under [MIT License](https://opensource.org/licenses/MIT). 
 
 This project is the result of collaborative efforts among researchers, engineers, and developers passionate about advancing computational methods in textile engineering. We express our gratitude to all contributors and the broader scientific community for their support and feedback.
 
-For more information, questions, or to contribute to the project, please visit our [GitHub repository](https://github.com/your-repo/lacemaker).
-
 ---
 
 This README is a starting point for the Lacemaker project, providing users and contributors with a clear understanding of the project's purpose, features, and how to engage with it. Adjustments and enhancements should be made as the project evolves and grows.
