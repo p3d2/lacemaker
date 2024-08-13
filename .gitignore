@@ -1,4 +1,5 @@
 output/
+test/
 temp/
 log.lammps
 log.out
