@@ -316,6 +316,10 @@ def calculate_angles(yarns, yarn_id):
 def write_lammps_data(yarns, yarn_id, bonds, angles, roi_bounds, dist, mass, units, ks1, ks2, kb, filename="yarns.txt"):
     with open(filename, 'w') as file:
         
+        if 1 == 1: # bring origin to 0
+            xmin = roi_bounds['x_min']
+            ymin = roi_bounds['y_min']
+
         # Write headers
         num_atoms = len(yarns)
         num_bonds = len(bonds)
@@ -334,8 +338,8 @@ def write_lammps_data(yarns, yarn_id, bonds, angles, roi_bounds, dist, mass, uni
         file.write(f"{num_angle_types} angle types\n\n")
         
         # Box bounds based on ROI
-        file.write(f"{(roi_bounds['x_min']-dist)*units} {(roi_bounds['x_max']+dist)*units} xlo xhi\n")
-        file.write(f"{(roi_bounds['y_min']-dist)*units} {(roi_bounds['y_max']+dist)*units} ylo yhi\n")
+        file.write(f"{(roi_bounds['x_min']-dist - xmin)*units} {(roi_bounds['x_max']+dist - xmin)*units} xlo xhi\n")
+        file.write(f"{(roi_bounds['y_min']-dist - ymin)*units} {(roi_bounds['y_max']+dist - ymin)*units} ylo yhi\n")
         file.write(f"{(roi_bounds['z_min']-dist)*units} {(roi_bounds['z_max']+dist)*units} zlo zhi\n\n")
         
         # Masses section
@@ -347,7 +351,7 @@ def write_lammps_data(yarns, yarn_id, bonds, angles, roi_bounds, dist, mass, uni
         file.write("\nAtoms\n\n")
         for k, yarn in enumerate(yarns):
             atom_type, x, y, z = yarn
-            file.write(f"{k+1} {yarn_id[k]+1} {atom_type} {x*units} {y*units} {z*units}\n")
+            file.write(f"{k+1} {yarn_id[k]+1} {atom_type} {(x - xmin)*units} {(y - ymin)*units} {z*units}\n")
 
         # Bonds section
         file.write("\nBonds\n\n")
