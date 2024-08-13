@@ -10,6 +10,17 @@ from matplotlib.patches import Patch
 import tkinter as tk
 from tkinter import Canvas, Scrollbar, IntVar, ttk, messagebox, filedialog
 from PIL import Image, ImageTk
+import subprocess
+import tkinter.messagebox as msgbox
+
+def run_simulations():
+    try:
+        # Replace 'script1.py' and 'script2.py' with your actual script names and paths
+        subprocess.run(["python", "script1.py"], check=True)
+        subprocess.run(["python", "script2.py"], check=True)
+        msgbox.showinfo("Simulation Status", "The simulation finished successfully.")
+    except subprocess.CalledProcessError as e:
+        msgbox.showerror("Simulation Error", f"An error occurred during the simulations: {e}")
 
 def open_combobox():
     # Function to simulate opening the combobox
@@ -45,6 +56,7 @@ def on_file_select(event):
         interior.bind("<Configure>", lambda event, canvas=canvas: onFrameConfigure(canvas))
 
         create_node_buttons(data, interior, canvas)  # Pass the interior and canvas
+        create_path_checkboxes()
         draw_graph()
 
 def clear_node_buttons(frame):
@@ -141,6 +153,26 @@ def to_int(value):
     if val[-1] in 'lr':
         return int(val[:-1])
     return int(val)
+
+def create_path_checkboxes():
+    global checkbox_vars
+    checkbox_vars = []
+
+    # Clear existing widgets
+    for widget in shrink_frame.winfo_children():
+        widget.destroy()
+
+    # Add the 'Shrink' label
+    shrink_label = ttk.Label(shrink_frame, text="Shrink", background='white')
+    shrink_label.pack(side="left", padx=(0, 10))
+
+    # Create checkboxes
+    num_paths = len(data['unit_yarns'].items())
+    for i in range(num_paths):
+        var = tk.IntVar(value=0)
+        chk = ttk.Checkbutton(shrink_frame, text=f"{i+1}", variable=var, style='White.TCheckbutton')
+        chk.pack(side="left", padx=5)
+        checkbox_vars.append(var)
 
 def draw_graph():
     if not data_loaded:
@@ -326,7 +358,7 @@ def draw_graph():
     figure_canvas.draw()  # Redraw the canvas with the updated graph
     figure_canvas2.draw()
 
-folder = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\input\json_patterns'
+folder = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\input\json_patterns_small'
 file_paths = get_files(folder)
 plt.rcParams['font.family'] = 'monospace'
 plt.rcParams['font.monospace'] = ['Source Code Pro']
@@ -349,6 +381,7 @@ style.configure("Active.TButton", background="#c0e4c0")
 style.configure('White.TFrame', background='#ffffff')
 style.configure("BoldLabel.TLabel", font=('Source Code Pro', 12, 'bold'), foreground="grey", background='#ffffff')
 style.configure('TCombobox', arrowsize=0)  # Adjust padding as necessary
+style.configure('White.TCheckbutton', background='white')
 
 # Define left and right panels
 left_panel = ttk.Frame(root, width=400, relief=tk.RIDGE, style = 'White.TFrame')
@@ -432,6 +465,16 @@ update_button.pack(side="left", padx=5, expand=True)
 update_button.photo = update_ico# keep a reference to the image to avoid garbage collection
 update_button.pack()
 
+# Run Simulations Button
+icon_path_run = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\run.png'
+run_ico = ImageTk.PhotoImage(Image.open(icon_path_run))
+
+run_button = ttk.Button(buttons_frame, image=run_ico, text="Run", compound="left")
+run_button.pack(side="left", padx=5)  # Ensure it's packed before the save button
+run_button.photo = run_ico  # Keep a reference to avoid garbage collection
+
+run_button.config(command=run_simulations)
+
 # Save All Changes Button
 icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\save.png'
 global save_ico
@@ -453,16 +496,19 @@ coordinates_frame.pack(fill='x', padx=10, expand=True)
 
 # X Coordinate Entry
 x_label = ttk.Label(coordinates_frame, text="X:", style = 'BoldLabel.TLabel')
-x_label.pack(side="left", padx=(20, 0))
+x_label.pack(side="left", padx=(5, 0))
 x_entry = ttk.Entry(coordinates_frame, textvariable=x_var, font=('Source Code Pro', 14), width=10)
 x_entry.pack(side="left", padx=(0, 40))
 
 # Y Coordinate Entry
 y_label = ttk.Label(coordinates_frame, text="Y:", style = 'BoldLabel.TLabel')
-y_label.pack(side="left", padx=(20, 0))
+y_label.pack(side="left", padx=(5, 0))
 y_entry = ttk.Entry(coordinates_frame, textvariable=y_var, font=('Source Code Pro', 14), width=10)
 y_entry.pack(side="left")
 
+shrink_frame = ttk.Frame(coordinates_frame, style='White.TFrame')
+shrink_frame.pack(side="left", fill='x', padx=(5, 0))
+    
 setup_initial_state()    
 draw_graph()
 root.mainloop()
