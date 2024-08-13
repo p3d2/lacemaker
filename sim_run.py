@@ -1,13 +1,13 @@
-import os
+import os, sys
 from lammps import PyLammps
 
 os.environ['OMP_NUM_THREADS'] = '4'
 
 # Input
 
-folderdata = "output/lammps_data/pattern1024_0.5_1.0_0.0_30.0_5.0.data"  # Define your folder path here
+folderdata = sys.argv[1]
+filename = os.path.splitext(os.path.basename(folderdata))[0] 
 folderdump = "test/"  # Define your output path here
-filename = "pattern1024_0.5_1.0_0.0_30.0_5.0"  # Define your filename here
 thermodump = 10000  # Define thermo output frequency
 xmin, xmax, ymin, ymax = 1.5, 63.0, 1.5, 63.0  # Define dimensions as per your simulation box
 visc1 = 0.1  # Define viscosity parameter for simulation 1
