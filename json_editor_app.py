@@ -376,14 +376,14 @@ button_frame = ttk.Frame(left_panel, style = 'White.TFrame')
 button_frame.pack(fill="both", expand=True)
 
 # Embedding the matplotlib figure within the right panel's canvas
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(10, 10))
 figure_canvas = FigureCanvasTkAgg(fig, master=tk_canvas)
 figure_canvas.draw()
 canvas_widget = figure_canvas.get_tk_widget()
 canvas_widget.pack(side="top", fill="both", expand=True)
 
 # Setup for the second matplotlib figure
-fig2, ax2 = plt.subplots(figsize=(8.5, 8.5))
+fig2, ax2 = plt.subplots(figsize=(7.5, 7.5))
 figure_canvas2 = FigureCanvasTkAgg(fig2, master=figure_frame)
 figure_canvas2.draw()
 canvas_widget2 = figure_canvas2.get_tk_widget()
@@ -400,7 +400,6 @@ y_var = tk.DoubleVar()
 buttons_frame = ttk.Frame(controls_frame, style = 'White.TFrame')
 buttons_frame.pack(fill='y', padx=10, expand=True)
 buttons_frame.grid_propagate(False)
-buttons_frame.config(width=200, height=100)
 
 # Load JSON Button
 #load_button = ttk.Button(buttons_frame, text="Load JSON", command=lambda: load_json_file())
