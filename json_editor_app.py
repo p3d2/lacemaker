@@ -12,12 +12,26 @@ from tkinter import Canvas, Scrollbar, IntVar, ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 import subprocess
 import tkinter.messagebox as msgbox
+import datetime
 
 def run_simulations():
+    # First, save the data and get the new file path
+    fp = save_data()
+    if not fp:
+        return  # Exit if saving failed or no file was loaded
+
     try:
-        # Replace 'script1.py' and 'script2.py' with your actual script names and paths
-        subprocess.run(["python", "script1.py"], check=True)
-        subprocess.run(["python", "script2.py"], check=True)
+        filename = os.path.splitext(os.path.basename(fp))[0]
+        # Local python script execution using the new file path
+        command1 = ["python", "lace_maker.py", fp,
+                    "--dist_particles=0.", "--units=1.0",
+                    "--mass=1.0", "--threshold=0.0"]
+        command2 = ["python", "sim_run.py", 
+                    os.path.join("output", "lammps_data", 
+                                 f"{filename}_0.5_1.0_0.0_30.0_5.0.data")]
+        
+        subprocess.run(command1, check=True)
+        subprocess.run(command2, check=True)
         msgbox.showinfo("Simulation Status", "The simulation finished successfully.")
     except subprocess.CalledProcessError as e:
         msgbox.showerror("Simulation Error", f"An error occurred during the simulations: {e}")
@@ -104,12 +118,18 @@ def load_json_file():
         
 def save_data():
     if data_file:
-        new_filepath = data_file.replace('.json', '_new.json')
+        # Generate the current timestamp
+        timestamp = datetime.datetime.now().strftime('%y%m%d%H%M')
+        new_filepath = data_file.replace('.json', f'_{timestamp}.json')
+        
         with open(new_filepath, 'w') as file:
-            json.dump({"nodes": data}, file, indent=4)
+            json.dump(data, file, indent=4, separators=(',',':'))
+
         messagebox.showinfo("Save Data", "Data saved successfully to " + new_filepath)
+        return new_filepath  # Return the new file path for further use
     else:
         messagebox.showerror("Error", "No file loaded to save. Please load a file first.")
+        return None  # Return None if no file was saved
 
 def setup_initial_state():
     global fig, ax, figure_canvas, fig2, ax2, figure_canvas2
@@ -358,7 +378,8 @@ def draw_graph():
     figure_canvas.draw()  # Redraw the canvas with the updated graph
     figure_canvas2.draw()
 
-folder = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\input\json_patterns_small'
+#folder = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\input\json_patterns_small'
+folder = r'input/json_patterns_small'
 file_paths = get_files(folder)
 plt.rcParams['font.family'] = 'monospace'
 plt.rcParams['font.monospace'] = ['Source Code Pro']
@@ -366,7 +387,7 @@ plt.rcParams['font.monospace'] = ['Source Code Pro']
 # Initialize the main window
 root = tk.Tk()
 root.title("Node Editor")
-root.state('zoomed')  # Maximize the window
+root.state('normal')  # Maximize the window
 current_node_var = IntVar()
 data = {}
 data_file = None  # Initialize as None or with a default path if applicable
@@ -437,7 +458,8 @@ buttons_frame.grid_propagate(False)
 # Load JSON Button
 #load_button = ttk.Button(buttons_frame, text="Load JSON", command=lambda: load_json_file())
 #load_button.pack(side="left", padx=5, expand=True)
-icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\load.png'
+#icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\load.png'
+icon_path = r'ico/load.png'
 global load_ico
 image = Image.open(icon_path)
 load_ico = ImageTk.PhotoImage(image)
@@ -455,7 +477,8 @@ button.pack(side="left", padx=(0, 10))
 button.image = load_ico
 
 # Update Node Button
-icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\update.png'
+#icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\update.png'
+icon_path = r'ico/update.png'
 global update_ico
 image = Image.open(icon_path)
 update_ico = ImageTk.PhotoImage(image)
@@ -466,7 +489,8 @@ update_button.photo = update_ico# keep a reference to the image to avoid garbage
 update_button.pack()
 
 # Run Simulations Button
-icon_path_run = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\run.png'
+#icon_path_run = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\run.png'
+icon_path_run = r'ico/run.png'
 run_ico = ImageTk.PhotoImage(Image.open(icon_path_run))
 
 run_button = ttk.Button(buttons_frame, image=run_ico, text="Run", compound="left")
@@ -476,7 +500,8 @@ run_button.photo = run_ico  # Keep a reference to avoid garbage collection
 run_button.config(command=run_simulations)
 
 # Save All Changes Button
-icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\save.png'
+#icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\save.png'
+icon_path = r'ico/save.png'
 global save_ico
 image = Image.open(icon_path)
 save_ico = ImageTk.PhotoImage(image)
