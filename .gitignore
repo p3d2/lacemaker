@@ -4,6 +4,7 @@ temp/
 log.lammps
 log.out
 old_files/
+input/json_patterns_small/custom/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
