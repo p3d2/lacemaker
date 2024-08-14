@@ -1,0 +1,73 @@
+# Initialization settings
+units lj
+atom_style molecular
+boundary m m m
+
+# Set bond and angle styles
+bond_style harmonic
+angle_style harmonic
+
+# Read data from a file (please set this path manually or pass it through a variable)
+read_data output/lammps_data/pattern1024_2408141144_0.5_1.0_0.0_30.0_5.0.data
+
+# Define force field settings
+pair_style soft_exclude 1.0 8
+pair_coeff * * 100.0
+comm_modify cutoff 3.5
+
+# Output settings
+timestep 0.01
+variable thermodump equal 5000
+variable iter equal 10
+
+variable filedump string test/test.lammpstrj
+variable logdump string test/test.log
+compute perAtomPE all pe/atom
+dump myDump all custom ${thermodump} ${filedump} id mol type x y z
+log ${logdump}
+
+# Define regions and groups
+region left_block block INF 1.5 INF INF INF INF units box
+region right_block block 63.0 INF INF INF INF INF units box
+region bottom_block block INF INF INF 1.5 INF INF units box
+region top_block block INF INF 63.0 INF INF INF units box
+group left_wall region left_block
+group right_wall region right_block
+group bottom_wall region bottom_block
+group top_wall region top_block
+group boundary union left_wall right_wall bottom_wall top_wall
+
+# Apply fixes
+fix freezef boundary setforce 0.0 0.0 0.0
+fix dragU all viscous 0.1
+fix nve_all all nve
+
+# Minimization settings
+minimize 1.0e-6 1.0e-7 10000 100000
+neigh_modify every 100
+
+# Integrator settings
+thermo ${thermodump}
+thermo_style custom step temp pe ke etotal
+
+# Run 1st simulation -> Stabilization
+variable filerestart string test/sim1.restart
+run ${thermodump}
+
+# Run 2nd simulation -> Contraction
+unfix dragU
+fix dragU all viscous 0.1
+
+label loopa
+variable i loop ${iter}
+variable r0diff equal 0.5-$i*0.04
+bond_coeff 1 30.0 ${r0diff}
+bond_coeff 2 30.0 ${r0diff}
+bond_coeff 3 30.0 ${r0diff}
+bond_coeff 4 30.0 ${r0diff}
+bond_coeff 5 30.0 ${r0diff}
+bond_coeff 6 30.0 ${r0diff}
+run ${thermodump}
+
+next i
+jump SELF loopa

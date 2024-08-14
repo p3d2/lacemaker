@@ -1,23 +1,32 @@
-import os, sys
+import os, argparse
 from lammps import PyLammps
 
-os.environ['OMP_NUM_THREADS'] = '4'
+parser = argparse.ArgumentParser(description="Run LAMMPS simulations with specified options.")
+parser.add_argument('folderdata', type=str, help='Path to the input data folder.')
+parser.add_argument('--shrink', type=str, default='', help='Comma-separated list of active boxes indices.')
+
+os.environ['OMP_NUM_THREADS'] = '8'
 
 # Input
+args = parser.parse_args()
+folderdata = args.folderdata
+if args.shrink:
+    shrink = [int(index) for index in args.shrink.split(',')]
+else:
+    shrink = []
 
-folderdata = sys.argv[1]
 filename = os.path.splitext(os.path.basename(folderdata))[0] 
 folderdump = "test/"  # Define your output path here
-thermodump = 10000  # Define thermo output frequency
+thermodump = 5000  # Define thermo output frequency
 xmin, xmax, ymin, ymax = 1.5, 63.0, 1.5, 63.0  # Define dimensions as per your simulation box
 visc1 = 0.1  # Define viscosity parameter for simulation 1
-visc2 = 0.05  # Define viscosity parameter for simulation 2
-tstep = 0.005  # Define timestep
+visc2 = 0.1  # Define viscosity parameter for simulation 2
+tstep = 0.01  # Define timestep
 nframes1 = 1  # Define number of frames for simulation 1
-nframes2 = 19  # Define number of frames for simulation 2
+nframes2 = 10 # Define number of frames for simulation 2
 kb = 30.0
 r0 = 0.5  # Initial bond length
-dr0 = 0.01  # Change in bond length per frame
+dr0 = 0.04  # Change in bond length per frame
 
 # Initialize PyLammps
 L = PyLammps()
@@ -83,6 +92,6 @@ L.fix("dragU all viscous", visc2)
 
 for i in range(nframes2):
     r0diff = r0 - (i+1) * dr0
-    L.command(f"bond_coeff {1} {kb} {r0diff}")
-    L.command(f"bond_coeff {2} {kb} {r0diff}")
+    for bond in shrink:
+        L.command(f"bond_coeff {bond} {kb} {r0diff}")
     L.run(thermodump)
