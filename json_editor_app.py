@@ -16,19 +16,22 @@ import datetime
 
 def run_simulations():
     # First, save the data and get the new file path
-    fp = save_data()
+    fp = save_data(False)
     if not fp:
         return  # Exit if saving failed or no file was loaded
 
     try:
         filename = os.path.splitext(os.path.basename(fp))[0]
+        active_checkboxes = get_active_checkboxes()
         # Local python script execution using the new file path
         command1 = ["python", "lace_maker.py", fp,
-                    "--dist_particles=0.", "--units=1.0",
+                    "--dist_particles=0.5", "--units=1.0",
                     "--mass=1.0", "--threshold=0.0"]
         command2 = ["python", "sim_run.py", 
                     os.path.join("output", "lammps_data", 
-                                 f"{filename}_0.5_1.0_0.0_30.0_5.0.data")]
+                                 f"{filename}_0.5_1.0_0.0_30.0_5.0.data"),
+                    "--shrink="+active_checkboxes]
+        #command2 = ["sbatch", "sim_run.sh"]
         
         subprocess.run(command1, check=True)
         subprocess.run(command2, check=True)
@@ -116,16 +119,19 @@ def load_json_file():
             create_node_buttons(data, button_frame)
         draw_graph()
         
-def save_data():
+def save_data(trigger_message):
     if data_file:
         # Generate the current timestamp
+        directory, filename = os.path.split(data_file)
         timestamp = datetime.datetime.now().strftime('%y%m%d%H%M')
-        new_filepath = data_file.replace('.json', f'_{timestamp}.json')
+        new_filename = f"{os.path.splitext(filename)[0]}_{timestamp}{os.path.splitext(filename)[1]}"
+        new_filepath = os.path.join(os.path.join(directory, "custom"), new_filename)
         
         with open(new_filepath, 'w') as file:
             json.dump(data, file, indent=4, separators=(',',':'))
 
-        messagebox.showinfo("Save Data", "Data saved successfully to " + new_filepath)
+        if trigger_message:
+            messagebox.showinfo("Save Data", "Data saved successfully to " + new_filepath)
         return new_filepath  # Return the new file path for further use
     else:
         messagebox.showerror("Error", "No file loaded to save. Please load a file first.")
@@ -193,6 +199,10 @@ def create_path_checkboxes():
         chk = ttk.Checkbutton(shrink_frame, text=f"{i+1}", variable=var, style='White.TCheckbutton')
         chk.pack(side="left", padx=5)
         checkbox_vars.append(var)
+
+def get_active_checkboxes():
+    active_indices = [str(index) for index, var in enumerate(checkbox_vars, start=1) if var.get() == 1]
+    return ','.join(active_indices) 
 
 def draw_graph():
     if not data_loaded:
@@ -493,11 +503,9 @@ update_button.pack()
 icon_path_run = r'ico/run.png'
 run_ico = ImageTk.PhotoImage(Image.open(icon_path_run))
 
-run_button = ttk.Button(buttons_frame, image=run_ico, text="Run", compound="left")
+run_button = ttk.Button(buttons_frame, image=run_ico, text="Run", compound="left", command=lambda: run_simulations())
 run_button.pack(side="left", padx=5)  # Ensure it's packed before the save button
 run_button.photo = run_ico  # Keep a reference to avoid garbage collection
-
-run_button.config(command=run_simulations)
 
 # Save All Changes Button
 #icon_path = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\ico\save.png'
@@ -507,7 +515,7 @@ image = Image.open(icon_path)
 save_ico = ImageTk.PhotoImage(image)
 
 data_loaded = False
-save_button = ttk.Button(buttons_frame, image = save_ico, text="Save", compound="left", command=save_data)
+save_button = ttk.Button(buttons_frame, image = save_ico, text="Save", compound="left", command=lambda: save_data(True))
 save_button.pack(side="left", padx=5, expand=True)
 save_button.photo = save_ico# keep a reference to the image to avoid garbage collection
 save_button.pack()
