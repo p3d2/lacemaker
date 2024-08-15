@@ -13,6 +13,7 @@ from PIL import Image, ImageTk
 import subprocess
 import tkinter.messagebox as msgbox
 import datetime
+import threading
 
 def run_simulations():
     # First, save the data and get the new file path
@@ -21,23 +22,69 @@ def run_simulations():
         return  # Exit if saving failed or no file was loaded
 
     try:
+        # Show the loading screen with GIF
+        loading_window = show_gif_animation()  # Start the GIF animation
+
+        # Extract filename and prepare commands
         filename = os.path.splitext(os.path.basename(fp))[0]
         active_checkboxes = get_active_checkboxes()
-        # Local python script execution using the new file path
+        
         command1 = ["python", "lace_maker.py", fp,
                     "--dist_particles=0.5", "--units=1.0",
                     "--mass=1.0", "--threshold=0.0"]
         command2 = ["python", "sim_run.py", 
                     os.path.join("output", "lammps_data", 
                                  f"{filename}_0.5_1.0_0.0_30.0_5.0.data"),
-                    "--shrink="+active_checkboxes]
-        #command2 = ["sbatch", "sim_run.sh"]
+                    "--shrink=" + active_checkboxes]
         
+        # Execute commands
         subprocess.run(command1, check=True)
         subprocess.run(command2, check=True)
-        msgbox.showinfo("Simulation Status", "The simulation finished successfully.")
+
+        # Stop the GIF and close the loading window
+        loading_window.destroy()
+        
+        # Inform the user of success
+        messagebox.showinfo("Simulation Status", "The simulation finished successfully.")
     except subprocess.CalledProcessError as e:
-        msgbox.showerror("Simulation Error", f"An error occurred during the simulations: {e}")
+        messagebox.showerror("Simulation Error", f"An error occurred during the simulations: {e}")
+        if loading_window:
+            loading_window.destroy()
+
+def show_gif_animation():
+    loading_window = tk.Toplevel()
+    loading_window.title("Loading...")
+    
+    # Set window size
+    gif_width = 400
+    gif_height = 400
+    loading_window.geometry(f"{gif_width}x{gif_height}")
+
+    # Center the window
+    screen_width = loading_window.winfo_screenwidth()
+    screen_height = loading_window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (gif_width / 2))
+    y_coordinate = int((screen_height / 2) - (gif_height / 2))
+    loading_window.geometry(f"+{x_coordinate}+{y_coordinate}")
+
+    # Minimal window decorations
+    loading_window.attributes('-type', 'splash')  # This might work on some Linux window managers
+
+    # Load and display GIF
+    frames = [tk.PhotoImage(file='ico/loading.gif', format=f'gif -index {i}') for i in range(6)]
+    label = tk.Label(loading_window, image=frames[0])
+    label.pack()
+
+    # Update function for GIF
+    def update_frame(index):
+        frame = frames[index % len(frames)]
+        label.configure(image=frame)
+        loading_window.after(100, update_frame, (index+1) % len(frames))
+
+    # Start GIF animation
+    update_frame(0)
+
+    return loading_window
 
 def open_combobox():
     # Function to simulate opening the combobox
@@ -503,7 +550,7 @@ update_button.pack()
 icon_path_run = r'ico/run.png'
 run_ico = ImageTk.PhotoImage(Image.open(icon_path_run))
 
-run_button = ttk.Button(buttons_frame, image=run_ico, text="Run", compound="left", command=lambda: run_simulations())
+run_button = ttk.Button(buttons_frame, image=run_ico, text="Run", compound="left", command=lambda: threading.Thread(target=run_simulations).start())
 run_button.pack(side="left", padx=5)  # Ensure it's packed before the save button
 run_button.photo = run_ico  # Keep a reference to avoid garbage collection
 
