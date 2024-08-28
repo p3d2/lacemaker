@@ -8,7 +8,8 @@ bond_style harmonic
 angle_style harmonic
 
 # Read data from a file (please set this path manually or pass it through a variable)
-read_data output/lammps_data/pattern1024_2408141144_0.5_1.0_0.0_30.0_5.0.data
+read_data ${input_file}
+variable root string /scratch/work/silvap1/lacemaker/sim_run.lmp
 
 # Define force field settings
 pair_style soft_exclude 1.0 8
@@ -20,17 +21,17 @@ timestep 0.01
 variable thermodump equal 5000
 variable iter equal 10
 
-variable filedump string test/test.lammpstrj
-variable logdump string test/test.log
+variable filedump string test/${fname}.lammpstrj
+variable logdump string test/${fname}.log
 compute perAtomPE all pe/atom
 dump myDump all custom ${thermodump} ${filedump} id mol type x y z
 log ${logdump}
 
 # Define regions and groups
-region left_block block INF 1.5 INF INF INF INF units box
-region right_block block 63.0 INF INF INF INF INF units box
-region bottom_block block INF INF INF 1.5 INF INF units box
-region top_block block INF INF 63.0 INF INF INF units box
+region left_block block INF ${xmin} INF INF INF INF units box
+region right_block block ${xmax} INF INF INF INF INF units box
+region bottom_block block INF INF INF ${ymin} INF INF units box
+region top_block block INF INF ${ymax} INF INF INF units box
 group left_wall region left_block
 group right_wall region right_block
 group bottom_wall region bottom_block
@@ -51,7 +52,6 @@ thermo ${thermodump}
 thermo_style custom step temp pe ke etotal
 
 # Run 1st simulation -> Stabilization
-variable filerestart string test/sim1.restart
 run ${thermodump}
 
 # Run 2nd simulation -> Contraction
@@ -61,13 +61,18 @@ fix dragU all viscous 0.1
 label loopa
 variable i loop ${iter}
 variable r0diff equal 0.5-$i*0.04
-bond_coeff 1 30.0 ${r0diff}
-bond_coeff 2 30.0 ${r0diff}
-bond_coeff 3 30.0 ${r0diff}
-bond_coeff 4 30.0 ${r0diff}
-bond_coeff 5 30.0 ${r0diff}
-bond_coeff 6 30.0 ${r0diff}
+
+# Loop over possible bond types to selectively apply changes
+if "${modify_bond1} == 1" then "bond_coeff 1 30.0 ${r0diff}"
+if "${modify_bond2} == 1" then "bond_coeff 2 30.0 ${r0diff}"
+if "${modify_bond3} == 1" then "bond_coeff 3 30.0 ${r0diff}"
+if "${modify_bond4} == 1" then "bond_coeff 4 30.0 ${r0diff}"
+if "${modify_bond5} == 1" then "bond_coeff 5 30.0 ${r0diff}"
+if "${modify_bond6} == 1" then "bond_coeff 6 30.0 ${r0diff}"
+if "${modify_bond7} == 1" then "bond_coeff 7 30.0 ${r0diff}"
+if "${modify_bond8} == 1" then "bond_coeff 8 30.0 ${r0diff}"
+
 run ${thermodump}
 
 next i
-jump SELF loopa
+jump ${root} loopa
