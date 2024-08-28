@@ -27,15 +27,28 @@ def run_simulations():
 
         # Extract filename and prepare commands
         filename = os.path.splitext(os.path.basename(fp))[0]
-        active_checkboxes = get_active_checkboxes()
+        active_checkboxes = [0] * 8
+        print(checkbox_vars)
+        for i, var in enumerate(checkbox_vars, start=1):
+            if var.get() == 1 and i <= 8:
+                active_checkboxes[i - 1] = 1 
         
         command1 = ["python", "lace_maker.py", fp,
                     "--dist_particles=0.5", "--units=1.0",
                     "--mass=1.0", "--threshold=0.0"]
-        command2 = ["python", "sim_run.py", 
-                    os.path.join("output", "lammps_data", 
-                                 f"{filename}_0.5_1.0_0.0_30.0_5.0.data"),
-                    "--shrink=" + active_checkboxes]
+        
+        command2 = ["srun", "--output=log.out", "--mem=8G", "--ntasks=16", "lmp", 
+                    "-var", "input_file", os.path.join("output", "lammps_data", f"{filename}_0.5_1.0_0.0_30.0_5.0.data"),
+                    "-var", "fname", f"{filename}",
+                    "-var", "modify_bond1", f"{active_checkboxes[0]}",
+                    "-var", "modify_bond2", f"{active_checkboxes[1]}", 
+                    "-var", "modify_bond3", f"{active_checkboxes[2]}", 
+                    "-var", "modify_bond4", f"{active_checkboxes[3]}", 
+                    "-var", "modify_bond5", f"{active_checkboxes[4]}", 
+                    "-var", "modify_bond6", f"{active_checkboxes[5]}", 
+                    "-var", "modify_bond7", f"{active_checkboxes[6]}", 
+                    "-var", "modify_bond8", f"{active_checkboxes[7]}", 
+                    "-in", "sim_run.lmp"]
         
         # Execute commands
         subprocess.run(command1, check=True)
@@ -246,10 +259,6 @@ def create_path_checkboxes():
         chk = ttk.Checkbutton(shrink_frame, text=f"{i+1}", variable=var, style='White.TCheckbutton')
         chk.pack(side="left", padx=5)
         checkbox_vars.append(var)
-
-def get_active_checkboxes():
-    active_indices = [str(index) for index, var in enumerate(checkbox_vars, start=1) if var.get() == 1]
-    return ','.join(active_indices) 
 
 def draw_graph():
     if not data_loaded:
