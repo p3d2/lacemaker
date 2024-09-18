@@ -74,6 +74,13 @@ defaults:
       navigation:
         enabled: true
         nav_menu: "main"
+      # _docs
+  - scope:
+      path: ""
+      type: docs
+    values:
+      sidebar:
+        nav: "docs"
 
 # Search settings
 search_enabled: true
