@@ -10,7 +10,7 @@ header:
 
 <div class="intro">
   <p>
-Explore various tessellation patterns and their dynamic behaviors through simulations. This project showcases different patterns with detailed descriptions and images.
+Explore various tessellation patterns and their dynamic behaviors through simulations. This project showcases different patterns with detailed descriptions and images.</p>
 </div>
 
 [Explore Patterns](/patterns/){: .btn .btn--primary }
