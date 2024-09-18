@@ -23,13 +23,13 @@ exclude:
   - vendor/ruby
 
 # Optional: Configure theme settings
-minimal_mistakes_skin: "default" # You can change the skin color
+minimal_mistakes_skin: "dark" # You can change the skin color
+logo: "{{ '/assets/images/logo.png' | relative_url }}"
 
 # Navigation links
 nav:
   - title: "Home"
     url: "{{ '/' | relative_url }}"
-    icon: "{{ '/assets/images/logo.png' | relative_url }}"
   - title: "Patterns"
     url: "{{ '/patterns/' | relative_url }}"
   - title: "About"
