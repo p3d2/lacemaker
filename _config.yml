@@ -7,6 +7,7 @@ remote_theme: "mmistakes/minimal-mistakes"
 # Enable plugins
 plugins:
   - jekyll-remote-theme
+  - jekyll-include-cache
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-feed
