@@ -1,5 +1,43 @@
 title: "Lace tessellation dynamics simulations"
 description: "Exploring various tessellation patterns and their dynamics in lace fabrics."
-theme: jekyll-gallery-generator
+url: "https://p3d2.github.io/lacemaker/"
+baseurl: "/lacemaker"
+remote_theme: "mmistakes/minimal-mistakes"
+
+# Enable plugins
 plugins:
   - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-feed
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle
+  - vendor/cache
+  - vendor/gems
+  - vendor/ruby
+
+# Optional: Configure theme settings
+minimal_mistakes_skin: "default" # You can change the skin color
+
+# Navigation links
+nav:
+  - title: "Home"
+    url: "/"
+  - title: "Patterns"
+    url: "/patterns/"
+  - title: "About"
+    url: "/about/"
+
+# Author information
+author:
+  name: "Pedro E. S. Silva"
+  avatar: "/assets/images/avatar.png"
+  bio: "A brief bio about me."
+  links:
+    - label: "GitHub"
+      icon: "fab fa-github"
+      url: "https://github.com/p3d2"
