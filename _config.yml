@@ -1,5 +1,3 @@
-title: "Lace tessellation dynamics simulations"
-description: "Exploring various tessellation patterns and their dynamics in lace fabrics."
 url: "https://p3d2.github.io/lacemaker/"
 baseurl: "/lacemaker"
 remote_theme: "mmistakes/minimal-mistakes"
