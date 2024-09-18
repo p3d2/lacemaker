@@ -2,10 +2,6 @@
 title: "Lace tessellation dynamics simulations"
 layout: home
 permalink: /
-header:
-  overlay_color: "#000"
-  overlay_filter: "0.5"
-  caption: "Exploring the world of tessellations"
 ---
 
 <div class="intro">

@@ -1,0 +1,12 @@
+main:
+  - title: "Lace patterns"
+    url: /patterns/
+  - title: "About"
+    url: /about/
+    target: _blank
+
+docs:
+  - title: "Lace patterns"
+    children:
+    - title: "1024"
+      url: /patterns/1024/
