@@ -8,7 +8,3 @@ classes: wide
 ---
 
 Explore the various tessellation patterns available:
-
-{% for pattern in site.patterns %}
-  - [{{ pattern.title }}]({{ pattern.url | relative_url }})
-{% endfor %}
