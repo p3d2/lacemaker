@@ -9,6 +9,7 @@ header:
 plugins:
   - jekyll-remote-theme
   - jekyll-include-cache
+  - jekyll-paginate
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-feed
@@ -24,22 +25,23 @@ exclude:
 
 # Optional: Configure theme settings
 minimal_mistakes_skin: "dark" # You can change the skin color
-logo: "{{ '/assets/images/logo.png' | relative_url }}"
+logo: /assets/images/logo.png
 
 # Navigation links
-nav:
+main:
   - title: "Home"
-    url: "{{ '/' | relative_url }}"
+    url: /
   - title: "Patterns"
-    url: "{{ '/patterns/' | relative_url }}"
+    url: /patterns/
   - title: "About"
-    url: "{{ '/about/' | relative_url }}"
+    url: /about/
 
 # Pattern collections
 collections:
   patterns:
     output: true
     permalink: /patterns/:name/
+    layout: single
 
 # Author information
 author:
@@ -50,3 +52,13 @@ author:
     - label: "GitHub"
       icon: "fab fa-github"
       url: "https://github.com/p3d2"
+
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "single"
+      navigation:
+        enabled: true
+        nav_menu: "main"
