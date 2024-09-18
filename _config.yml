@@ -1,5 +1,4 @@
-url: "https://p3d2.github.io"
-baseurl: "/lacemaker"
+
 remote_theme: "mmistakes/minimal-mistakes"
 
 header:
@@ -24,17 +23,14 @@ exclude:
   - vendor/ruby
 
 # Optional: Configure theme settings
-minimal_mistakes_skin: "dark" # You can change the skin color
+name: "Pedro Silva"
+url: "https://p3d2.github.io"
+baseurl: "/lacemaker"
+minimal_mistakes_skin: "dirt" # You can change the skin color
 logo: /assets/images/logo.png
 
-# Navigation links
-main:
-  - title: "Home"
-    url: /
-  - title: "Patterns"
-    url: /patterns/
-  - title: "About"
-    url: /about/
+author:
+  name: Pedro Silva
 
 # Pattern collections
 collections:
