@@ -71,6 +71,14 @@ defaults:
       type: "patterns"
     values:
       layout: "single"
+      navigation:
+        enabled: true
+        nav_menu: "main"
+
+# Search settings
+search_enabled: true
+search_engine: lunr
+search_languages: ["en"]
 
 collections:
   patterns:
