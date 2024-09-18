@@ -1,8 +1,4 @@
-
 remote_theme: "mmistakes/minimal-mistakes"
-
-header:
-  logo: /assets/images/logo.png
 
 # Enable plugins
 plugins:
@@ -22,9 +18,13 @@ exclude:
   - vendor/gems
   - vendor/ruby
 
+include:
+  - "_pages"
+
 # Optional: Configure theme settings
 name: "Pedro Silva"
 url: "https://p3d2.github.io"
+title: "Lacemaker"
 baseurl: "/lacemaker"
 minimal_mistakes_skin: "dirt" # You can change the skin color
 logo: /assets/images/logo.png
@@ -39,6 +39,14 @@ collections:
     permalink: /patterns/:name/
     layout: single
 
+main:
+  - title: "Home"
+    url: "{{ '/' | relative_url }}"
+  - title: "Patterns"
+    url: "{{ '/patterns/' | relative_url }}"
+  - title: "About"
+    url: "{{ '/about/' | relative_url }}"
+
 # Author information
 author:
   name: "Pedro E. S. Silva"
@@ -51,10 +59,21 @@ author:
 
 defaults:
   - scope:
-      path: ""
+      path: "_pages"
       type: "pages"
     values:
       layout: "single"
       navigation:
         enabled: true
         nav_menu: "main"
+  - scope:
+      path: "_patterns"
+      type: "patterns"
+    values:
+      layout: "single"
+
+collections:
+  patterns:
+    output: true
+    permalink: /patterns/:name/
+    layout: single
