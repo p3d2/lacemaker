@@ -1,4 +1,4 @@
-url: "https://p3d2.github.io/lacemaker/"
+url: "https://p3d2.github.io"
 baseurl: "/lacemaker"
 remote_theme: "mmistakes/minimal-mistakes"
 
@@ -28,12 +28,12 @@ minimal_mistakes_skin: "default" # You can change the skin color
 # Navigation links
 nav:
   - title: "Home"
-    url: "/"
-    icon: "/assets/images/logo.png"
+    url: "{{ '/' | relative_url }}"
+    icon: "{{ '/assets/images/logo.png' | relative_url }}"
   - title: "Patterns"
-    url: "/patterns/"
+    url: "{{ '/patterns/' | relative_url }}"
   - title: "About"
-    url: "/about/"
+    url: "{{ '/about/' | relative_url }}"
 
 # Pattern collections
 collections:
