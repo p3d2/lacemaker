@@ -9,8 +9,6 @@ classes: wide
 
 Explore the various tessellation patterns available:
 
-{% for pattern in site.pages %}
-  {% if pattern.permalink contains '/patterns/' and pattern.title != 'Patterns' %}
+{% for pattern in site.patterns %}
   - [{{ pattern.title }}]({{ pattern.url | relative_url }})
-  {% endif %}
 {% endfor %}
