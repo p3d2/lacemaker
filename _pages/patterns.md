@@ -1,11 +1,16 @@
 ---
 title: "Lace patterns"
-layout: posts
+layout: collection
 permalink: /patterns/
+collection: patterns
+entries_layout: grid
+classes: wide
 ---
 
-{% assign sorted_pages = site.pages | where_exp: "page", "page.permalink contains '/patterns/' and page.title != 'Patterns'" | sort: "title" %}
+Explore the various tessellation patterns available:
 
-{% for page in sorted_pages %}
-- [{{ page.title }}]({{ page.url | relative_url }})
+{% for pattern in site.pages %}
+  {% if pattern.permalink contains '/patterns/' and pattern.title != 'Patterns' %}
+  - [{{ pattern.title }}]({{ pattern.url | relative_url }})
+  {% endif %}
 {% endfor %}
