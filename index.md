@@ -1,6 +1,6 @@
 ---
 title: "Lace tessellation dynamics simulations"
-layout: splash
+layout: home
 permalink: /
 header:
   overlay_color: "#000"
@@ -13,5 +13,5 @@ header:
 Explore various tessellation patterns and their dynamic behaviors through simulations. This project showcases different patterns with detailed descriptions and images.</p>
 </div>
 
-[Explore Patterns](/patterns/){: .btn .btn--primary }
-[About This Project](/about/){: .btn }
+[Explore Patterns]({{ '/patterns/' | relative_url }}){: .btn .btn--primary }
+[About This Project]({{ '/about/' | relative_url }}){: .btn }
