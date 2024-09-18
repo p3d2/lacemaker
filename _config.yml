@@ -2,6 +2,9 @@ url: "https://p3d2.github.io/lacemaker/"
 baseurl: "/lacemaker"
 remote_theme: "mmistakes/minimal-mistakes"
 
+header:
+  logo: /assets/images/logo.png
+
 # Enable plugins
 plugins:
   - jekyll-remote-theme
@@ -26,10 +29,17 @@ minimal_mistakes_skin: "default" # You can change the skin color
 nav:
   - title: "Home"
     url: "/"
+    icon: "/assets/images/logo.png"
   - title: "Patterns"
     url: "/patterns/"
   - title: "About"
     url: "/about/"
+
+# Pattern collections
+collections:
+  patterns:
+    output: true
+    permalink: /patterns/:name/
 
 # Author information
 author:
