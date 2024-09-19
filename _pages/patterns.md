@@ -1,6 +1,6 @@
 ---
 title: "Lace patterns"
-layout: pages
+layout: single
 permalink: /patterns/
 collection: patterns
 entries_layout: grid
@@ -11,8 +11,8 @@ classes: wide
 
   {% for pattern in site.patterns %}
     <div class="pattern-item">
-      <a href="{{ pattern.url }}">
-        <img src="{{ pattern.image_path }}" alt="{{ pattern.title }}" class="pattern-thumbnail" loading="lazy">
+      <a href="{{ site.baseurl }}{{ pattern.url }}">
+        <img src="{{ site.baseurl }}{{ pattern.image_path }}" alt="{{ pattern.title }}" class="pattern-thumbnail" loading="lazy">
         <p>{{ pattern.title }}</p>
       </a>
     </div>
