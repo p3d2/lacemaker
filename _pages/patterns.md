@@ -9,6 +9,13 @@ classes: wide
 
 <div class="patterns-grid">
 
-  [![Pattern 1024]({{ '/assets/images/1024_pattern.jpg' | relative_url }})](/patterns/1024/)
-  **Pattern 1024**
+  {% for pattern in site.patterns %}
+    <div class="pattern-item">
+      <a href="{{ pattern.url }}">
+        <img src="{{ pattern.image_path }}" alt="{{ pattern.title }}" class="pattern-thumbnail" loading="lazy">
+        <p>{{ pattern.title }}</p>
+      </a>
+    </div>
+  {% endfor %}
+
 </div>
