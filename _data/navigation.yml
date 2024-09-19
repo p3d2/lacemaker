@@ -1,15 +1,15 @@
 main:
   - title: "Home"
-    url: "{{ '/' | relative_url }}"
+    url: "/"
   - title: "Lace patterns"
-    url: "{{ '/patterns/' | relative_url }}"
+    url: "/patterns/"
   - title: "About"
-    url: "{{ '/about/' | relative_url }}"
+    url: "/about/"
     target: _blank
 
 docs:
   - title: "Lace patterns"
-    url: "{{ '/patterns/' | relative_url }}"
+    url: "/patterns/"
     children:
       - title: "1024"
-        url: "{{ '/patterns/1024/' | relative_url }}"
+        url: "/patterns/1024/"
