@@ -1,9 +1,7 @@
 ---
 title: "Lace patterns"
-layout: pages
+layout: single
 permalink: /patterns/
-collection: patterns
-entries_layout: grid
 classes: wide
 ---
 
