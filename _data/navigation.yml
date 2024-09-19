@@ -6,10 +6,3 @@ main:
   - title: "About"
     url: "/about/"
     target: _blank
-
-docs:
-  - title: "Lace patterns"
-    url: "/patterns/"
-    children:
-      - title: "1024"
-        url: "/patterns/1024/"
