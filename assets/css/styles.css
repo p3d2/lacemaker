@@ -6,7 +6,7 @@
 }
 
 .pattern-item {
-  width: 33%; /* 33% of the container width */
+  width: 24%; /* 24% of the container width */
   box-sizing: border-box;
   text-align: center;
   border: 1px solid #ddd;
