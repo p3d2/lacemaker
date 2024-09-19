@@ -1,6 +1,3 @@
-/* assets/css/styles.css */
-
-/* Container for the grid */
 .patterns-grid {
   display: flex;
   flex-wrap: wrap;
@@ -8,9 +5,8 @@
   justify-content: center;
 }
 
-/* Individual pattern items */
-.patterns-grid a {
-  width: 33%;
+.pattern-item {
+  width: 33%; /* 33% of the container width */
   box-sizing: border-box;
   text-align: center;
   border: 1px solid #ddd;
@@ -22,19 +18,17 @@
   color: inherit; /* Inherit text color */
 }
 
-.patterns-grid a:hover {
+.pattern-item:hover {
   transform: scale(1.05);
 }
 
-/* Images within the pattern items */
-.patterns-grid img {
+.pattern-thumbnail {
   width: 100%;
   height: auto;
   border-radius: 4px;
   object-fit: cover; /* Ensures the image covers the container without distortion */
 }
 
-/* Captions */
 .patterns-grid p {
   margin-top: 10px;
   font-size: 1.1em;
@@ -43,13 +37,13 @@
 
 /* Responsive Design */
 @media (max-width: 900px) {
-  .patterns-grid a {
-    width: 50%; /* Adjust to 50% on medium screens */
+  .pattern-item {
+    width: 50%; /* 50% width on medium screens */
   }
 }
 
 @media (max-width: 600px) {
-  .patterns-grid a {
+  .pattern-item {
     width: 100%; /* Full width on small screens */
   }
 }
