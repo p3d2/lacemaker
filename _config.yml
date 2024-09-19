@@ -78,11 +78,6 @@ defaults:
       navigation:
         enabled: true
         nav_menu: "main"
-      # _docs
-  - scope:
-      path: ""
-      type: docs
-    values:
       sidebar:
         nav: "docs"
 
@@ -90,9 +85,3 @@ defaults:
 search_enabled: true
 search_engine: lunr
 search_languages: ["en"]
-
-collections:
-  patterns:
-    output: true
-    permalink: /patterns/:name/
-    layout: single
