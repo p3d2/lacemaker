@@ -43,14 +43,6 @@ sidebar:
   nav:
     - docs
 
-main:
-  - title: "Home"
-    url: "{{ '/' | relative_url }}"
-  - title: "Patterns"
-    url: "{{ '/patterns/' | relative_url }}"
-  - title: "About"
-    url: "{{ '/about/' | relative_url }}"
-
 # Author information
 author:
   name: "Pedro E. S. Silva"
@@ -70,6 +62,8 @@ defaults:
       navigation:
         enabled: true
         nav_menu: "main"
+      sidebar:
+        nav: "docs"
   - scope:
       path: "_patterns"
       type: "patterns"
@@ -80,8 +74,3 @@ defaults:
         nav_menu: "main"
       sidebar:
         nav: "docs"
-
-# Search settings
-search_enabled: true
-search_engine: lunr
-search_languages: ["en"]
