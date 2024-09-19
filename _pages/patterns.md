@@ -1,11 +1,12 @@
 ---
 title: "Lace patterns"
-layout: collection
+layout: pages
 permalink: /patterns/
 collection: patterns
 entries_layout: grid
 classes: wide
-
-feature_row:
-  - image_path: /assets/images/1024_pattern.jpg
 ---
+
+# Lace Patterns Gallery
+
+{% include figure popup=true link="/patterns/1024/" image_path="/assets/images/1024_pattern.jpg" alt="Pattern 1024" caption="Pattern 1024." width="300" height="300"%}
