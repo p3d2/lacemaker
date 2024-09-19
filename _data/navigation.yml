@@ -8,5 +8,5 @@ main:
 docs:
   - title: "Lace patterns"
     children:
-    - title: "1024"
-      url: /patterns/1024/
+      - title: "1024"
+        url: /patterns/1024/
