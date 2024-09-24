@@ -1,0 +1,8 @@
+pattern_id	status	dist_particles	units	mass	threshold	ks	kb	bond0_1	bond0_2	bond0_3	bond0_4	bond0_5	bond0_6	bond0_7	bond0_8	visc	tstep	thermodump	nframes	xmin	xmax	ymin	ymax	visc2	tstep2	thermodump2	nframes2	exp	contract
+1024	0	0.25	1	1	0	30	5	0.24	0.24	0.24	0.24	0.24	0.24	0	0	0.1	0.005	10000	10	1	127	1	127	0.01	0.005	100000	15	"[[1],[4,5],[1,2,3,4,5,6]]"	0.4
+																													
+																													
+																													
+																													
+																													
+																													
