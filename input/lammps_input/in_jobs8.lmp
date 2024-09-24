@@ -1,0 +1,64 @@
+# LAMMPS Input Script
+
+# Initialization
+units           lj
+atom_style      molecular
+boundary        m m m  # Non-periodic boundary conditions in all directions
+
+bond_style      harmonic
+angle_style 	harmonic
+
+# Atom Definition
+read_data ${folderdata}
+
+# Force Field Settings
+pair_style soft_exclude 1.0 16
+pair_coeff * * 200.0
+comm_modify cutoff 3.5
+
+# CHANGE BONDS
+if "${b1} == 1" then "bond_coeff 1 ${ks} ${bond1}"
+if "${b2} == 1" then "bond_coeff 2 ${ks} ${bond2}"
+if "${b3} == 1" then "bond_coeff 3 ${ks} ${bond3}"
+if "${b4} == 1" then "bond_coeff 4 ${ks} ${bond4}"
+if "${b5} == 1" then "bond_coeff 5 ${ks} ${bond5}"
+if "${b6} == 1" then "bond_coeff 6 ${ks} ${bond6}"
+if "${b7} == 1" then "bond_coeff 7 ${ks} ${bond7}"
+if "${b8} == 1" then "bond_coeff 8 ${ks} ${bond8}"
+
+# Dump command to output atom positions to a file
+variable filedump string "${sim0_data}"
+variable logdump string "${sim0_log}"
+compute perAtomPE all pe/atom
+dump myDump all custom ${thermodump} ${filedump} id mol type x y z fx fy fz c_perAtomPE
+log ${logdump}
+
+# Fixes
+region left_block block INF ${xmin} INF INF INF INF units box
+region right_block block ${xmax} INF INF INF INF INF units box
+region bottom_block block INF INF INF ${ymin} INF INF units box
+region top_block block INF INF ${ymax} INF INF INF units box
+
+group left_wall region left_block
+group right_wall region right_block
+group bottom_wall region bottom_block
+group top_wall region top_block
+group boundary union left_wall right_wall bottom_wall top_wall
+
+fix freezef boundary setforce 0.0 0.0 0.0
+fix dragU all viscous ${visc}
+fix nve_all all nve
+
+# Minimization to relax initial configuration
+minimize 1.0e-6 1.0e-7 10000 100000
+neigh_modify every 100
+
+# Integrator Settings
+timestep        ${tstep}
+thermo          ${thermodump}
+thermo_style    custom step temp pe ke etotal
+
+# Run
+variable iter equal ${thermodump}*${nframes}
+run ${iter}
+write_restart ${restart}
