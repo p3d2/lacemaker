@@ -1,0 +1,74 @@
+# LAMMPS Input Script
+
+read_restart ${folderrestart}
+
+# Set force to zero on all atoms
+velocity all set 0.0 0.0 0.0
+
+neigh_modify every 100
+
+# Integrator Settings
+timestep        ${tstep}
+thermo          ${thermodump}
+thermo_style    custom step temp pe ke etotal
+
+# Dump command to output atom positions to a file
+variable filedump string "${sim1_data}"
+variable logdump string "${sim1_log}"
+compute perAtomPE all pe/atom
+dump myDump all custom ${thermodump} ${filedump} id mol type x y z fx fy fz c_perAtomPE
+log ${logdump}
+
+# Run NVE
+fix freezef boundary setforce 0.0 0.0 0.0
+fix dragU all viscous ${visc}
+fix nve_all all nve
+label loop
+variable i loop ${nframes}
+
+    variable coeff1 equal ${bond1}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff2 equal ${bond2}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff3 equal ${bond3}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff4 equal ${bond4}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff5 equal ${bond5}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff6 equal ${bond6}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff7 equal ${bond7}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff8 equal ${bond8}*(1-(${i}/${nframes})*(1-${contract}))
+
+    if "${b1} == 1" then "bond_coeff 1 ${ks} ${coeff1}"
+    if "${b2} == 1" then "bond_coeff 2 ${ks} ${coeff2}"
+    if "${b3} == 1" then "bond_coeff 3 ${ks} ${coeff3}"
+    if "${b4} == 1" then "bond_coeff 4 ${ks} ${coeff4}"
+    if "${b5} == 1" then "bond_coeff 5 ${ks} ${coeff5}"
+    if "${b6} == 1" then "bond_coeff 6 ${ks} ${coeff6}"
+    if "${b7} == 1" then "bond_coeff 7 ${ks} ${coeff7}"
+    if "${b8} == 1" then "bond_coeff 8 ${ks} ${coeff8}"
+    run ${thermodump}
+
+next i
+jump ${self} loop
+
+label loop2
+variable j loop ${nframes}
+
+    variable coeff1 equal ${bond1}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff2 equal ${bond2}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff3 equal ${bond3}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff4 equal ${bond4}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff5 equal ${bond5}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff6 equal ${bond6}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff7 equal ${bond7}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff8 equal ${bond8}*(${contract}+(1-${contract})*${j}/${nframes})
+
+    if "${b1} == 1" then "bond_coeff 1 ${ks} ${coeff1}"
+    if "${b2} == 1" then "bond_coeff 2 ${ks} ${coeff2}"
+    if "${b3} == 1" then "bond_coeff 3 ${ks} ${coeff3}"
+    if "${b4} == 1" then "bond_coeff 4 ${ks} ${coeff4}"
+    if "${b5} == 1" then "bond_coeff 5 ${ks} ${coeff5}"
+    if "${b6} == 1" then "bond_coeff 6 ${ks} ${coeff6}"
+    if "${b7} == 1" then "bond_coeff 7 ${ks} ${coeff7}"
+    if "${b8} == 1" then "bond_coeff 8 ${ks} ${coeff8}"
+    run ${thermodump}
+
+next j
+jump ${self} loop2
