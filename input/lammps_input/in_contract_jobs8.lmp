@@ -23,6 +23,8 @@ log ${logdump}
 fix freezef boundary setforce 0.0 0.0 0.0
 fix dragU all viscous ${visc}
 fix nve_all all nve
+run ${thermodump}
+
 label loop
 variable i loop ${nframes}
 
