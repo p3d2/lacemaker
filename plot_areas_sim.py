@@ -13,9 +13,11 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import imageio.v2 as imageio
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 from scipy.stats import gaussian_kde
+from scipy.interpolate import interp1d, PchipInterpolator
 from shapely.geometry import Point
 from shapely.geometry import Polygon as ShapelyPolygon
 from shapely.ops import unary_union
@@ -113,10 +115,15 @@ def get_polygons(geom):
         return []
 
 def save_plot(positions):
-    fig, ax = plt.subplots(figsize=(12, 8))
-    fig2, ax2 = plt.subplots(figsize=(12, 8))
-    hist_data = []
+    fig, ax = plt.subplots(figsize=(8, 8))
+    fig3, ax3 = plt.subplots(figsize=(8, 8))
+
+    method = 'log10'
+    density_list, x_list = [], []
+    frames = []
     for t in range(len(positions)):
+        fig2, ax2 = plt.subplots(figsize=(8, 8))
+
         pos_0 = np.array(positions[t]) 
         x = pos_0[:, 0]
         y = pos_0[:, 1]
@@ -127,7 +134,6 @@ def save_plot(positions):
 
         # Merge circles with union
         merged = unary_union(circles)
-
         polygons = get_polygons(merged)
 
         # Prepare matplotlib patches
@@ -149,18 +155,18 @@ def save_plot(positions):
                 areas.append(interior_polygon.area)
 
         if t == 0:
-            max_area = max(areas) 
+            max_area = 1000 #max(areas)
 
         for poly in polygons:
             for (interior, area) in zip(poly.interiors, areas):
                 interior_coords = np.array(interior.coords)
                 # Use the same color or modify as needed
-                color = cmap(area / max_area)
+                if method == 'log10': color = cmap(np.log10(area + 1) / np.log10(max_area + 1))
+                if method == 'sqrt': color = cmap(np.sqrt(area/max_area))
                 hole = Polygon(
                     interior_coords,
-                    facecolor=color,  # Or assign a different mapping if desired
-                    edgecolor='white',
-                    linestyle='dashed',
+                    facecolor=color,
+                    edgecolor='gray',
                     linewidth=1,
                     alpha=0.7
                 )
@@ -170,10 +176,10 @@ def save_plot(positions):
         ax2.set_xlim(x.min() - radius, x.max() + radius)
         ax2.set_ylim(y.min() - radius, y.max() + radius)
         ax2.set_aspect('equal')  # Ensure the aspect ratio is equal
-        if t == 0:
-            fig2.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_area_dist.png'),
-                         format='png', dpi=300, bbox_inches='tight', pad_inches=0)
-    
+        frame_filename = os.path.join('output', 'simulations', pattern_folder, 'plots', f'frame_{t}.png')
+        fig2.savefig(frame_filename, format='png', dpi=300, bbox_inches='tight', pad_inches=0)
+        frames.append(frame_filename)
+        plt.close(fig2)
         # Plot the KDE
         areas_array = np.array(areas)
         min_area_threshold = 1.0  # Adjust this value as needed
@@ -181,49 +187,116 @@ def save_plot(positions):
         # Filter areas to include only those above the threshold
         filtered_areas = areas_array[areas_array >= min_area_threshold]
         
-        kde = gaussian_kde(areas_array, bw_method='silverman')
-        x_min, x_max = 10.0, areas_array.max()
-        x_values = np.linspace(x_min, x_max, 1000)
-        density = kde(x_values)
+        filtered_areas = filtered_areas.reshape(-1, 1)  # Reshape for sklearn apply log to the data
+        if method == 'log10': proc_areas = np.log10(filtered_areas) # Use log data
+        if method == 'sqrt': proc_areas = np.sqrt(filtered_areas)
         
-        filtered_areas = filtered_areas.reshape(-1, 1)  # Reshape for sklearn
-
         # Define the range for the KDE plot
-        x_min, x_max = filtered_areas.min(), filtered_areas.max()
+        x_min, x_max = 0.0, 3.0
         x_values = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
 
         # Initialize KernelDensity
-        kde = KernelDensity(kernel='epanechnikov', bandwidth=max_area/20)  # Adjust bandwidth as needed
-
-        kde.fit(filtered_areas, sample_weight=filtered_areas.flatten())
-
+        if method == 'log10': kde = KernelDensity(kernel='epanechnikov', bandwidth=0.05)
+        if method == 'sqrt': kde = KernelDensity(kernel='epanechnikov', bandwidth=1.0)  # Adjust bandwidth as needed
+        
+        kde.fit(proc_areas, sample_weight=proc_areas.flatten())
+        
         # Score samples (log density)
         log_density = kde.score_samples(x_values)
 
         # Convert log density to density
-        density = np.exp(log_density)
+        density = np.exp(log_density).flatten()
+        x_list.append(x_values.flatten())
+        density_list.append(density)
 
-        shift = 0.01 * t  # To make a waterfall plot
-        # Plot the KDE
-        #ax.plot(x_values, density - shift, color='black', lw=1, label='Epanechnikov KDE')
-
-        counts, bin_edges = np.histogram(filtered_areas, bins=40, density=True, weights=filtered_areas)
+        if method == 'log10': shift = 1.0 * t
+        if method == 'sqrt': shift = 0.1 * t  # To make a waterfall plot
+        
+        # Plot shaded regions:
+        num_bins = 40
+        counts, bin_edges = np.histogram(proc_areas, bins=num_bins, density=True, weights=proc_areas)
+        x = np.linspace(0.0, 3.0, 1000)
         bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-        norm = mcolors.Normalize(vmin=0, vmax=max_area)
+        norm = mcolors.Normalize(vmin=0, vmax=3.0)
         colors = cmap(norm(bin_centers))
-        #ax.bar(bin_centers, counts, width=(bin_edges[1] - bin_edges[0]), bottom=-shift,
+        peak_size = 0.5
+        #ax3.bar(bin_centers, counts, width=(bin_edges[1] - bin_edges[0]), bottom=-shift,
         #       color=colors, edgecolor='black', alpha=0.5)
-        hist_data.append(counts)
 
-    hist_array = np.array(hist_data)
-    sns.heatmap(
-        hist_array, 
-        cmap='viridis',
-        ax=ax
+        mask = (x < bin_edges[0])
+        alpha3 = 1.0
+        ax3.fill_betweenx(x[mask], shift,  shift + density[mask]*peak_size,  color=colors[0], alpha=alpha3)
+        for i, (left, right, color) in enumerate(zip(bin_edges[:-1], bin_edges[1:], colors)):
+            mask = (x >= left) & (x < right)
+            ax3.fill_betweenx(x[mask], shift,  shift + density[mask]*peak_size,  color=color, alpha=alpha3)
+        mask = x >= bin_edges[-1]
+        ax3.fill_betweenx(x[mask], shift,  shift + density[mask]*peak_size,  color=colors[-1], alpha=alpha3)
+        ax3.plot(shift + density*peak_size, x_values,  color='black', lw=1, label='Epanechnikov KDE')
+    ax3.set_xlim(0.0, len(density_list)+0.5)
+    ax3.set_yticks([0, 1, 2, 3], ['1', '10', '100', '1000'])
+    ax3.set_xlabel('Time Step')
+    ax3.set_ylabel('Area')
+    # Define the common x_values grid
+    global_x_min = min([xv.min() for xv in x_list])
+    global_x_max = max([xv.max() for xv in x_list])
+    common_x_values = np.linspace(global_x_min, global_x_max, 1000)
+
+    kde_data_interpolated = []
+
+    for x_vals, dens in zip(x_list, density_list):
+        interp_func = interp1d(x_vals, dens, bounds_error=False, fill_value=0)
+        density_common = interp_func(common_x_values)
+        kde_data_interpolated.append(density_common)
+
+    kde_data = np.array(kde_data_interpolated)
+    t_old = np.arange(len(density_list))
+    extra_steps = 5
+    t_new = np.linspace(t_old[0], t_old[-1], len(density_list)*extra_steps-1)
+
+    density_interpolated = np.zeros((len(t_new), kde_data.shape[1]))
+
+    # Perform PCHIP interpolation for each x_value
+    for i in range(kde_data.shape[1]):
+        interpolator = PchipInterpolator(t_old, kde_data[:, i])
+        density_interpolated[:, i] = interpolator(t_new)
+
+    num_time_steps = density_interpolated.shape[0]
+    num_x_values = density_interpolated.shape[1]
+    num_x_ticks = 10  
+    num_y_ticks = 10
+
+    T_grid, X_grid = np.meshgrid(t_new, common_x_values)
+
+    density_interpolated = np.nan_to_num(
+        density_interpolated,
+        nan=0.0,
+        posinf=0.0,
+        neginf=0.0
     )
-    
+
+    # Use contourf to plot the data
+    ax.pcolormesh(T_grid, X_grid, density_interpolated.T, shading='auto', cmap='magma')
+    ax.invert_yaxis()
+    ax.set_xlabel('Time Step')
+    ax.set_ylabel('Area')
+
+    # Optionally, set the limits of the axes
+    ax.set_xlim(t_new.min(), t_new.max())
+    ax3.set_yticks([0, 1, 2, 3], ['1', '10', '100', '1000'])
+
     fig.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_kde.png'),
                 format='png', dpi=300, bbox_inches='tight', pad_inches=0)
+    fig3.savefig(os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_hist.png'),
+                format='png', dpi=300, bbox_inches='tight', pad_inches=0)
+
+    gif_filename = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_area_dist.gif')
+    with imageio.get_writer(gif_filename, mode='I', fps=10, loop=0) as writer:
+        for filename in frames:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    for filename in frames:
+        os.remove(filename)
 
 parser = argparse.ArgumentParser(description='Processing dump file name')
 parser.add_argument('folder', type=str, help='The name of the dump file to be processed')
