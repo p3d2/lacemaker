@@ -28,14 +28,14 @@ run ${thermodump}
 label loop
 variable i loop ${nframes}
 
-    variable coeff1 equal ${bond1}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff2 equal ${bond2}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff3 equal ${bond3}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff4 equal ${bond4}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff5 equal ${bond5}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff6 equal ${bond6}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff7 equal ${bond7}*(1-(${i}/${nframes})*(1-${contract}))
-    variable coeff8 equal ${bond8}*(1-(${i}/${nframes})*(1-${contract}))
+    variable coeff1 equal ${bond1}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff2 equal ${bond2}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff3 equal ${bond3}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff4 equal ${bond4}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff5 equal ${bond5}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff6 equal ${bond6}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff7 equal ${bond7}*(1-(${i}/${nframes})*(${contract}))
+    variable coeff8 equal ${bond8}*(1-(${i}/${nframes})*(${contract}))
 
     if "${b1} == 1" then "bond_coeff 1 ${ks} ${coeff1}"
     if "${b2} == 1" then "bond_coeff 2 ${ks} ${coeff2}"
@@ -53,14 +53,14 @@ jump ${self} loop
 label loop2
 variable j loop ${nframes}
 
-    variable coeff1 equal ${bond1}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff2 equal ${bond2}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff3 equal ${bond3}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff4 equal ${bond4}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff5 equal ${bond5}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff6 equal ${bond6}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff7 equal ${bond7}*(${contract}+(1-${contract})*${j}/${nframes})
-    variable coeff8 equal ${bond8}*(${contract}+(1-${contract})*${j}/${nframes})
+    variable coeff1 equal ${bond1}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff2 equal ${bond2}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff3 equal ${bond3}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff4 equal ${bond4}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff5 equal ${bond5}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff6 equal ${bond6}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff7 equal ${bond7}*(1-${contract}+${j}*${contract}/${nframes})
+    variable coeff8 equal ${bond8}*(1-${contract}+${j}*${contract}/${nframes})
 
     if "${b1} == 1" then "bond_coeff 1 ${ks} ${coeff1}"
     if "${b2} == 1" then "bond_coeff 2 ${ks} ${coeff2}"
