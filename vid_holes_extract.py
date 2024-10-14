@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import json
 import os
+import argparse
+import subprocess
 import matplotlib.pyplot as plt
 import imageio.v2 as imageio
 
@@ -63,7 +65,7 @@ def process_video(video_path, output_json, frame_skip=1):
         frame_c += 1
 
     # Generate GIF from frames
-    gif_filename = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_area_dist.gif')
+    gif_filename = os.path.join(subfolder_path, 'plots', dump_file + '_area_dist.gif')
     with imageio.get_writer(gif_filename, mode='I', fps=10, loop=0) as writer:
         for filename in frames:
             image = imageio.imread(filename)
@@ -175,17 +177,59 @@ def extract_areas(original, processed, mask, div, time):
                 cv2.drawContours(filled_contours, [cnt], -1, color_bgra, thickness=cv2.FILLED)
                 
     ax.imshow(cv2.cvtColor(filled_contours, cv2.COLOR_BGRA2RGBA))
-    frame_filename = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + f'frame_{time}.png')
+    frame_filename = os.path.join(subfolder_path, 'plots', dump_file + f'frame_{time}.png')
     fig.savefig(frame_filename, format='png', dpi=300, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
     return (valid_areas, frame_filename)
 
 if __name__ == "__main__":
-    # Example usage
-    pattern_folder = 'Pattern_3025'
-    dump_file = 'contract_'
-    video_file = os.path.join('output', 'simulations', pattern_folder, '3025-01 20240905', 'DSC_0181.MOV')
-    output_json_file = os.path.join('output', 'simulations', pattern_folder, 'plots', 'DSC_0181_holes.json')
-    frame_skip = 100 
 
-    process_video(video_file, output_json_file, frame_skip)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Process videos in subfolders and extract holes areas.')
+    parser.add_argument('folder_location', help='The folder that contains multiple subfolders. Each subfolder contains a MOV file')
+    parser.add_argument('--overwrite', type=int, default=0, help='Set to 1 to overwrite existing outputs.')
+    parser.add_argument('--frame_skip', type=int, default=100, help='Number of frames to skip.')
+    args = parser.parse_args()
+
+    folder_location = args.folder_location
+    overwrite_flag = args.overwrite
+    frame_skip = args.frame_skip
+    dump_file = 'contract_'
+
+    # Iterate over each subfolder in the folder_location
+    for pattern_folder in os.listdir(folder_location):
+        subfolder_path = os.path.join(folder_location, pattern_folder)
+        if os.path.isdir(subfolder_path):
+            # Find .MOV files in the subfolder
+            mov_files = [f for f in os.listdir(subfolder_path) if f.endswith('.MOV')]
+            for mov_file in mov_files:
+                vname = os.path.splitext(mov_file)[0]
+
+                # Build paths
+                video_file = os.path.join(subfolder_path, mov_file)
+                plots_folder = os.path.join(subfolder_path, 'plots')
+                output_json_file = os.path.join(plots_folder, f'{vname}_holes.json')
+
+                # Create plots directory if it doesn't exist
+                if not os.path.exists(plots_folder):
+                    os.makedirs(plots_folder)
+
+                # Decide whether to process or skip
+                if overwrite_flag == 1:
+                    print(f'Processing {video_file} (overwriting existing outputs).')
+                    process_video(video_file, output_json_file, frame_skip)
+                    # Run holes_analysis.py using srun
+                    command = ['srun', '--mem=4G', 'python', 'holes_analysis.py', subfolder_path, vname]
+                    print(f'Running holes_analysis.py for {vname}')
+                    subprocess.run(command)
+                else:
+                    if not os.path.exists(output_json_file):
+                        print(f'Processing {video_file}.')
+                        process_video(video_file, output_json_file, frame_skip)
+
+                        # Run holes_analysis.py using srun
+                        command = ['srun', '--mem=4G', 'python', 'holes_analysis.py', subfolder_path, vname]
+                        print(f'Running holes_analysis.py for {vname}')
+                        subprocess.run(command)
+                    else:
+                        print(f'Skipping {video_file}, output already exists.')
