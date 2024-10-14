@@ -16,7 +16,7 @@ plt.rcParams.update({'font.size': 20})
 
 def plot_from_json(json_file, pattern_folder, dump_file, method='log10'):
     # Create directories if they don't exist
-    plots_dir = os.path.join('output', 'simulations', pattern_folder, 'plots')
+    plots_dir = os.path.join(pattern_folder, 'plots')
     os.makedirs(plots_dir, exist_ok=True)
 
     with open(json_file, 'r') as f:
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     dump_file = sys.argv[2]
 
     # Construct the JSON file path
-    json_file = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_holes.json')
+    json_file = os.path.join(pattern_folder, 'plots', dump_file + '_holes.json')
 
     # Check if the JSON file exists
     if not os.path.exists(json_file):
