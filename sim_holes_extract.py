@@ -153,7 +153,7 @@ def save_holes(positions):
         ax.set_xlim(x.min() - radius, x.max() + radius)
         ax.set_ylim(y.min() - radius, y.max() + radius)
 
-        frame_filename = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + f'frame_{t}.png')
+        frame_filename = os.path.join(pattern_folder, 'plots', dump_file + f'frame_{t}.png')
         fig.savefig(frame_filename, format='png', dpi=300, bbox_inches='tight', pad_inches=0)
         frames.append(frame_filename)
         plt.close(fig)
@@ -166,12 +166,12 @@ def save_holes(positions):
         data.append(time_data)
         
     # Write data to a JSON file
-    output_file = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_holes.json')
+    output_file = os.path.join(pattern_folder, 'plots', dump_file + '_holes.json')
     with open(output_file, 'w') as f:
         json.dump(data, f, indent=2)
     
     # Generate GIF from frames
-    gif_filename = os.path.join('output', 'simulations', pattern_folder, 'plots', dump_file + '_area_dist.gif')
+    gif_filename = os.path.join(pattern_folder, 'plots', dump_file + '_area_dist.gif')
     with imageio.get_writer(gif_filename, mode='I', fps=10, loop=0) as writer:
         for filename in frames:
             image = imageio.imread(filename)
@@ -195,7 +195,7 @@ mol_r = args.mol_r
 xmin, xmax, ymin, ymax = args.roi
 
 (force_data, id_data, atom_type, pe_data, pos, coord_atoms) = read_lammps_dump(
-    os.path.join('output', 'simulations', pattern_folder, dump_file + '.lammpstrj'),
+    os.path.join(pattern_folder, dump_file + '.lammpstrj'),
     xmin, xmax, ymin, ymax)
 
 for k in range(len(pe_data)):
