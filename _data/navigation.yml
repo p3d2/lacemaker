@@ -3,6 +3,8 @@ main:
     url: "/"
   - title: "Lace patterns"
     url: "/patterns/"
+  - title: "Create pattern"
+    url: "/create/"
   - title: "About"
     url: "/about/"
     target: _blank
