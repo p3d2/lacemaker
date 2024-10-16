@@ -10,4 +10,5 @@ Explore various tessellation patterns and their dynamic behaviors through simula
 </div>
 
 [Explore Patterns]({{ '/patterns/' | relative_url }}){: .btn .btn--primary }
+[Create a Pattern]({{ '/create/' | relative_url }}){: .btn }
 [About This Project]({{ '/about/' | relative_url }}){: .btn }
