@@ -34,6 +34,7 @@ Let's use the following lace example:
 <div>
   <label for="file-select">Select JSON File:</label>
   <select id="file-select"></select>
+  <button id="view-toggle-button">Switch View</button>
   <button id="save-button">Save Changes</button>
 </div>
 
