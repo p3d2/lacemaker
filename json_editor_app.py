@@ -445,7 +445,7 @@ def draw_graph():
     figure_canvas2.draw()
 
 #folder = r'\\data.triton.aalto.fi\work\silvap1\lacemaker\input\json_patterns_small'
-folder = r'input/json_patterns_small'
+folder = r'input/json_patterns'
 file_paths = get_files(folder)
 plt.rcParams['font.family'] = 'monospace'
 plt.rcParams['font.monospace'] = ['Source Code Pro']
@@ -496,7 +496,7 @@ button_frame = ttk.Frame(left_panel, style = 'White.TFrame')
 button_frame.pack(fill="both", expand=True)
 
 # Embedding the matplotlib figure within the right panel's canvas
-fig, ax = plt.subplots(figsize=(10, 10))
+fig, ax = plt.subplots(figsize=(12, 12))
 figure_canvas = FigureCanvasTkAgg(fig, master=tk_canvas)
 figure_canvas.draw()
 canvas_widget = figure_canvas.get_tk_widget()
