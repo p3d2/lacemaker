@@ -38,10 +38,10 @@ Let's use the following lace example:
 </div>
 
 <div id="graph-container" style="width:100%; height:800px;"></div>
+{% endraw %}
 
 <script>
   const dataPath = "{{ '/input/json_patterns/' | relative_url }}";
 </script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="{{ '/assets/js/app.js' | relative_url }}"></script>
-{% endraw %}
