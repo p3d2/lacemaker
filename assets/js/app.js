@@ -5,10 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let svg;
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
-  const dataPath = '/data/'; 
-
   // Fetch the manifest file
-  fetch(`${dataPath}manifest.json`)
+  fetch(`/data/manifest.json`)
     .then(response => response.json())
     .then(files => {
       // Populate the select dropdown
