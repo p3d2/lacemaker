@@ -331,7 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderFigure2() {
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
     const lace = [];
-
+    const width = graphContainer.clientWidth;
+    const height = graphContainer.clientHeight;
+    
     const zoom = d3.zoom()
       .scaleExtent([0.5, 5]) // Adjust zoom levels as needed
       .on('zoom', (event) => {
