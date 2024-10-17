@@ -232,6 +232,18 @@ document.addEventListener('DOMContentLoaded', () => {
       .domain([yExtent[0] - 2, yExtent[1] + 2])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
+    // Axes
+    const xAxisScale = d3.scaleLinear()
+      .domain([Math.floor(xExtent[0] / 4) * 4, Math.ceil(xExtent[1] / 4) * 4])
+      .range([margin, graphContainer.clientWidth - margin]);
+
+    const yAxisScale = d3.scaleLinear()
+      .domain([Math.floor(yExtent[0] / 4) * 4, Math.ceil(yExtent[1] / 4) * 4])
+      .range([graphContainer.clientHeight - margin, margin]);
+
+    const xAxis = d3.axisBottom(xAxisScale).ticks((xExtent[1] - xExtent[0]) / 4);
+    const yAxis = d3.axisLeft(yAxisScale).ticks((yExtent[1] - yExtent[0]) / 4);
+
     // Grid lines
         svg.append('g')
         .attr('class', 'grid')
@@ -306,18 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .text(d => d.label)
         .attr('font-size', 12)
         .attr('font-weight', 'bold');
-
-    // Axes
-    const xAxisScale = d3.scaleLinear()
-      .domain([Math.floor(xExtent[0] / 4) * 4, Math.ceil(xExtent[1] / 4) * 4])
-      .range([margin, graphContainer.clientWidth - margin]);
-
-    const yAxisScale = d3.scaleLinear()
-      .domain([Math.floor(yExtent[0] / 4) * 4, Math.ceil(yExtent[1] / 4) * 4])
-      .range([graphContainer.clientHeight - margin, margin]);
-
-    const xAxis = d3.axisBottom(xAxisScale).ticks((xExtent[1] - xExtent[0]) / 4);
-    const yAxis = d3.axisLeft(yAxisScale).ticks((yExtent[1] - yExtent[0]) / 4);
 
     svg.append('g')
       .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
