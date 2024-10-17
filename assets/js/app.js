@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // List of JSON files (update with your actual file names)
   const files = [
-    'pattern1.json',
+    'pattern1024.json',
+    'pattern1084.json'
     // Add your files here
   ];
 
