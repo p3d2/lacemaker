@@ -1,30 +1,15 @@
-let currentView = 'mesh';
-
 document.addEventListener('DOMContentLoaded', () => {
-  const viewToggleButton = document.getElementById('view-toggle-button');
-  viewToggleButton.addEventListener('click', () => {
-    // Toggle the view
-    if (currentView === 'pattern') {
-      currentView = 'mesh';
-      viewToggleButton.textContent = 'Switch to Pattern View';
-    } else {
-      currentView = 'pattern';
-      viewToggleButton.textContent = 'Switch to Mesh View';
-    }
-    // Re-render the graph with the new view
-    renderGraph();
-  });
-
   const fileSelect = document.getElementById('file-select');
   const graphContainer = document.getElementById('graph-container');
   let graphData;
-  let simulation;
   let svg;
+  let currentView = 'figure1'; // 'figure1' or 'figure2'
 
   // List of JSON files (update with your actual file names)
   const files = [
     'pattern1024.json',
-    'pattern1084.json'
+    'pattern1084.json',
+    'pattern1093.json'
     // Add your files here
   ];
 
@@ -41,6 +26,19 @@ document.addEventListener('DOMContentLoaded', () => {
     loadGraph(fileName);
   });
 
+  // Switch view button
+  const viewToggleButton = document.getElementById('view-toggle-button');
+  viewToggleButton.addEventListener('click', () => {
+    if (currentView === 'figure1') {
+      currentView = 'figure2';
+      viewToggleButton.textContent = 'Switch to Figure 1';
+    } else {
+      currentView = 'figure1';
+      viewToggleButton.textContent = 'Switch to Figure 2';
+    }
+    renderGraph();
+  });
+
   // Load the initial graph
   if (files.length > 0) {
     loadGraph(files[0]);
@@ -53,8 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`${dataPath}${fileName}`)
       .then(response => response.json())
       .then(data => {
-        // Process data according to your JSON structure
-        graphData = convertDataToGraphFormat(data);
+        graphData = data;
         renderGraph();
       })
       .catch(error => {
@@ -63,261 +60,276 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  function convertDataToGraphFormat(data) {
-    const nodes = [];
-    const links = [];
-    const nodeMap = {}; // Map from node ID to node object
-
-    // Parse nodes
-    for (const [nodeId, pos] of Object.entries(data.nodes)) {
-      const node = {
-        id: nodeId,
-        x: pos[0],
-        y: pos[1],
-        // Handle optional third element
-        extra: pos[2] || null,
-      };
-      nodes.push(node);
-      nodeMap[nodeId] = node;
-    }
-
-    // Parse paths and shifts
-    data.paths.forEach((pathObj, pathIndex) => {
-      const path = pathObj.path;
-      const shifts = pathObj.shifts || {};
-      let cumulativeShift = [0, 0];
-
-      for (let i = 0; i < path.length - 1; i++) {
-        let sourceId = path[i];
-        let targetId = path[i + 1];
-
-        // Handle modified node IDs (e.g., "1r", "8l")
-        sourceId = cleanNodeId(sourceId);
-        targetId = cleanNodeId(targetId);
-
-        // Apply shifts if any
-        const shiftKey = `[${path[i]}, ${path[i + 1]}]`;
-        if (shifts[shiftKey]) {
-          const shift = shifts[shiftKey];
-          cumulativeShift[0] += shift[0];
-          cumulativeShift[1] += shift[1];
-        }
-
-        // Get source and target nodes
-        const sourceNode = nodeMap[sourceId];
-        const targetNode = nodeMap[targetId];
-
-        // Clone nodes if necessary to account for shifts
-        const shiftedTargetNode = getShiftedNode(targetNode, cumulativeShift);
-
-        // Add shifted node to nodes array if not already present
-        if (!nodes.includes(shiftedTargetNode)) {
-          nodes.push(shiftedTargetNode);
-        }
-
-        // Create link
-        links.push({
-          source: sourceNode,
-          target: shiftedTargetNode,
-          pathIndex: pathIndex,
-        });
-      }
-    });
-
-    return { nodes, links };
-  }
-
-  function cleanNodeId(nodeId) {
-    if (typeof nodeId === 'string') {
-      // Remove any suffixes like 'r' or 'l'
-      return nodeId.replace(/[rl]$/, '');
-    }
-    return nodeId.toString();
-  }
-
-  const shiftedNodeCache = {};
-
-  function getShiftedNode(node, shift) {
-    // Create a unique key for the shifted node
-    const key = `${node.id}_${shift[0]}_${shift[1]}`;
-    if (shiftedNodeCache[key]) {
-      return shiftedNodeCache[key];
-    } else {
-      const shiftedNode = {
-        id: key,
-        originalId: node.id,
-        x: node.x + shift[0],
-        y: node.y + shift[1],
-        extra: node.extra,
-      };
-      shiftedNodeCache[key] = shiftedNode;
-      return shiftedNode;
-    }
-  }
-
   function renderGraph() {
     // Clear previous SVG content
     d3.select('#graph-container').selectAll('*').remove();
-  
+
     const width = graphContainer.clientWidth;
     const height = graphContainer.clientHeight;
-  
+
+    // Set up SVG
     svg = d3.select('#graph-container').append('svg')
       .attr('width', width)
-      .attr('height', height)
-      .call(d3.zoom().on('zoom', (event) => {
-        svg.attr('transform', event.transform);
-      }))
-      .append('g');
-  
-    // Define color scale for paths
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
-  
-    // Render based on the current view
-    if (currentView === 'pattern') {
-      renderPatternView(svg, color);
+      .attr('height', height);
+
+    if (currentView === 'figure1') {
+      renderFigure1();
     } else {
-      renderMeshView(svg, color);
+      renderFigure2();
     }
   }
 
-  function renderPatternView(svg, color) {
-    // In Pattern View, we position nodes based on their coordinates without force simulation
-  
-    // Add links
-    const link = svg.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(graphData.links)
-      .enter().append('line')
-      .attr('class', 'link')
-      .attr('stroke', d => color(d.pathIndex))
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y);
-  
-    // Add nodes
-    const node = svg.append('g')
-      .attr('class', 'nodes')
-      .selectAll('g')
-      .data(graphData.nodes)
-      .enter().append('g');
-  
-    node.append('circle')
-      .attr('r', 10)
-      .attr('fill', '#69b3a2')
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y);
-  
-    node.append('text')
-      .attr('x', d => d.x + 12)
-      .attr('y', d => d.y + 4)
-      .text(d => d.originalId || d.id);
-  
-    // Add interactions if needed (e.g., click events)
-  }
+  function renderFigure1() {
+    const G = new Map();
+    const nodeColors = new Map();
+    const labelDict = new Map();
+    const posToNodeId = new Map();
+    const posBase = new Map();
+    const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
 
-  function renderMeshView(svg, color) {
-    // In Mesh View, we can apply force simulation or adjust styling as needed
-  
-    // Initialize simulation
-    simulation = d3.forceSimulation(graphData.nodes)
-      .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(graphContainer.clientWidth / 2, graphContainer.clientHeight / 2));
-  
-    // Add links
-    const link = svg.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(graphData.links)
-      .enter().append('line')
-      .attr('class', 'link')
-      .attr('stroke', d => color(d.pathIndex));
-  
-    // Add nodes
-    const node = svg.append('g')
-      .attr('class', 'nodes')
-      .selectAll('g')
-      .data(graphData.nodes)
-      .enter().append('g')
-      .call(d3.drag()
-        .on('start', dragStarted)
-        .on('drag', dragged)
-        .on('end', dragEnded));
-  
-    node.append('circle')
-      .attr('r', 10)
-      .attr('fill', '#69b3a2');
-  
-    node.append('text')
-      .attr('dx', 12)
-      .attr('dy', '.35em')
-      .text(d => d.originalId || d.id);
-  
-    // Simulation tick
-    simulation.on('tick', () => {
-      link
-        .attr('x1', d => d.source.x)
-        .attr('y1', d => d.source.y)
-        .attr('x2', d => d.target.x)
-        .attr('y2', d => d.target.y);
-  
-      node.attr('transform', d => `translate(${d.x},${d.y})`);
-    });
-  }
-  
-  // Save button event
-  document.getElementById('save-button').addEventListener('click', () => {
-    saveGraph();
-  });
+    // Parse nodes
+    for (const [nodeId, pos] of Object.entries(graphData.nodes)) {
+      const roundedPos = pos.slice(0, 2).map(p => Math.round(p * 100) / 100);
+      G.set(nodeId, { pos: roundedPos });
+      nodeColors.set(nodeId, 'white');
+      labelDict.set(nodeId, nodeId);
+      posToNodeId.set(roundedPos.toString(), nodeId);
+    }
 
-  function saveGraph() {
-    // Prepare the data to be saved
-    const nodes = graphData.nodes.map(node => {
-      return {
-        id: node.originalId || node.id,
-        x: node.x,
-        y: node.y,
-        extra: node.extra,
-        // Include other node properties if any
-      };
-    });
+    for (const [key, value] of posToNodeId.entries()) {
+      posBase.set(key, value);
+    }
 
-    const links = graphData.links.map(link => {
-      return {
-        source: link.source.originalId || link.source.id,
-        target: link.target.originalId || link.target.id,
-        // Include other link properties if any
-      };
-    });
+    // Paths
+    const paths = {};
+    for (let index = 0; index < graphData.paths.length; index++) {
+      const pathInfo = graphData.paths[index];
+      paths[index] = pathInfo.path;
+    }
 
-    const updatedData = {
-      // Include the original data structure
-      ...graphData.originalData,
-      nodes: nodes.reduce((acc, node) => {
-        const id = node.id;
-        const posArray = [node.x, node.y];
-        if (node.extra !== null) {
-          posArray.push(node.extra);
+    // Build the graph
+    for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
+      const pathId = yarnData[0];
+      const nodeStartIndex = yarnData[1].toString();
+      const pathStartIndex = yarnData[2];
+      let pathZ0 = yarnData[3];
+      const yarnPath = paths[pathId].map(toInt);
+
+      // Unit repetitions
+      const unitRepetition = graphData.unit_repetion[yarnId];
+      const rep1 = unitRepetition[0];
+      const vector1 = [unitRepetition[1], unitRepetition[2]];
+      const vector2 = [unitRepetition[4], unitRepetition[5]];
+      const rep2 = unitRepetition[3];
+
+      // Adjust path for starting point within pattern
+      const adjustedPath = yarnPath.slice(pathStartIndex).concat(yarnPath.slice(0, pathStartIndex));
+      let currentPos = [...G.get(nodeStartIndex).pos];
+      let cumulativeShift = [0.0, 0.0];
+
+      const pathZorder = [];
+      for (let i = 0; i < adjustedPath.length; i++) {
+        pathZorder.push(pathZ0);
+        const nodeId = adjustedPath[i].toString();
+        const twists = graphData.nodes[nodeId] && graphData.nodes[nodeId][2] ? graphData.nodes[nodeId][2] : 0;
+        if (twists % 2 === 0) pathZ0 = -pathZ0;
+      }
+
+      const pathSave = [currentPos];
+      for (let i = 0; i < adjustedPath.length; i++) {
+        const nodeStart = adjustedPath[i % adjustedPath.length].toString();
+        const nodeEnd = adjustedPath[(i + 1) % adjustedPath.length].toString();
+
+        const shiftKey = `[${nodeStart}, ${nodeEnd}]`;
+        const currentShift = graphData.paths[pathId].shifts[shiftKey] || [0, 0];
+        cumulativeShift[0] += currentShift[0];
+        cumulativeShift[1] += currentShift[1];
+
+        const endPosBase = G.get(nodeEnd).pos;
+        const endPos = [endPosBase[0] + cumulativeShift[0], endPosBase[1] + cumulativeShift[1]];
+        const roundedPos = endPos.map(p => Math.round(p * 100) / 100);
+
+        const posKey = roundedPos.toString();
+        let newNodeId = posToNodeId.get(posKey);
+        if (!newNodeId) {
+          newNodeId = `${nodeEnd}_${roundedPos[0]}_${roundedPos[1]}`;
+          G.set(newNodeId, { pos: roundedPos });
+          nodeColors.set(newNodeId, 'white');
+          labelDict.set(newNodeId, nodeEnd);
+          posToNodeId.set(posKey, newNodeId);
         }
-        acc[id] = posArray;
-        return acc;
-      }, {}),
-      // Paths and shifts would need to be updated accordingly
-      // For simplicity, we're not updating shifts here
-    };
 
-    const jsonStr = JSON.stringify(updatedData, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+        // Add edge
+        const edgeKey = `${currentPos.toString()}-${endPos.toString()}`;
+        G.get(posToNodeId.get(currentPos.toString())).edges = G.get(posToNodeId.get(currentPos.toString())).edges || [];
+        G.get(posToNodeId.get(currentPos.toString())).edges.push({
+          target: newNodeId,
+          color: pathColors[yarnId % pathColors.length],
+        });
 
-    // Create a link and trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `updated_${fileSelect.value}`;
-    a.click();
-    URL.revokeObjectURL(url);
+        // Change color of the trivial network
+        if (posBase.has(currentPos.toString()) && pathZorder[i % adjustedPath.length] > 0) {
+          nodeColors.set(nodeStart, pathColors[yarnId % pathColors.length]);
+          const nodeTwists = graphData.nodes[nodeStart] && graphData.nodes[nodeStart][2] ? graphData.nodes[nodeStart][2] : 0;
+          if (Math.abs(nodeTwists) > 0) {
+            nodeColors.set(nodeStart, 'gray');
+          }
+        }
+
+        pathSave.push(endPos);
+
+        // Update current point
+        currentPos = endPos;
+      }
+    }
+
+    // Drawing
+    const allNodes = Array.from(G.keys());
+    const nodeData = allNodes.map(nodeId => {
+      return {
+        id: nodeId,
+        x: G.get(nodeId).pos[0],
+        y: G.get(nodeId).pos[1],
+        color: nodeColors.get(nodeId),
+        label: labelDict.get(nodeId),
+      };
+    });
+
+    const edgeData = [];
+    for (const nodeId of allNodes) {
+      const node = G.get(nodeId);
+      if (node.edges) {
+        for (const edge of node.edges) {
+          edgeData.push({
+            source: nodeId,
+            target: edge.target,
+            color: edge.color,
+          });
+        }
+      }
+    }
+
+    // Scaling
+    const xExtent = d3.extent(nodeData, d => d.x);
+    const yExtent = d3.extent(nodeData, d => d.y);
+    const margin = 20;
+
+    const xScale = d3.scaleLinear()
+      .domain([xExtent[0] - 2, xExtent[1] + 2])
+      .range([margin, graphContainer.clientWidth - margin]);
+
+    const yScale = d3.scaleLinear()
+      .domain([yExtent[0] - 2, yExtent[1] + 2])
+      .range([graphContainer.clientHeight - margin, margin]);
+
+    // Draw nodes
+    svg.selectAll('.node')
+      .data(nodeData)
+      .enter()
+      .append('circle')
+      .attr('class', 'node')
+      .attr('cx', d => xScale(d.x))
+      .attr('cy', d => yScale(d.y))
+      .attr('r', 10)
+      .attr('fill', d => d.color)
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
+
+    // Draw labels
+    svg.selectAll('.label')
+      .data(nodeData)
+      .enter()
+      .append('text')
+      .attr('class', 'label')
+      .attr('x', d => xScale(d.x) + 12)
+      .attr('y', d => yScale(d.y) + 4)
+      .text(d => d.label)
+      .attr('font-size', 12)
+      .attr('font-weight', 'bold');
+
+    // Draw edges
+    svg.selectAll('.edge')
+      .data(edgeData)
+      .enter()
+      .append('line')
+      .attr('class', 'edge')
+      .attr('x1', d => xScale(G.get(d.source).pos[0]))
+      .attr('y1', d => yScale(G.get(d.source).pos[1]))
+      .attr('x2', d => xScale(G.get(d.target).pos[0]))
+      .attr('y2', d => yScale(G.get(d.target).pos[1]))
+      .attr('stroke', d => d.color)
+      .attr('stroke-width', 8);
+
+    // Draw base edges
+    svg.selectAll('.base-edge')
+      .data(edgeData)
+      .enter()
+      .append('line')
+      .attr('class', 'base-edge')
+      .attr('x1', d => xScale(G.get(d.source).pos[0]))
+      .attr('y1', d => yScale(G.get(d.source).pos[1]))
+      .attr('x2', d => xScale(G.get(d.target).pos[0]))
+      .attr('y2', d => yScale(G.get(d.target).pos[1]))
+      .attr('stroke', 'black')
+      .attr('stroke-width', 12)
+      .attr('opacity', 0.5);
+
+    // Axes and grid
+    const xAxisScale = d3.scaleLinear()
+      .domain([Math.floor(xExtent[0] / 4) * 4, Math.ceil(xExtent[1] / 4) * 4])
+      .range([margin, graphContainer.clientWidth - margin]);
+
+    const yAxisScale = d3.scaleLinear()
+      .domain([Math.floor(yExtent[0] / 4) * 4, Math.ceil(yExtent[1] / 4) * 4])
+      .range([graphContainer.clientHeight - margin, margin]);
+
+    const xAxis = d3.axisBottom(xAxisScale).ticks((xExtent[1] - xExtent[0]) / 4);
+    const yAxis = d3.axisLeft(yAxisScale).ticks((yExtent[1] - yExtent[0]) / 4);
+
+    svg.append('g')
+      .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
+      .call(xAxis);
+
+    svg.append('g')
+      .attr('transform', `translate(${margin}, 0)`)
+      .call(yAxis);
+
+    // Grid lines
+    svg.append('g')
+      .attr('class', 'grid')
+      .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
+      .call(d3.axisBottom(xAxisScale)
+        .ticks((xExtent[1] - xExtent[0]) / 1)
+        .tickSize(-graphContainer.clientHeight + 2 * margin)
+        .tickFormat(''))
+      .selectAll('line')
+      .attr('stroke', 'lightgray')
+      .attr('stroke-dasharray', '2,2');
+
+    svg.append('g')
+      .attr('class', 'grid')
+      .attr('transform', `translate(${margin}, 0)`)
+      .call(d3.axisLeft(yAxisScale)
+        .ticks((yExtent[1] - yExtent[0]) / 1)
+        .tickSize(-graphContainer.clientWidth + 2 * margin)
+        .tickFormat(''))
+      .selectAll('line')
+      .attr('stroke', 'lightgray')
+      .attr('stroke-dasharray', '2,2');
   }
-});
+
+  function renderFigure2() {
+    const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
+    const lace = [];
+
+    // Build paths
+    for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
+      const pathId = yarnData[0];
+      const nodeStartIndex = yarnData[1].toString();
+      const pathStartIndex = yarnData[2];
+      const yarnPath = graphData.paths[pathId].path.map(toInt);
+
+      // Unit repetitions
+      const unitRepetition = graphData.unit_repetion[yarnId];
+      const rep1 = unitRepetition[0];
+      const ve
