@@ -1,5 +1,3 @@
-// assets/js/app.js
-
 document.addEventListener('DOMContentLoaded', () => {
   const fileSelect = document.getElementById('file-select');
   const graphContainer = document.getElementById('graph-container');
@@ -7,13 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let simulation;
   let svg;
 
-  // Fetch list of JSON files from the input/json_patterns/ directory
-  // Since we can't read the directory contents directly, we'll create a JSON file that lists the available JSON files
-  // Alternatively, if the list of files is static or known, you can hardcode it
+  // List of JSON files (update with your actual file names)
   const files = [
-    'pattern1024.json',
-    'pattern1084.json',
-    // Add more file names as needed
+    'pattern1.json',
+    // Add your files here
   ];
 
   // Populate the select dropdown
@@ -36,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadGraph(fileName) {
     // Clear previous SVG
-    d3.select('svg').remove();
-  
+    d3.select('#graph-container').selectAll('*').remove();
+
     fetch(`${dataPath}${fileName}`)
       .then(response => response.json())
       .then(data => {
@@ -47,36 +42,100 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(error => {
         console.error('Error loading JSON file:', error);
+        alert('Error loading JSON file. Check the console for details.');
       });
   }
-  
+
   function convertDataToGraphFormat(data) {
     const nodes = [];
     const links = [];
-  
-    // Assuming data.nodes is an object with node IDs as keys and positions as values
+    const nodeMap = {}; // Map from node ID to node object
+
+    // Parse nodes
     for (const [nodeId, pos] of Object.entries(data.nodes)) {
-      nodes.push({
+      const node = {
         id: nodeId,
         x: pos[0],
         y: pos[1],
-        // Include other properties if necessary
-      });
+        // Handle optional third element
+        extra: pos[2] || null,
+      };
+      nodes.push(node);
+      nodeMap[nodeId] = node;
     }
-  
-    // Assuming data.paths is an array of path objects
-    data.paths.forEach(path => {
-      const pathNodes = path.path; // Adjust based on your data structure
-      for (let i = 0; i < pathNodes.length - 1; i++) {
+
+    // Parse paths and shifts
+    data.paths.forEach((pathObj, pathIndex) => {
+      const path = pathObj.path;
+      const shifts = pathObj.shifts || {};
+      let cumulativeShift = [0, 0];
+
+      for (let i = 0; i < path.length - 1; i++) {
+        let sourceId = path[i];
+        let targetId = path[i + 1];
+
+        // Handle modified node IDs (e.g., "1r", "8l")
+        sourceId = cleanNodeId(sourceId);
+        targetId = cleanNodeId(targetId);
+
+        // Apply shifts if any
+        const shiftKey = `[${path[i]}, ${path[i + 1]}]`;
+        if (shifts[shiftKey]) {
+          const shift = shifts[shiftKey];
+          cumulativeShift[0] += shift[0];
+          cumulativeShift[1] += shift[1];
+        }
+
+        // Get source and target nodes
+        const sourceNode = nodeMap[sourceId];
+        const targetNode = nodeMap[targetId];
+
+        // Clone nodes if necessary to account for shifts
+        const shiftedTargetNode = getShiftedNode(targetNode, cumulativeShift);
+
+        // Add shifted node to nodes array if not already present
+        if (!nodes.includes(shiftedTargetNode)) {
+          nodes.push(shiftedTargetNode);
+        }
+
+        // Create link
         links.push({
-          source: pathNodes[i],
-          target: pathNodes[i + 1],
-          // Include other properties if necessary
+          source: sourceNode,
+          target: shiftedTargetNode,
+          pathIndex: pathIndex,
         });
       }
     });
-  
+
     return { nodes, links };
+  }
+
+  function cleanNodeId(nodeId) {
+    if (typeof nodeId === 'string') {
+      // Remove any suffixes like 'r' or 'l'
+      return nodeId.replace(/[rl]$/, '');
+    }
+    return nodeId.toString();
+  }
+
+  const shiftedNodeCache = {};
+
+  function getShiftedNode(node, shift) {
+    // Create a unique key for the shifted node
+    const key = `${node.id}_${shift[0]}_${shift[1]}`;
+    if (shiftedNodeCache[key]) {
+      return shiftedNodeCache[key];
+    } else {
+      const shiftedNode = {
+        id: key,
+        originalId: node.id,
+        x: node.x + shift[0],
+        y: node.y + shift[1],
+        extra: node.extra,
+      };
+      shiftedNodeCache[key] = shiftedNode;
+      return shiftedNode;
+    }
   }
 
   function renderGraph() {
@@ -91,11 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }))
       .append('g');
 
-    // Initialize simulation
-    simulation = d3.forceSimulation(graphData.nodes)
-      .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(width / 2, height / 2));
+    // Define color scale for paths
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     // Add links
     const link = svg.append('g')
@@ -103,7 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .selectAll('line')
       .data(graphData.links)
       .enter().append('line')
-      .attr('class', 'link');
+      .attr('class', 'link')
+      .attr('stroke', d => color(d.pathIndex));
 
     // Add nodes
     const node = svg.append('g')
@@ -123,18 +180,23 @@ document.addEventListener('DOMContentLoaded', () => {
     node.append('text')
       .attr('dx', 12)
       .attr('dy', '.35em')
-      .text(d => d.id);
+      .text(d => d.originalId || d.id);
 
     // Add node double-click event to edit node properties
     node.on('dblclick', (event, d) => {
-      const newId = prompt('Enter new node ID:', d.id);
+      const newId = prompt('Enter new node ID:', d.originalId || d.id);
       if (newId !== null && newId !== d.id) {
-        d.id = newId;
+        d.originalId = newId;
         d3.select(event.currentTarget).select('text').text(newId);
-        simulation.nodes(graphData.nodes);
-        simulation.alpha(0.3).restart();
+        // Update nodeMap if necessary
       }
     });
+
+    // Simulation setup
+    simulation = d3.forceSimulation(graphData.nodes)
+      .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
+      .force('charge', d3.forceManyBody().strength(-300))
+      .force('center', d3.forceCenter(width / 2, height / 2));
 
     // Simulation tick
     simulation.on('tick', () => {
@@ -175,25 +237,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Prepare the data to be saved
     const nodes = graphData.nodes.map(node => {
       return {
-        id: node.id,
+        id: node.originalId || node.id,
         x: node.x,
         y: node.y,
+        extra: node.extra,
         // Include other node properties if any
       };
     });
 
     const links = graphData.links.map(link => {
       return {
-        source: link.source.id ? link.source.id : link.source,
-        target: link.target.id ? link.target.id : link.target,
+        source: link.source.originalId || link.source.id,
+        target: link.target.originalId || link.target.id,
         // Include other link properties if any
       };
     });
 
     const updatedData = {
-      ...graphData,
-      nodes,
-      links,
+      // Include the original data structure
+      ...graphData.originalData,
+      nodes: nodes.reduce((acc, node) => {
+        const id = node.id;
+        const posArray = [node.x, node.y];
+        if (node.extra !== null) {
+          posArray.push(node.extra);
+        }
+        acc[id] = posArray;
+        return acc;
+      }, {}),
+      // Paths and shifts would need to be updated accordingly
+      // For simplicity, we're not updating shifts here
     };
 
     const jsonStr = JSON.stringify(updatedData, null, 2);
