@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .enter()
         .append('text')
         .attr('class', 'label')
-        .attr('x', d => xScale(d.x) + 4)
+        .attr('x', d => xScale(d.x))
         .attr('y', d => yScale(d.y) + 4)
         .text(d => d.label)
         .attr('font-size', 12)
@@ -333,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lace = [];
     const width = graphContainer.clientWidth;
     const height = graphContainer.clientHeight;
+    const margin = 20;
 
     const zoom = d3.zoom()
       .scaleExtent([0.5, 5]) // Adjust zoom levels as needed
