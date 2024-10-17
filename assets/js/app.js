@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let svg;
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
-  const dataPath = '/assets/js/'; 
+  const dataPath = '/data/'; 
 
   // Fetch the manifest file
   fetch(`${dataPath}manifest.json`)
@@ -488,14 +488,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('transform', (d, i) => `translate(0, ${margin + i * 20})`);
   
     legend.append('rect')
-      .attr('x', graphContainer.clientWidth - margin - 18)
-      .attr('y', margin + 9)
+      .attr('x', graphContainer.clientWidth - margin - 24)
+      .attr('y', margin)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', d => d);
   
     legend.append('text')
-      .attr('x', graphContainer.clientWidth - margin - 24)
+      .attr('x', graphContiner.clientWidth - margin - 30)
       .attr('y', margin + 9)
       .attr('dy', '.35em')
       .style('text-anchor', 'end')
