@@ -222,30 +222,46 @@ document.addEventListener('DOMContentLoaded', () => {
       .domain([yExtent[0] - 2, yExtent[1] + 2])
       .range([graphContainer.clientHeight - margin, margin]);
 
-    // Draw nodes
-    svg.selectAll('.node')
-      .data(nodeData)
-      .enter()
-      .append('circle')
-      .attr('class', 'node')
-      .attr('cx', d => xScale(d.x))
-      .attr('cy', d => yScale(d.y))
-      .attr('r', 10)
-      .attr('fill', d => d.color)
-      .attr('stroke', 'black')
-      .attr('stroke-width', 1);
+    const dataWidth = xExtent[1] - xExtent[0] + 4; // +4 to account for margins
+    const dataHeight = yExtent[1] - yExtent[0] + 4;
 
-    // Draw labels
-    svg.selectAll('.label')
-      .data(nodeData)
-      .enter()
-      .append('text')
-      .attr('class', 'label')
-      .attr('x', d => xScale(d.x) + 12)
-      .attr('y', d => yScale(d.y) + 4)
-      .text(d => d.label)
-      .attr('font-size', 12)
-      .attr('font-weight', 'bold');
+    // Compute scaleFactor to ensure square units
+    const scaleFactor = Math.min(
+      (graphContainer.clientWidth - 2 * margin) / dataWidth,
+      (graphContainer.clientHeight - 2 * margin) / dataHeight
+    );
+
+    // Adjust scales to ensure square spacing and invert y-axis
+    const xScale = d3.scaleLinear()
+      .domain([xExtent[0] - 2, xExtent[1] + 2])
+      .range([margin, margin + dataWidth * scaleFactor]);
+
+    const yScale = d3.scaleLinear()
+      .domain([yExtent[0] - 2, yExtent[1] + 2])
+      .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
+
+    // Grid lines
+        svg.append('g')
+        .attr('class', 'grid')
+        .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
+        .call(d3.axisBottom(xAxisScale)
+          .ticks((xExtent[1] - xExtent[0]) / 1)
+          .tickSize(-graphContainer.clientHeight + 2 * margin)
+          .tickFormat(''))
+        .selectAll('line')
+        .attr('stroke', 'lightgray')
+        .attr('stroke-dasharray', '2,2');
+  
+      svg.append('g')
+        .attr('class', 'grid')
+        .attr('transform', `translate(${margin}, 0)`)
+        .call(d3.axisLeft(yAxisScale)
+          .ticks((yExtent[1] - yExtent[0]) / 1)
+          .tickSize(-graphContainer.clientWidth + 2 * margin)
+          .tickFormat(''))
+        .selectAll('line')
+        .attr('stroke', 'lightgray')
+        .attr('stroke-dasharray', '2,2');
 
     // Draw edges
     svg.selectAll('.edge')
@@ -274,7 +290,32 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke-width', 12)
       .attr('opacity', 0.5);
 
-    // Axes and grid
+      // Draw nodes
+        svg.selectAll('.node')
+        .data(nodeData)
+        .enter()
+        .append('circle')
+        .attr('class', 'node')
+        .attr('cx', d => xScale(d.x))
+        .attr('cy', d => yScale(d.y))
+        .attr('r', 10)
+        .attr('fill', d => d.color)
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1);
+  
+      // Draw labels
+      svg.selectAll('.label')
+        .data(nodeData)
+        .enter()
+        .append('text')
+        .attr('class', 'label')
+        .attr('x', d => xScale(d.x) + 12)
+        .attr('y', d => yScale(d.y) + 4)
+        .text(d => d.label)
+        .attr('font-size', 12)
+        .attr('font-weight', 'bold');
+
+    // Axes
     const xAxisScale = d3.scaleLinear()
       .domain([Math.floor(xExtent[0] / 4) * 4, Math.ceil(xExtent[1] / 4) * 4])
       .range([margin, graphContainer.clientWidth - margin]);
@@ -293,34 +334,24 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.append('g')
       .attr('transform', `translate(${margin}, 0)`)
       .call(yAxis);
-
-    // Grid lines
-    svg.append('g')
-      .attr('class', 'grid')
-      .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
-      .call(d3.axisBottom(xAxisScale)
-        .ticks((xExtent[1] - xExtent[0]) / 1)
-        .tickSize(-graphContainer.clientHeight + 2 * margin)
-        .tickFormat(''))
-      .selectAll('line')
-      .attr('stroke', 'lightgray')
-      .attr('stroke-dasharray', '2,2');
-
-    svg.append('g')
-      .attr('class', 'grid')
-      .attr('transform', `translate(${margin}, 0)`)
-      .call(d3.axisLeft(yAxisScale)
-        .ticks((yExtent[1] - yExtent[0]) / 1)
-        .tickSize(-graphContainer.clientWidth + 2 * margin)
-        .tickFormat(''))
-      .selectAll('line')
-      .attr('stroke', 'lightgray')
-      .attr('stroke-dasharray', '2,2');
   }
 
   function renderFigure2() {
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
     const lace = [];
+
+    const zoom = d3.zoom()
+      .scaleExtent([0.5, 5]) // Adjust zoom levels as needed
+      .on('zoom', (event) => {
+        svgGroup.attr('transform', event.transform);
+      });
+
+    const svg = d3.select('#graph-container').append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .call(zoom);
+
+    const svgGroup = svg.append('g');
 
     // Build paths
     for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
@@ -382,15 +413,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const allPoints = allPaths.flat();
     const xExtent = d3.extent(allPoints, d => d[0]);
     const yExtent = d3.extent(allPoints, d => d[1]);
-    const margin = 20;
+    // Compute dataWidth and dataHeight based on ROI bounds
+    const dataWidth = graphData.roi_bounds.x_max - graphData.roi_bounds.x_min;
+    const dataHeight = graphData.roi_bounds.y_max - graphData.roi_bounds.y_min;
 
+    // Compute scaleFactor to ensure square units
+    const scaleFactor = Math.min(
+      (graphContainer.clientWidth - 2 * margin) / dataWidth,
+      (graphContainer.clientHeight - 2 * margin) / dataHeight
+    );
+
+    // Adjust scales to ensure square spacing and invert y-axis
     const xScale = d3.scaleLinear()
       .domain([graphData.roi_bounds.x_min, graphData.roi_bounds.x_max])
-      .range([margin, graphContainer.clientWidth - margin]);
+      .range([margin, margin + dataWidth * scaleFactor]);
 
     const yScale = d3.scaleLinear()
       .domain([graphData.roi_bounds.y_min, graphData.roi_bounds.y_max])
-      .range([graphContainer.clientHeight - margin, margin]);
+      .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
     // Draw paths
     const lineGenerator = d3.line()
@@ -398,14 +438,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .y(d => yScale(d[1]));
 
     lace.forEach((d, i) => {
-      svg.append('path')
+      svgGroup.append('path')
         .attr('d', lineGenerator(d.path))
         .attr('fill', 'none')
         .attr('stroke', 'black')
         .attr('stroke-width', 6)
         .attr('opacity', 0.5);
 
-      svg.append('path')
+      svgGroup.append('path')
         .attr('d', lineGenerator(d.path))
         .attr('fill', 'none')
         .attr('stroke', d.color)
@@ -413,7 +453,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Legend
-    const legend = svg.selectAll('.legend')
+    const legendItems = Object.keys(graphData.unit_yarns).length;
+    const legendWidth = 120; // Adjust as needed
+    const legendHeight = legendItems * 20 + 20;
+    svgGroup.append('rect')
+      .attr('x', graphContainer.clientWidth - margin - legendWidth - 20)
+      .attr('y', margin - 20)
+      .attr('width', legendWidth + 40)
+      .attr('height', legendHeight)
+      .attr('fill', 'white')
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.8);
+    const legend = svgGroup.selectAll('.legend')
       .data(pathColors.slice(0, Object.keys(graphData.unit_yarns).length))
       .enter()
       .append('g')
@@ -434,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .text((d, i) => `Path ${i + 1}`);
 
     // Axes and aspect ratio
-    svg.attr('viewBox', `0 0 ${graphContainer.clientWidth} ${graphContainer.clientHeight}`)
+    svgGroup.attr('viewBox', `0 0 ${graphContainer.clientWidth} ${graphContainer.clientHeight}`)
       .attr('preserveAspectRatio', 'xMidYMid meet');
   }
 
