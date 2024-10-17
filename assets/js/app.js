@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
   // Fetch the manifest file
-  fetch(`/assets/data/manifest.json`)
+  fetch('input/json_patterns/manifest.json')
     .then(response => response.json())
     .then(files => {
       // Populate the select dropdown
