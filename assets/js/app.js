@@ -214,14 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const yExtent = d3.extent(nodeData, d => d.y);
     const margin = 20;
 
-    const xScale = d3.scaleLinear()
-      .domain([xExtent[0] - 2, xExtent[1] + 2])
-      .range([margin, graphContainer.clientWidth - margin]);
-
-    const yScale = d3.scaleLinear()
-      .domain([yExtent[0] - 2, yExtent[1] + 2])
-      .range([graphContainer.clientHeight - margin, margin]);
-
     const dataWidth = xExtent[1] - xExtent[0] + 4; // +4 to account for margins
     const dataHeight = yExtent[1] - yExtent[0] + 4;
 
