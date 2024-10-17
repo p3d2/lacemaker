@@ -5,13 +5,29 @@ document.addEventListener('DOMContentLoaded', () => {
   let svg;
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
-  // List of JSON files (update with your actual file names)
-  const files = [
-    'pattern1024.json',
-    'pattern1084.json',
-    'pattern1093.json'
-    // Add your files here
-  ];
+  const dataPath = '/assets/js/'; 
+
+  // Fetch the manifest file
+  fetch(`${dataPath}manifest.json`)
+    .then(response => response.json())
+    .then(files => {
+      // Populate the select dropdown
+      files.forEach(file => {
+        const option = document.createElement('option');
+        option.value = file;
+        option.textContent = file;
+        fileSelect.appendChild(option);
+      });
+
+      // Load the initial graph
+      if (files.length > 0) {
+        loadGraph(files[0]);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching manifest file:', error);
+      alert('Error fetching manifest file. Check the console for details.');
+    });
 
   // Populate the select dropdown
   files.forEach(file => {
