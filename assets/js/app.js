@@ -1,4 +1,20 @@
+let currentView = 'mesh';
+
 document.addEventListener('DOMContentLoaded', () => {
+  const viewToggleButton = document.getElementById('view-toggle-button');
+  viewToggleButton.addEventListener('click', () => {
+    // Toggle the view
+    if (currentView === 'pattern') {
+      currentView = 'mesh';
+      viewToggleButton.textContent = 'Switch to Pattern View';
+    } else {
+      currentView = 'pattern';
+      viewToggleButton.textContent = 'Switch to Mesh View';
+    }
+    // Re-render the graph with the new view
+    renderGraph();
+  });
+
   const fileSelect = document.getElementById('file-select');
   const graphContainer = document.getElementById('graph-container');
   let graphData;
@@ -140,9 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderGraph() {
+    // Clear previous SVG content
+    d3.select('#graph-container').selectAll('*').remove();
+  
     const width = graphContainer.clientWidth;
     const height = graphContainer.clientHeight;
-
+  
     svg = d3.select('#graph-container').append('svg')
       .attr('width', width)
       .attr('height', height)
@@ -150,10 +169,64 @@ document.addEventListener('DOMContentLoaded', () => {
         svg.attr('transform', event.transform);
       }))
       .append('g');
-
+  
     // Define color scale for paths
     const color = d3.scaleOrdinal(d3.schemeCategory10);
+  
+    // Render based on the current view
+    if (currentView === 'pattern') {
+      renderPatternView(svg, color);
+    } else {
+      renderMeshView(svg, color);
+    }
+  }
 
+  function renderPatternView(svg, color) {
+    // In Pattern View, we position nodes based on their coordinates without force simulation
+  
+    // Add links
+    const link = svg.append('g')
+      .attr('class', 'links')
+      .selectAll('line')
+      .data(graphData.links)
+      .enter().append('line')
+      .attr('class', 'link')
+      .attr('stroke', d => color(d.pathIndex))
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
+  
+    // Add nodes
+    const node = svg.append('g')
+      .attr('class', 'nodes')
+      .selectAll('g')
+      .data(graphData.nodes)
+      .enter().append('g');
+  
+    node.append('circle')
+      .attr('r', 10)
+      .attr('fill', '#69b3a2')
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y);
+  
+    node.append('text')
+      .attr('x', d => d.x + 12)
+      .attr('y', d => d.y + 4)
+      .text(d => d.originalId || d.id);
+  
+    // Add interactions if needed (e.g., click events)
+  }
+
+  function renderMeshView(svg, color) {
+    // In Mesh View, we can apply force simulation or adjust styling as needed
+  
+    // Initialize simulation
+    simulation = d3.forceSimulation(graphData.nodes)
+      .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
+      .force('charge', d3.forceManyBody().strength(-300))
+      .force('center', d3.forceCenter(graphContainer.clientWidth / 2, graphContainer.clientHeight / 2));
+  
     // Add links
     const link = svg.append('g')
       .attr('class', 'links')
@@ -162,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .enter().append('line')
       .attr('class', 'link')
       .attr('stroke', d => color(d.pathIndex));
-
+  
     // Add nodes
     const node = svg.append('g')
       .attr('class', 'nodes')
@@ -173,32 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
         .on('start', dragStarted)
         .on('drag', dragged)
         .on('end', dragEnded));
-
+  
     node.append('circle')
       .attr('r', 10)
       .attr('fill', '#69b3a2');
-
+  
     node.append('text')
       .attr('dx', 12)
       .attr('dy', '.35em')
       .text(d => d.originalId || d.id);
-
-    // Add node double-click event to edit node properties
-    node.on('dblclick', (event, d) => {
-      const newId = prompt('Enter new node ID:', d.originalId || d.id);
-      if (newId !== null && newId !== d.id) {
-        d.originalId = newId;
-        d3.select(event.currentTarget).select('text').text(newId);
-        // Update nodeMap if necessary
-      }
-    });
-
-    // Simulation setup
-    simulation = d3.forceSimulation(graphData.nodes)
-      .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(width / 2, height / 2));
-
+  
     // Simulation tick
     simulation.on('tick', () => {
       link
@@ -206,29 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
         .attr('y1', d => d.source.y)
         .attr('x2', d => d.target.x)
         .attr('y2', d => d.target.y);
-
+  
       node.attr('transform', d => `translate(${d.x},${d.y})`);
     });
   }
-
-  // Drag functions
-  function dragStarted(event, d) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-  }
-
-  function dragged(event, d) {
-    d.fx = event.x;
-    d.fy = event.y;
-  }
-
-  function dragEnded(event, d) {
-    if (!event.active) simulation.alphaTarget(0);
-    d.fx = null;
-    d.fy = null;
-  }
-
+  
   // Save button event
   document.getElementById('save-button').addEventListener('click', () => {
     saveGraph();
