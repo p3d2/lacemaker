@@ -223,11 +223,11 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     const xScale = d3.scaleLinear()
-      .domain([xExtent[0], xExtent[1]])
+      .domain([xExtent[0] - 2, xExtent[1] + 2])
       .range([margin, margin + dataWidth * scaleFactor]);
 
     const yScale = d3.scaleLinear()
-      .domain([yExtent[1], yExtent[0]])
+      .domain([yExtent[1] + 2, yExtent[0] - 2])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
     // Draw grid lines first
@@ -416,6 +416,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke', 'black')
       .attr('stroke-width', 1)
       .attr('opacity', 0.8);
+    
+    svg.attr('viewBox', `0 0 ${graphContainer.clientWidth} ${graphContainer.clientHeight}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
 
     const legend = svg.selectAll('.legend')
       .data(pathColors.slice(0, Object.keys(graphData.unit_yarns).length))
