@@ -37,16 +37,46 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadGraph(fileName) {
     // Clear previous SVG
     d3.select('svg').remove();
-
+  
     fetch(`${dataPath}${fileName}`)
       .then(response => response.json())
       .then(data => {
-        graphData = data;
+        // Process data according to your JSON structure
+        graphData = convertDataToGraphFormat(data);
         renderGraph();
       })
       .catch(error => {
         console.error('Error loading JSON file:', error);
       });
+  }
+  
+  function convertDataToGraphFormat(data) {
+    const nodes = [];
+    const links = [];
+  
+    // Assuming data.nodes is an object with node IDs as keys and positions as values
+    for (const [nodeId, pos] of Object.entries(data.nodes)) {
+      nodes.push({
+        id: nodeId,
+        x: pos[0],
+        y: pos[1],
+        // Include other properties if necessary
+      });
+    }
+  
+    // Assuming data.paths is an array of path objects
+    data.paths.forEach(path => {
+      const pathNodes = path.path; // Adjust based on your data structure
+      for (let i = 0; i < pathNodes.length - 1; i++) {
+        links.push({
+          source: pathNodes[i],
+          target: pathNodes[i + 1],
+          // Include other properties if necessary
+        });
+      }
+    });
+  
+    return { nodes, links };
   }
 
   function renderGraph() {
