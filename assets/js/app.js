@@ -455,10 +455,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Add background rectangle behind legend
     svg.append('rect')
-      .attr('x', graphContainer.clientWidth - margin - legendWidth - 20)
-      .attr('y', margin - 20)
-      .attr('width', legendWidth + 1)
-      .attr('height', legendHeight + 1)
+      .attr('x', graphContainer.clientWidth - legendWidth)
+      .attr('y', margin + 9)
+      .attr('width', legendWidth + 2)
+      .attr('height', legendHeight + 2)
       .attr('fill', 'white')
       .attr('stroke', 'black')
       .attr('stroke-width', 1)
@@ -473,6 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     legend.append('rect')
       .attr('x', graphContainer.clientWidth - margin - 18)
+      .attr('y', margin + 9)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', d => d);
