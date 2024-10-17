@@ -30,12 +30,17 @@ To make it easier to identify the yarn pattern, it can be helpful to visualize i
 
 Let's use the following lace example:
 
+{% raw %}
+<div>
+  <label for="file-select">Select JSON File:</label>
+  <select id="file-select"></select>
+  <button id="save-button">Save Changes</button>
+</div>
+
 <div id="graph-container" style="width:100%; height:800px;"></div>
 
 <script>
-  const dataPath = "{{ '/assets/data/' | relative_url }}";
+  const dataPath = "{{ '/input/json_patterns/' | relative_url }}";
 </script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="{{ '/assets/js/app.js' | relative_url }}"></script>
-
----
