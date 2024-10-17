@@ -31,10 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
   viewToggleButton.addEventListener('click', () => {
     if (currentView === 'figure1') {
       currentView = 'figure2';
-      viewToggleButton.textContent = 'Switch to Figure 1';
+      viewToggleButton.textContent = 'Pattern View';
     } else {
       currentView = 'figure1';
-      viewToggleButton.textContent = 'Switch to Figure 2';
+      viewToggleButton.textContent = 'Mesh View';
     }
     renderGraph();
   });
@@ -327,85 +327,130 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderFigure2() {
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
     const lace = [];
-    
-    const width = graphContainer.clientWidth;
-    const height = graphContainer.clientHeight;
     const margin = 20;
-
-    const zoom = d3.zoom()
-      .scaleExtent([0.5, 5]) // Adjust zoom levels as needed
-      .on('zoom', (event) => {
-        svgGroup.attr('transform', event.transform);
-      });
-
-    // Apply zoom to existing svg
-    svg.call(zoom);
-
-    const svgGroup = svg.append('g');
-
+  
     // Build paths
-    // Your code to build the 'lace' array goes here
-
+    for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
+      const pathId = yarnData[0];
+      const nodeStartIndex = yarnData[1].toString();
+      const pathStartIndex = yarnData[2];
+      const yarnPath = graphData.paths[pathId].path.map(toInt);
+  
+      // Unit repetitions
+      const unitRepetition = graphData.unit_repetion[yarnId];
+      const rep1 = unitRepetition[0];
+      const vector1 = [unitRepetition[1], unitRepetition[2]];
+      const vector2 = [unitRepetition[4], unitRepetition[5]];
+      const rep2 = unitRepetition[3];
+  
+      // Adjust path for starting point within pattern
+      const adjustedPath = yarnPath.slice(pathStartIndex).concat(yarnPath.slice(0, pathStartIndex));
+      let currentPos = graphData.nodes[nodeStartIndex].slice(0, 2);
+      let cumulativeShift = [0.0, 0.0];
+  
+      const pathSave = [currentPos];
+      for (let i = 0; i < adjustedPath.length; i++) {
+        const nodeStart = adjustedPath[i % adjustedPath.length].toString();
+        const nodeEnd = adjustedPath[(i + 1) % adjustedPath.length].toString();
+  
+        const shiftKey = `[${nodeStart}, ${nodeEnd}]`;
+        const currentShift = graphData.paths[pathId].shifts[shiftKey] || [0, 0];
+        cumulativeShift[0] += currentShift[0];
+        cumulativeShift[1] += currentShift[1];
+  
+        const endPosBase = graphData.nodes[nodeEnd].slice(0, 2);
+        const endPos = [endPosBase[0] + cumulativeShift[0], endPosBase[1] + cumulativeShift[1]];
+  
+        pathSave.push(endPos);
+  
+        // Update current point
+        currentPos = endPos;
+      }
+  
+      for (let k2 = 0; k2 < rep2; k2++) {
+        for (let k1 = 0; k1 < rep1; k1++) {
+          const replicatedPath = pathSave.map(([x, y]) => [
+            x + k1 * vector1[0] + k2 * vector2[0],
+            y + k1 * vector1[1] + k2 * vector2[1],
+          ]);
+          lace.push({
+            path: replicatedPath,
+            color: pathColors[yarnId % pathColors.length],
+          });
+        }
+      }
+    }
+  
     // Scaling
     const allPaths = lace.map(d => d.path);
     const allPoints = allPaths.flat();
     const xExtent = d3.extent(allPoints, d => d[0]);
     const yExtent = d3.extent(allPoints, d => d[1]);
-
+  
     // Compute dataWidth and dataHeight based on ROI bounds
     const dataWidth = graphData.roi_bounds.x_max - graphData.roi_bounds.x_min;
     const dataHeight = graphData.roi_bounds.y_max - graphData.roi_bounds.y_min;
-
+  
     // Compute scaleFactor to ensure square units
     const scaleFactor = Math.min(
       (graphContainer.clientWidth - 2 * margin) / dataWidth,
       (graphContainer.clientHeight - 2 * margin) / dataHeight
     );
-
+  
     // Adjust scales to ensure square spacing and invert y-axis
     const xScale = d3.scaleLinear()
       .domain([graphData.roi_bounds.x_min, graphData.roi_bounds.x_max])
       .range([margin, margin + dataWidth * scaleFactor]);
-
+  
     const yScale = d3.scaleLinear()
       .domain([graphData.roi_bounds.y_min, graphData.roi_bounds.y_max])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
-
+  
+    // Create SVG and group
+    const svg = d3.select('#graph-container').append('svg')
+      .attr('width', graphContainer.clientWidth)
+      .attr('height', graphContainer.clientHeight);
+  
+    const svgGroup = svg.append('g');
+  
+    // Define clip path after calculating scales
+    svg.append('defs')
+      .append('clipPath')
+      .attr('id', 'clip-path')
+      .append('rect')
+      .attr('x', margin)
+      .attr('y', margin)
+      .attr('width', dataWidth * scaleFactor)
+      .attr('height', dataHeight * scaleFactor);
+  
     // Apply the clip path to svgGroup
     svgGroup.attr('clip-path', 'url(#clip-path)');
-
+  
     // Draw paths
     const lineGenerator = d3.line()
       .x(d => xScale(d[0]))
       .y(d => yScale(d[1]));
-
-    // Draw paths using data binding
-    svgGroup.selectAll('.path-background')
-      .data(lace)
-      .enter()
-      .append('path')
-      .attr('class', 'path-background')
-      .attr('d', d => lineGenerator(d.path))
-      .attr('fill', 'none')
-      .attr('stroke', 'black')
-      .attr('stroke-width', 6)
-      .attr('opacity', 0.5);
-
-    svgGroup.selectAll('.path-foreground')
-      .data(lace)
-      .enter()
-      .append('path')
-      .attr('class', 'path-foreground')
-      .attr('d', d => lineGenerator(d.path))
-      .attr('fill', 'none')
-      .attr('stroke', d => d.color)
-      .attr('stroke-width', 4);
-
+  
+    lace.forEach((d) => {
+      svgGroup.append('path')
+        .attr('d', lineGenerator(d.path))
+        .attr('fill', 'none')
+        .attr('stroke', 'black')
+        .attr('stroke-width', 6)
+        .attr('opacity', 0.5);
+  
+      svgGroup.append('path')
+        .attr('d', lineGenerator(d.path))
+        .attr('fill', 'none')
+        .attr('stroke', d.color)
+        .attr('stroke-width', 4);
+    });
+  
     // Legend
     const legendItems = Object.keys(graphData.unit_yarns).length;
     const legendWidth = 120; // Adjust as needed
     const legendHeight = legendItems * 20 + 20;
-
+  
     // Add background rectangle behind legend
     svg.append('rect')
       .attr('x', graphContainer.clientWidth - margin - legendWidth - 20)
@@ -416,34 +461,31 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke', 'black')
       .attr('stroke-width', 1)
       .attr('opacity', 0.8);
-    
-    svg.attr('viewBox', `0 0 ${graphContainer.clientWidth} ${graphContainer.clientHeight}`)
-      .attr('preserveAspectRatio', 'xMidYMid meet');
-
+  
     const legend = svg.selectAll('.legend')
-      .data(pathColors.slice(0, Object.keys(graphData.unit_yarns).length))
+      .data(pathColors.slice(0, legendItems))
       .enter()
       .append('g')
       .attr('class', 'legend')
       .attr('transform', (d, i) => `translate(0, ${margin + i * 20})`);
-
+  
     legend.append('rect')
       .attr('x', graphContainer.clientWidth - margin - 18)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', d => d);
-
+  
     legend.append('text')
       .attr('x', graphContainer.clientWidth - margin - 24)
-      .attr('y', 9)
+      .attr('y', margin + 9)
       .attr('dy', '.35em')
       .style('text-anchor', 'end')
       .text((d, i) => `Path ${i + 1}`);
-
+  
     // Bring legend to front
     legend.raise();
   }
-
+  
   function toInt(value) {
     if (typeof value === 'string') {
       return parseInt(value.replace(/[^\d]/g, ''), 10);
