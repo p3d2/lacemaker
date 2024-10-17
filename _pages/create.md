@@ -44,3 +44,4 @@ Let's use the following lace example:
 </script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="{{ '/assets/js/app.js' | relative_url }}"></script>
+{% endraw %}
