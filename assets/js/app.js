@@ -406,11 +406,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .domain([graphData.roi_bounds.y_min, graphData.roi_bounds.y_max])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
   
-    // Create SVG and group
-    const svg = d3.select('#graph-container').append('svg')
-      .attr('width', graphContainer.clientWidth)
-      .attr('height', graphContainer.clientHeight);
+    // Use the existing SVG from renderGraph()
+    // Remove the line that creates a new SVG here
   
+    // Clear any existing content in the SVG
+    svg.selectAll('*').remove();
+  
+    // Create a group within the SVG
     const svgGroup = svg.append('g');
   
     // Define clip path after calculating scales
@@ -455,8 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
     svg.append('rect')
       .attr('x', graphContainer.clientWidth - margin - legendWidth - 20)
       .attr('y', margin - 20)
-      .attr('width', legendWidth + 40)
-      .attr('height', legendHeight)
+      .attr('width', legendWidth + 1)
+      .attr('height', legendHeight + 1)
       .attr('fill', 'white')
       .attr('stroke', 'black')
       .attr('stroke-width', 1)
@@ -485,6 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bring legend to front
     legend.raise();
   }
+  
   
   function toInt(value) {
     if (typeof value === 'string') {
