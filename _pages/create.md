@@ -26,8 +26,16 @@ In this step, we'll examine the crossings in the yarn pattern and identify how y
 
 In this step, we will identify the nodes necessary for describing the repetitions in the yarn pattern. It's important to note that defining the smallest unit cell is **not needed**.
 
-To make it easier to identify the yarn pattern, it can be helpful to visualize it. You can sketch the pattern on a paper or use a software tool to draw it digitally (you can use the blank pattern [here]({{ '/assets/images/blank_pattern.svg' | relative_url }}) and open it on Inkscape(https://inkscape.org/)). This will provide a clear understanding of how the yarns are arranged and repeated.
+To make it easier to identify the yarn pattern, it can be helpful to visualize it. You can sketch the pattern on a paper or use a software tool to draw it digitally (you can use the blank pattern [here]({{ '/assets/images/blank_pattern.svg' | relative_url }}) and open it on [Inkscape](https://inkscape.org/)). This will provide a clear understanding of how the yarns are arranged and repeated.
 
 Let's use the following lace example:
+
+<div id="graph-container" style="width:100%; height:800px;"></div>
+
+<script>
+  const dataPath = "{{ '/assets/data/' | relative_url }}";
+</script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="{{ '/assets/js/app.js' | relative_url }}"></script>
 
 ---
