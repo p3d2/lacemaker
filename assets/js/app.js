@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .enter()
       .append('text')
       .attr('class', 'label')
-      .attr('x', d => xScale(d.x) - 12)
+      .attr('x', d => xScale(d.x) - 4)
       .attr('y', d => yScale(d.y) + 4)
       .text(d => d.label)
       .attr('font-size', 12)
@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     svgGroup.attr('clip-path', 'url(#clip-path)');
 
     // Set viewBox and preserveAspectRatio on svg
-    svg.attr('viewBox', `0 0 ${width} ${height}`)
+    svg.attr('viewBox', `0 0 0 0`)
       .attr('preserveAspectRatio', 'xMidYMid meet');
 
     // Draw paths
