@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderGraph() {
     // Clear previous SVG content
     d3.select('#graph-container').selectAll('*').remove();
-
+    
     const width = graphContainer.clientWidth;
     const height = graphContainer.clientHeight;
 
@@ -209,13 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    const margin = 20;
+
     // Scaling
     const xExtent = d3.extent(nodeData, d => d.x);
     const yExtent = d3.extent(nodeData, d => d.y);
-    const margin = 20;
 
-    const dataWidth = xExtent[1] - xExtent[0] + 4; // +4 to account for margins
-    const dataHeight = yExtent[1] - yExtent[0] + 4;
+    const dataWidth = xExtent[1] - xExtent[0];
+    const dataHeight = yExtent[1] - yExtent[0];
 
     // Compute scaleFactor to ensure square units
     const scaleFactor = Math.min(
@@ -223,65 +224,41 @@ document.addEventListener('DOMContentLoaded', () => {
       (graphContainer.clientHeight - 2 * margin) / dataHeight
     );
 
-    // Adjust scales to ensure square spacing and invert y-axis
     const xScale = d3.scaleLinear()
-      .domain([xExtent[0] - 2, xExtent[1] + 2])
+      .domain([xExtent[0], xExtent[1]])
       .range([margin, margin + dataWidth * scaleFactor]);
 
     const yScale = d3.scaleLinear()
-      .domain([yExtent[0] - 2, yExtent[1] + 2])
+      .domain([yExtent[0], yExtent[1]])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
-    // Axes
-    const xAxisScale = d3.scaleLinear()
-      .domain([Math.floor(xExtent[0] / 4) * 4, Math.ceil(xExtent[1] / 4) * 4])
-      .range([margin, graphContainer.clientWidth - margin]);
+    // Grid lines for x-axis
+    svg.append('g')
+      .attr('class', 'grid')
+      .attr('transform', `translate(0, ${margin + dataHeight * scaleFactor})`)
+      .call(d3.axisBottom(xScale)
+        .ticks((xExtent[1] - xExtent[0]))
+        .tickSize(-dataHeight * scaleFactor)
+        .tickFormat(''))
+      .selectAll('line')
+      .attr('stroke', 'lightgray')
+      .attr('stroke-dasharray', '2,2');
 
-    const yAxisScale = d3.scaleLinear()
-      .domain([Math.floor(yExtent[0] / 4) * 4, Math.ceil(yExtent[1] / 4) * 4])
-      .range([graphContainer.clientHeight - margin, margin]);
+    // Grid lines for y-axis
+    svg.append('g')
+      .attr('class', 'grid')
+      .attr('transform', `translate(${margin}, 0)`)
+      .call(d3.axisLeft(yScale)
+        .ticks((yExtent[1] - yExtent[0]))
+        .tickSize(-dataWidth * scaleFactor)
+        .tickFormat(''))
+      .selectAll('line')
+      .attr('stroke', 'lightgray')
+      .attr('stroke-dasharray', '2,2');
 
-    const xAxis = d3.axisBottom(xAxisScale).ticks((xExtent[1] - xExtent[0]) / 4);
-    const yAxis = d3.axisLeft(yAxisScale).ticks((yExtent[1] - yExtent[0]) / 4);
-
-    // Grid lines
-        svg.append('g')
-        .attr('class', 'grid')
-        .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
-        .call(d3.axisBottom(xAxisScale)
-          .ticks((xExtent[1] - xExtent[0]) / 1)
-          .tickSize(-graphContainer.clientHeight + 2 * margin)
-          .tickFormat(''))
-        .selectAll('line')
-        .attr('stroke', 'lightgray')
-        .attr('stroke-dasharray', '2,2');
-  
-      svg.append('g')
-        .attr('class', 'grid')
-        .attr('transform', `translate(${margin}, 0)`)
-        .call(d3.axisLeft(yAxisScale)
-          .ticks((yExtent[1] - yExtent[0]) / 1)
-          .tickSize(-graphContainer.clientWidth + 2 * margin)
-          .tickFormat(''))
-        .selectAll('line')
-        .attr('stroke', 'lightgray')
-        .attr('stroke-dasharray', '2,2');
-
-    // Draw edges
-    svg.selectAll('.edge')
-      .data(edgeData)
-      .enter()
-      .append('line')
-      .attr('class', 'edge')
-      .attr('x1', d => xScale(G.get(d.source).pos[0]))
-      .attr('y1', d => yScale(G.get(d.source).pos[1]))
-      .attr('x2', d => xScale(G.get(d.target).pos[0]))
-      .attr('y2', d => yScale(G.get(d.target).pos[1]))
-      .attr('stroke', d => d.color)
-      .attr('stroke-width', 8);
-
-    // Draw base edges
-    svg.selectAll('.base-edge')
+    // Draw base edges (thicker black edges)
+    svg.append('g')
+      .selectAll('.base-edge')
       .data(edgeData)
       .enter()
       .append('line')
@@ -294,35 +271,57 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke-width', 12)
       .attr('opacity', 0.5);
 
-      // Draw nodes
-        svg.selectAll('.node')
-        .data(nodeData)
-        .enter()
-        .append('circle')
-        .attr('class', 'node')
-        .attr('cx', d => xScale(d.x))
-        .attr('cy', d => yScale(d.y))
-        .attr('r', 10)
-        .attr('fill', d => d.color)
-        .attr('stroke', 'black')
-        .attr('stroke-width', 1);
-  
-      // Draw labels
-      svg.selectAll('.label')
-        .data(nodeData)
-        .enter()
-        .append('text')
-        .attr('class', 'label')
-        .attr('x', d => xScale(d.x))
-        .attr('y', d => yScale(d.y) + 4)
-        .text(d => d.label)
-        .attr('font-size', 12)
-        .attr('font-weight', 'bold');
-
+    // Draw edges (colored lines)
     svg.append('g')
-      .attr('transform', `translate(0, ${graphContainer.clientHeight - margin})`)
+      .selectAll('.edge')
+      .data(edgeData)
+      .enter()
+      .append('line')
+      .attr('class', 'edge')
+      .attr('x1', d => xScale(G.get(d.source).pos[0]))
+      .attr('y1', d => yScale(G.get(d.source).pos[1]))
+      .attr('x2', d => xScale(G.get(d.target).pos[0]))
+      .attr('y2', d => yScale(G.get(d.target).pos[1]))
+      .attr('stroke', d => d.color)
+      .attr('stroke-width', 8);
+
+    // Draw nodes
+    svg.append('g')
+      .selectAll('.node')
+      .data(nodeData)
+      .enter()
+      .append('circle')
+      .attr('class', 'node')
+      .attr('cx', d => xScale(d.x))
+      .attr('cy', d => yScale(d.y))
+      .attr('r', 10)
+      .attr('fill', d => d.color)
+      .attr('stroke', 'black')
+      .attr('stroke-width', 1);
+
+    // Draw labels
+    svg.append('g')
+      .selectAll('.label')
+      .data(nodeData)
+      .enter()
+      .append('text')
+      .attr('class', 'label')
+      .attr('x', d => xScale(d.x) - 12)
+      .attr('y', d => yScale(d.y) + 4)
+      .text(d => d.label)
+      .attr('font-size', 12)
+      .attr('font-weight', 'bold');
+
+    // Axes
+    const xAxis = d3.axisBottom(xScale).ticks((xExtent[1] - xExtent[0]) / 4);
+    const yAxis = d3.axisLeft(yScale).ticks((yExtent[1] - yExtent[0]) / 4);
+
+    // Draw x-axis at the bottom
+    svg.append('g')
+      .attr('transform', `translate(0, ${margin + dataHeight * scaleFactor})`)
       .call(xAxis);
 
+    // Draw y-axis on the left
     svg.append('g')
       .attr('transform', `translate(${margin}, 0)`)
       .call(yAxis);
@@ -331,6 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderFigure2() {
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
     const lace = [];
+    
     const width = graphContainer.clientWidth;
     const height = graphContainer.clientHeight;
     const margin = 20;
@@ -400,14 +400,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Drawing
-    const allPaths = lace.map(d => d.path);
-    const allColors = lace.map(d => d.color);
-
     // Scaling
+    const allPaths = lace.map(d => d.path);
     const allPoints = allPaths.flat();
     const xExtent = d3.extent(allPoints, d => d[0]);
     const yExtent = d3.extent(allPoints, d => d[1]);
+
     // Compute dataWidth and dataHeight based on ROI bounds
     const dataWidth = graphData.roi_bounds.x_max - graphData.roi_bounds.x_min;
     const dataHeight = graphData.roi_bounds.y_max - graphData.roi_bounds.y_min;
@@ -427,31 +425,57 @@ document.addEventListener('DOMContentLoaded', () => {
       .domain([graphData.roi_bounds.y_min, graphData.roi_bounds.y_max])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
+    // Define clip path after calculating scales
+    svg.append('defs')
+      .append('clipPath')
+      .attr('id', 'clip-path')
+      .append('rect')
+      .attr('x', margin)
+      .attr('y', margin)
+      .attr('width', dataWidth * scaleFactor)
+      .attr('height', dataHeight * scaleFactor);
+
+    // Apply the clip path to svgGroup
+    svgGroup.attr('clip-path', 'url(#clip-path)');
+
+    // Set viewBox and preserveAspectRatio on svg
+    svg.attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
     // Draw paths
     const lineGenerator = d3.line()
       .x(d => xScale(d[0]))
       .y(d => yScale(d[1]));
 
-    lace.forEach((d, i) => {
-      svgGroup.append('path')
-        .attr('d', lineGenerator(d.path))
-        .attr('fill', 'none')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 6)
-        .attr('opacity', 0.5);
+    // Draw paths using data binding
+    svgGroup.selectAll('.path-background')
+      .data(lace)
+      .enter()
+      .append('path')
+      .attr('class', 'path-background')
+      .attr('d', d => lineGenerator(d.path))
+      .attr('fill', 'none')
+      .attr('stroke', 'black')
+      .attr('stroke-width', 6)
+      .attr('opacity', 0.5);
 
-      svgGroup.append('path')
-        .attr('d', lineGenerator(d.path))
-        .attr('fill', 'none')
-        .attr('stroke', d.color)
-        .attr('stroke-width', 4);
-    });
+    svgGroup.selectAll('.path-foreground')
+      .data(lace)
+      .enter()
+      .append('path')
+      .attr('class', 'path-foreground')
+      .attr('d', d => lineGenerator(d.path))
+      .attr('fill', 'none')
+      .attr('stroke', d => d.color)
+      .attr('stroke-width', 4);
 
     // Legend
     const legendItems = Object.keys(graphData.unit_yarns).length;
     const legendWidth = 120; // Adjust as needed
     const legendHeight = legendItems * 20 + 20;
-    svgGroup.append('rect')
+
+    // Add background rectangle behind legend
+    svg.append('rect')
       .attr('x', graphContainer.clientWidth - margin - legendWidth - 20)
       .attr('y', margin - 20)
       .attr('width', legendWidth + 40)
@@ -460,12 +484,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke', 'black')
       .attr('stroke-width', 1)
       .attr('opacity', 0.8);
-    const legend = svgGroup.selectAll('.legend')
+
+    const legend = svg.selectAll('.legend')
       .data(pathColors.slice(0, Object.keys(graphData.unit_yarns).length))
       .enter()
       .append('g')
       .attr('class', 'legend')
-      .attr('transform', (d, i) => `translate(${margin}, ${margin + i * 20})`);
+      .attr('transform', (d, i) => `translate(0, ${margin + i * 20})`);
 
     legend.append('rect')
       .attr('x', graphContainer.clientWidth - margin - 18)
@@ -480,9 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .style('text-anchor', 'end')
       .text((d, i) => `Path ${i + 1}`);
 
-    // Axes and aspect ratio
-    svgGroup.attr('viewBox', `0 0 ${graphContainer.clientWidth} ${graphContainer.clientHeight}`)
-      .attr('preserveAspectRatio', 'xMidYMid meet');
+    // Bring legend to front
+    legend.raise();
   }
 
   function toInt(value) {
@@ -501,11 +525,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // Implement saving functionality if needed
   }
 });
-
-
-
-
-
-
-
-
