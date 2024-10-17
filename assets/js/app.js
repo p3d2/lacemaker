@@ -213,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const xExtent = d3.extent(nodeData, d => d.x);
     const yExtent = d3.extent(nodeData, d => d.y);
 
-    const dataWidth = xExtent[1] - xExtent[0];
-    const dataHeight = yExtent[1] - yExtent[0];
+    const dataWidth = xExtent[1] - xExtent[0] + 4;
+    const dataHeight = yExtent[1] - yExtent[0] + 4;
 
     // Compute scaleFactor to ensure square units
     const scaleFactor = Math.min(
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .range([margin, margin + dataWidth * scaleFactor]);
 
     const yScale = d3.scaleLinear()
-      .domain([yExtent[0], yExtent[1]])
+      .domain([yExtent[1], yExtent[0]])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
     // Draw grid lines first
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .enter()
       .append('text')
       .attr('class', 'label')
-      .attr('x', d => xScale(d.x) - 4)
+      .attr('x', d => xScale(d.x) - 6)
       .attr('y', d => yScale(d.y) + 4)
       .text(d => d.label)
       .attr('font-size', 12)
@@ -371,22 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .domain([graphData.roi_bounds.y_min, graphData.roi_bounds.y_max])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
 
-    // Define clip path after calculating scales
-    svg.append('defs')
-      .append('clipPath')
-      .attr('id', 'clip-path')
-      .append('rect')
-      .attr('x', margin)
-      .attr('y', margin)
-      .attr('width', dataWidth * scaleFactor)
-      .attr('height', dataHeight * scaleFactor);
-
     // Apply the clip path to svgGroup
     svgGroup.attr('clip-path', 'url(#clip-path)');
-
-    // Set viewBox and preserveAspectRatio on svg
-    svg.attr('viewBox', `0 0 0 0`)
-      .attr('preserveAspectRatio', 'xMidYMid meet');
 
     // Draw paths
     const lineGenerator = d3.line()
