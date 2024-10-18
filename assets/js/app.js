@@ -55,11 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGraph();
   });
 
-  // Load the initial graph
-  if (files.length > 0) {
-    loadGraph(files[0]);
-  }
-
   function loadGraph(fileName) {
     // Clear previous SVG
     d3.select('#graph-container').selectAll('*').remove();
