@@ -6,8 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
   // Fetch the manifest file
-  fetch('input/json_patterns/manifest.json')
-    .then(response => response.json())
+  // Fetch the manifest file from /assets/js/manifest.json
+  fetch('/assets/js/manifest.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(files => {
       // Populate the select dropdown
       files.forEach(file => {
@@ -23,17 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
     .catch(error => {
-      console.error('Error fetching manifest file:', error);
-      alert('Error fetching manifest file. Check the console for details.');
+      console.error('Error fetching manifest.json:', error);
+      alert('Error fetching manifest.json. Check the console for details.');
     });
-
-  // Populate the select dropdown
-  files.forEach(file => {
-    const option = document.createElement('option');
-    option.value = file;
-    option.textContent = file;
-    fileSelect.appendChild(option);
-  });
 
   fileSelect.addEventListener('change', () => {
     const fileName = fileSelect.value;
