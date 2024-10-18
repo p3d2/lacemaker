@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dataPath = "{{ '/input/json_patterns/' | relative_url }}";
 
   // Fetch the manifest file from /assets/js/manifest.json
-  fetch(`${dataPath}manifest.json`)
+  fetch(`${manifestPath}manifest.json`)
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
