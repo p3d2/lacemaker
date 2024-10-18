@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Add background rectangle behind legend
     svg.append('rect')
-      .attr('x', graphContainer.clientWidth - legendWidth)
+      .attr('x', graphContainer.clientWidth - legendWidth - margin)
       .attr('y', margin + 9)
       .attr('width', legendWidth + 2)
       .attr('height', legendHeight + 2)
@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .style('fill', d => d);
   
     legend.append('text')
-      .attr('x', graphContiner.clientWidth - margin - 30)
+      .attr('x', graphContainer.clientWidth - margin - 30)
       .attr('y', margin + 9)
       .attr('dy', '.35em')
       .style('text-anchor', 'end')
