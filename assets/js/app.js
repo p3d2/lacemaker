@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let svg;
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
-  const manifestPath = "{{ '/assets/js/' | relative_url }}";
-  const dataPath = "{{ '/input/json_patterns/' | relative_url }}";
+  const manifestPath = '../assets/js/';
+  const dataPath = '../input/json_patterns/';
 
   // Fetch the manifest file from /assets/js/manifest.json
   fetch(`${manifestPath}manifest.json`)
