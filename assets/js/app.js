@@ -10,30 +10,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Fetch the manifest file from /assets/js/manifest.json
   fetch(`${manifestPath}manifest.json`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(files => {
-      // Populate the select dropdown
-      files.forEach(file => {
-        const option = document.createElement('option');
-        option.value = file;
-        option.textContent = file;
-        fileSelect.appendChild(option);
-      });
-
-      // Load the initial graph
-      if (files.length > 0) {
-        loadGraph(files[0]);
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching manifest.json:', error);
-      alert('Error fetching manifest.json. Check the console for details.');
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(files => {
+    files.forEach(file => {
+      const option = document.createElement('option');
+      option.value = file;
+      option.textContent = file;
+      fileSelect.appendChild(option);
     });
+
+    // Load the initial graph
+    if (files.length > 0) {
+      loadGraph(files[0]);
+    }
+  })
+  .catch(error => {
+    console.error('Error fetching manifest.json:', error);
+    alert('Error fetching manifest.json. Check the console for details.');
+  });
+
 
   fileSelect.addEventListener('change', () => {
     const fileName = fileSelect.value;
@@ -469,9 +469,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Add background rectangle behind legend
     svg.append('rect')
-      .attr('x', graphContainer.clientWidth - legendWidth - margin)
+      .attr('x', graphContainer.clientWidth - legendWidth - margin - 4)
       .attr('y', margin + 9)
-      .attr('width', legendWidth + 2)
+      .attr('width', legendWidth - margin + 2)
       .attr('height', legendHeight + 2)
       .attr('fill', 'white')
       .attr('stroke', 'black')
