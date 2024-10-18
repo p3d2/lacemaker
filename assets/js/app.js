@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let svg;
   let currentView = 'figure1'; // 'figure1' or 'figure2'
 
-  // Fetch the manifest file
+  const dataPath = "{{ '/input/json_patterns/' | relative_url }}";
+
   // Fetch the manifest file from /assets/js/manifest.json
-  fetch('/assets/js/manifest.json')
+  fetch("{{ '/assets/js/manifest.json' | relative_url }}")
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
