@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const posToNodeId = new Map();
     const posBase = new Map();
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
-
+  
     // Parse nodes
     for (const [nodeId, pos] of Object.entries(graphData.nodes)) {
       const roundedPos = pos.slice(0, 2).map(p => Math.round(p * 100) / 100);
@@ -106,18 +106,18 @@ document.addEventListener('DOMContentLoaded', () => {
       labelDict.set(nodeId, nodeId);
       posToNodeId.set(roundedPos.toString(), nodeId);
     }
-
+  
     for (const [key, value] of posToNodeId.entries()) {
       posBase.set(key, value);
     }
-
+  
     // Paths
     const paths = {};
     for (let index = 0; index < graphData.paths.length; index++) {
       const pathInfo = graphData.paths[index];
       paths[index] = pathInfo.path;
     }
-
+  
     // Build the graph
     for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
       const pathId = yarnData[0];
@@ -125,19 +125,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const pathStartIndex = yarnData[2];
       let pathZ0 = yarnData[3];
       const yarnPath = paths[pathId].map(toInt);
-
+  
       // Unit repetitions
       const unitRepetition = graphData.unit_repetion[yarnId];
       const rep1 = unitRepetition[0];
       const vector1 = [unitRepetition[1], unitRepetition[2]];
       const vector2 = [unitRepetition[4], unitRepetition[5]];
       const rep2 = unitRepetition[3];
-
+  
       // Adjust path for starting point within pattern
       const adjustedPath = yarnPath.slice(pathStartIndex).concat(yarnPath.slice(0, pathStartIndex));
       let currentPos = [...G.get(nodeStartIndex).pos];
       let cumulativeShift = [0.0, 0.0];
-
+  
       const pathZorder = [];
       for (let i = 0; i < adjustedPath.length; i++) {
         pathZorder.push(pathZ0);
@@ -145,21 +145,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const twists = graphData.nodes[nodeId] && graphData.nodes[nodeId][2] ? graphData.nodes[nodeId][2] : 0;
         if (twists % 2 === 0) pathZ0 = -pathZ0;
       }
-
+  
       const pathSave = [currentPos];
       for (let i = 0; i < adjustedPath.length; i++) {
         const nodeStart = adjustedPath[i % adjustedPath.length].toString();
         const nodeEnd = adjustedPath[(i + 1) % adjustedPath.length].toString();
-
+  
         const shiftKey = `[${nodeStart}, ${nodeEnd}]`;
         const currentShift = graphData.paths[pathId].shifts[shiftKey] || [0, 0];
         cumulativeShift[0] += currentShift[0];
         cumulativeShift[1] += currentShift[1];
-
+  
         const endPosBase = G.get(nodeEnd).pos;
         const endPos = [endPosBase[0] + cumulativeShift[0], endPosBase[1] + cumulativeShift[1]];
         const roundedPos = endPos.map(p => Math.round(p * 100) / 100);
-
+  
         const posKey = roundedPos.toString();
         let newNodeId = posToNodeId.get(posKey);
         if (!newNodeId) {
@@ -169,14 +169,14 @@ document.addEventListener('DOMContentLoaded', () => {
           labelDict.set(newNodeId, nodeEnd);
           posToNodeId.set(posKey, newNodeId);
         }
-
+  
         // Add edge
         G.get(posToNodeId.get(currentPos.toString())).edges = G.get(posToNodeId.get(currentPos.toString())).edges || [];
         G.get(posToNodeId.get(currentPos.toString())).edges.push({
           target: newNodeId,
           color: pathColors[yarnId % pathColors.length],
         });
-
+  
         // Change color of the trivial network
         if (posBase.has(currentPos.toString()) && pathZorder[i % adjustedPath.length] > 0) {
           nodeColors.set(nodeStart, pathColors[yarnId % pathColors.length]);
@@ -185,16 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeColors.set(nodeStart, 'gray');
           }
         }
-
+  
         pathSave.push(endPos);
-
+  
         // Update current point
         currentPos = endPos;
       }
     }
-
+  
     const margin = 20;
-
+  
     // Scaling
     const allNodes = Array.from(G.keys());
     const nodeData = allNodes.map(nodeId => {
@@ -206,7 +206,13 @@ document.addEventListener('DOMContentLoaded', () => {
         label: labelDict.get(nodeId),
       };
     });
-
+  
+    // Create nodesDataMap for quick access
+    const nodesDataMap = {};
+    nodeData.forEach(d => {
+      nodesDataMap[d.id] = d;
+    });
+  
     const edgeData = [];
     for (const nodeId of allNodes) {
       const node = G.get(nodeId);
@@ -220,27 +226,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     }
-
+  
     const xExtent = d3.extent(nodeData, d => d.x);
     const yExtent = d3.extent(nodeData, d => d.y);
-
+  
     const dataWidth = xExtent[1] - xExtent[0] + 4;
     const dataHeight = yExtent[1] - yExtent[0] + 4;
-
+  
     // Compute scaleFactor to ensure square units
     const scaleFactor = Math.min(
       (graphContainer.clientWidth - 2 * margin) / dataWidth,
       (graphContainer.clientHeight - 2 * margin) / dataHeight
     );
-
+  
     const xScale = d3.scaleLinear()
       .domain([xExtent[0] - 2, xExtent[1] + 2])
       .range([margin, margin + dataWidth * scaleFactor]);
-
+  
     const yScale = d3.scaleLinear()
       .domain([yExtent[1] + 2, yExtent[0] - 2])
       .range([margin + dataHeight * scaleFactor, margin]); // Inverted y-axis
-
+  
     // Draw grid lines first
     svg.append('g')
       .attr('class', 'grid')
@@ -252,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .selectAll('line')
       .attr('stroke', 'lightgray')
       .attr('stroke-dasharray', '2,2');
-
+  
     svg.append('g')
       .attr('class', 'grid')
       .attr('transform', `translate(${margin}, 0)`)
@@ -263,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .selectAll('line')
       .attr('stroke', 'lightgray')
       .attr('stroke-dasharray', '2,2');
-
+  
     // Draw base edges
     svg.append('g')
       .selectAll('.base-edge')
@@ -278,9 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke', 'black')
       .attr('stroke-width', 12)
       .attr('opacity', 0.5);
-
+  
     // Draw edges
-    svg.append('g')
+    const edge = svg.append('g')
       .selectAll('.edge')
       .data(edgeData)
       .enter()
@@ -292,21 +298,43 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('y2', d => yScale(G.get(d.target).pos[1]))
       .attr('stroke', d => d.color)
       .attr('stroke-width', 8);
-
+  
+    // Define drag behavior
+    const drag = d3.drag()
+      .on('start', dragStarted)
+      .on('drag', dragged)
+      .on('end', dragEnded);
+  
     // Draw nodes
-    svg.append('g')
+    const node = svg.append('g')
       .selectAll('.node')
       .data(nodeData)
       .enter()
       .append('circle')
       .attr('class', 'node')
+      .attr('id', d => `node-${d.id}`)
       .attr('cx', d => xScale(d.x))
       .attr('cy', d => yScale(d.y))
       .attr('r', 10)
       .attr('fill', d => d.color)
       .attr('stroke', 'black')
-      .attr('stroke-width', 1);
-
+      .attr('stroke-width', 1)
+      .call(drag); // Add drag behavior
+  
+    // Draw node labels (coordinates)
+    const nodeLabel = svg.append('g')
+      .selectAll('.node-label')
+      .data(nodeData)
+      .enter()
+      .append('text')
+      .attr('class', 'node-label')
+      .attr('id', d => `label-${d.id}`)
+      .attr('x', d => xScale(d.x) + 12)
+      .attr('y', d => yScale(d.y) - 12)
+      .text(d => `(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`)
+      .attr('font-size', '12px')
+      .attr('fill', 'black');
+  
     // Draw labels
     svg.append('g')
       .selectAll('.label')
@@ -319,78 +347,88 @@ document.addEventListener('DOMContentLoaded', () => {
       .text(d => d.label)
       .attr('font-size', 12)
       .attr('font-weight', 'bold');
-
+  
     // Axes
     const xAxis = d3.axisBottom(xScale).ticks((xExtent[1] - xExtent[0]) / 4);
     const yAxis = d3.axisLeft(yScale).ticks((yExtent[1] - yExtent[0]) / 4);
-
+  
     // Draw x-axis at the bottom
     svg.append('g')
       .attr('transform', `translate(0, ${margin + dataHeight * scaleFactor})`)
       .call(xAxis);
-
+  
     // Draw y-axis on the left
     svg.append('g')
       .attr('transform', `translate(${margin}, 0)`)
       .call(yAxis);
-  }
-
-  function renderFigure2() {
-    const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
-    const lace = [];
-    const margin = 20;
   
-    // Build paths
-    for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
-      const pathId = yarnData[0];
-      const nodeStartIndex = yarnData[1].toString();
-      const pathStartIndex = yarnData[2];
-      const yarnPath = graphData.paths[pathId].path.map(toInt);
+    // Drag event handlers
+    function dragStarted(event, d) {
+      d3.select(this).raise().attr('stroke', 'red');
+    }
   
-      // Unit repetitions
-      const unitRepetition = graphData.unit_repetion[yarnId];
-      const rep1 = unitRepetition[0];
-      const vector1 = [unitRepetition[1], unitRepetition[2]];
-      const vector2 = [unitRepetition[4], unitRepetition[5]];
-      const rep2 = unitRepetition[3];
+    function dragged(event, d) {
+      // Convert mouse position to data coordinates
+      let newX = xScale.invert(event.x);
+      let newY = yScale.invert(event.y);
   
-      // Adjust path for starting point within pattern
-      const adjustedPath = yarnPath.slice(pathStartIndex).concat(yarnPath.slice(0, pathStartIndex));
-      let currentPos = graphData.nodes[nodeStartIndex].slice(0, 2);
-      let cumulativeShift = [0.0, 0.0];
+      // Snap to grid of 1.0 units
+      newX = Math.round(newX);
+      newY = Math.round(newY);
   
-      const pathSave = [currentPos];
-      for (let i = 0; i < adjustedPath.length; i++) {
-        const nodeStart = adjustedPath[i % adjustedPath.length].toString();
-        const nodeEnd = adjustedPath[(i + 1) % adjustedPath.length].toString();
+      // Update the node data
+      d.x = newX;
+      d.y = newY;
   
-        const shiftKey = `[${nodeStart}, ${nodeEnd}]`;
-        const currentShift = graphData.paths[pathId].shifts[shiftKey] || [0, 0];
-        cumulativeShift[0] += currentShift[0];
-        cumulativeShift[1] += currentShift[1];
+      // Update node position
+      d3.select(this)
+        .attr('cx', xScale(d.x))
+        .attr('cy', yScale(d.y));
   
-        const endPosBase = graphData.nodes[nodeEnd].slice(0, 2);
-        const endPos = [endPosBase[0] + cumulativeShift[0], endPosBase[1] + cumulativeShift[1]];
+      // Update label position and text
+      d3.select(`#label-${d.id}`)
+        .attr('x', xScale(d.x) + 12)
+        .attr('y', yScale(d.y) - 12)
+        .text(`(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`);
   
-        pathSave.push(endPos);
+      // Update the node's label position if necessary
+      d3.select(`.label[id='label-${d.id}']`)
+        .attr('x', xScale(d.x) - 6)
+        .attr('y', yScale(d.y) + 4);
   
-        // Update current point
-        currentPos = endPos;
+      // Update node data map
+      nodesDataMap[d.id].x = d.x;
+      nodesDataMap[d.id].y = d.y;
+  
+      // Update the G Map
+      if (G.has(d.id)) {
+        G.get(d.id).pos[0] = d.x;
+        G.get(d.id).pos[1] = d.y;
       }
   
-      for (let k2 = 0; k2 < rep2; k2++) {
-        for (let k1 = 0; k1 < rep1; k1++) {
-          const replicatedPath = pathSave.map(([x, y]) => [
-            x + k1 * vector1[0] + k2 * vector2[0],
-            y + k1 * vector1[1] + k2 * vector2[1],
-          ]);
-          lace.push({
-            path: replicatedPath,
-            color: pathColors[yarnId % pathColors.length],
-          });
-        }
+      // Update edges
+      updateEdges();
+    }
+  
+    function dragEnded(event, d) {
+      d3.select(this).attr('stroke', 'black');
+  
+      // Update graphData with new positions
+      if (graphData.nodes[d.id]) {
+        graphData.nodes[d.id][0] = d.x;
+        graphData.nodes[d.id][1] = d.y;
       }
     }
+  
+    function updateEdges() {
+      edge
+        .attr('x1', d => xScale(nodesDataMap[d.source].x))
+        .attr('y1', d => yScale(nodesDataMap[d.source].y))
+        .attr('x2', d => xScale(nodesDataMap[d.target].x))
+        .attr('y2', d => yScale(nodesDataMap[d.target].y));
+    }
+  }
+  
   
     // Scaling
     const allPaths = lace.map(d => d.path);
