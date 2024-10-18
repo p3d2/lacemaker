@@ -98,6 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const posBase = new Map();
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
   
+    // Create tooltip
+    const tooltip = d3.select('body').append('div')
+      .attr('class', 'tooltip')
+      .style('opacity', 0);
+  
     // Parse nodes
     for (const [nodeId, pos] of Object.entries(graphData.nodes)) {
       const roundedPos = pos.slice(0, 2).map(p => Math.round(p * 100) / 100);
@@ -319,29 +324,29 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('fill', d => d.color)
       .attr('stroke', 'black')
       .attr('stroke-width', 1)
-      .call(drag); // Add drag behavior
+      .call(drag) // Add drag behavior
+      .on('mouseover', (event, d) => {
+        tooltip.transition()
+          .duration(200)
+          .style('opacity', 0.9);
+        tooltip.html(`(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`)
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY - 20) + 'px');
+      })
+      .on('mouseout', (event, d) => {
+        tooltip.transition()
+          .duration(500)
+          .style('opacity', 0);
+      });
   
-    // Draw node labels (coordinates)
-    const nodeLabel = svg.append('g')
-      .selectAll('.node-label')
-      .data(nodeData)
-      .enter()
-      .append('text')
-      .attr('class', 'node-label')
-      .attr('id', d => `label-${d.id}`)
-      .attr('x', d => xScale(d.x) + 12)
-      .attr('y', d => yScale(d.y) - 12)
-      .text(d => `(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`)
-      .attr('font-size', '12px')
-      .attr('fill', 'black');
-  
-    // Draw labels
+    // Draw labels (node IDs)
     svg.append('g')
       .selectAll('.label')
       .data(nodeData)
       .enter()
       .append('text')
       .attr('class', 'label')
+      .attr('id', d => `label-id-${d.id}`)
       .attr('x', d => xScale(d.x) - 6)
       .attr('y', d => yScale(d.y) + 4)
       .text(d => d.label)
@@ -365,12 +370,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Drag event handlers
     function dragStarted(event, d) {
       d3.select(this).raise().attr('stroke', 'red');
+  
+      // Show tooltip
+      tooltip.transition()
+        .duration(200)
+        .style('opacity', 0.9);
     }
   
     function dragged(event, d) {
+      // Get the mouse position relative to the SVG container
+      const [x, y] = d3.pointer(event, svg.node());
+  
       // Convert mouse position to data coordinates
-      let newX = xScale.invert(event.x);
-      let newY = yScale.invert(event.y);
+      let newX = xScale.invert(x);
+      let newY = yScale.invert(y);
   
       // Snap to grid of 1.0 units
       newX = Math.round(newX);
@@ -385,17 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .attr('cx', xScale(d.x))
         .attr('cy', yScale(d.y));
   
-      // Update label position and text
-      d3.select(`#label-${d.id}`)
-        .attr('x', xScale(d.x) + 12)
-        .attr('y', yScale(d.y) - 12)
-        .text(`(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`);
-  
-      // Update the node's label position if necessary
-      d3.select(`.label[id='label-${d.id}']`)
-        .attr('x', xScale(d.x) - 6)
-        .attr('y', yScale(d.y) + 4);
-  
       // Update node data map
       nodesDataMap[d.id].x = d.x;
       nodesDataMap[d.id].y = d.y;
@@ -408,6 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
   
       // Update edges
       updateEdges();
+  
+      // Update tooltip position and content
+      tooltip.html(`(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`)
+        .style('left', (event.pageX + 10) + 'px')
+        .style('top', (event.pageY - 20) + 'px');
     }
   
     function dragEnded(event, d) {
@@ -418,6 +425,14 @@ document.addEventListener('DOMContentLoaded', () => {
         graphData.nodes[d.id][0] = d.x;
         graphData.nodes[d.id][1] = d.y;
       }
+  
+      // Hide tooltip
+      tooltip.transition()
+        .duration(500)
+        .style('opacity', 0);
+  
+      // Recalculate the entire pattern
+      renderGraph();
     }
   
     function updateEdges() {
@@ -427,7 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .attr('x2', d => xScale(nodesDataMap[d.target].x))
         .attr('y2', d => yScale(nodesDataMap[d.target].y));
     }
-  }  
+  }
+  
 
   function renderFigure2() {
     const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
