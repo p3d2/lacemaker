@@ -47,3 +47,15 @@
     width: 100%; /* Full width on small screens */
   }
 }
+
+/* Tooltip CSS */
+.tooltip {
+  position: absolute;
+  text-align: center;
+  padding: 4px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 1px solid gray;
+  border-radius: 4px;
+  pointer-events: none;
+}
