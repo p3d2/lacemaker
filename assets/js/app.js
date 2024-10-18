@@ -427,8 +427,64 @@ document.addEventListener('DOMContentLoaded', () => {
         .attr('x2', d => xScale(nodesDataMap[d.target].x))
         .attr('y2', d => yScale(nodesDataMap[d.target].y));
     }
-  }
+  }  
+
+  function renderFigure2() {
+    const pathColors = ['#ff6666', '#6666ff', '#ffff00', '#ff66ff', '#66ff33', '#ccffb3', '#b300ff', '#33ffff'];
+    const lace = [];
+    const margin = 20;
   
+    // Build paths
+    for (const [yarnId, yarnData] of Object.entries(graphData.unit_yarns)) {
+      const pathId = yarnData[0];
+      const nodeStartIndex = yarnData[1].toString();
+      const pathStartIndex = yarnData[2];
+      const yarnPath = graphData.paths[pathId].path.map(toInt);
+  
+      // Unit repetitions
+      const unitRepetition = graphData.unit_repetion[yarnId];
+      const rep1 = unitRepetition[0];
+      const vector1 = [unitRepetition[1], unitRepetition[2]];
+      const vector2 = [unitRepetition[4], unitRepetition[5]];
+      const rep2 = unitRepetition[3];
+  
+      // Adjust path for starting point within pattern
+      const adjustedPath = yarnPath.slice(pathStartIndex).concat(yarnPath.slice(0, pathStartIndex));
+      let currentPos = graphData.nodes[nodeStartIndex].slice(0, 2);
+      let cumulativeShift = [0.0, 0.0];
+  
+      const pathSave = [currentPos];
+      for (let i = 0; i < adjustedPath.length; i++) {
+        const nodeStart = adjustedPath[i % adjustedPath.length].toString();
+        const nodeEnd = adjustedPath[(i + 1) % adjustedPath.length].toString();
+  
+        const shiftKey = `[${nodeStart}, ${nodeEnd}]`;
+        const currentShift = graphData.paths[pathId].shifts[shiftKey] || [0, 0];
+        cumulativeShift[0] += currentShift[0];
+        cumulativeShift[1] += currentShift[1];
+  
+        const endPosBase = graphData.nodes[nodeEnd].slice(0, 2);
+        const endPos = [endPosBase[0] + cumulativeShift[0], endPosBase[1] + cumulativeShift[1]];
+  
+        pathSave.push(endPos);
+  
+        // Update current point
+        currentPos = endPos;
+      }
+  
+      for (let k2 = 0; k2 < rep2; k2++) {
+        for (let k1 = 0; k1 < rep1; k1++) {
+          const replicatedPath = pathSave.map(([x, y]) => [
+            x + k1 * vector1[0] + k2 * vector2[0],
+            y + k1 * vector1[1] + k2 * vector2[1],
+          ]);
+          lace.push({
+            path: replicatedPath,
+            color: pathColors[yarnId % pathColors.length],
+          });
+        }
+      }
+    }
   
     // Scaling
     const allPaths = lace.map(d => d.path);
