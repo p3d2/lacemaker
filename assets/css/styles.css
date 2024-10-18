@@ -61,12 +61,6 @@
   user-select: none;
 }
 
-@media (max-width: 600px) {
-  .node {
-    r: 15; /* Increase radius on smaller screens */
-  }
-}
-
 .label {
   user-select: none; /* Prevent text selection */
 }
