@@ -80,8 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set up SVG
     svg = d3.select('#graph-container').append('svg')
-      .attr('width', width)
-      .attr('height', height);
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
 
     if (currentView === 'figure1') {
       renderFigure1();
@@ -351,7 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('y', d => yScale(d.y) + 4)
       .text(d => d.label)
       .attr('font-size', 12)
-      .attr('font-weight', 'bold');
+      .attr('font-weight', 'bold')
+      .style('pointer-events', 'none'); // Prevent labels from capturing events
   
     // Axes
     const xAxis = d3.axisBottom(xScale).ticks((xExtent[1] - xExtent[0]) / 4);
@@ -378,44 +381,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   
     function dragged(event, d) {
-      // Get the mouse position relative to the SVG container
-      const [x, y] = d3.pointer(event, svg.node());
-  
-      // Convert mouse position to data coordinates
+      // Get the mouse or touch position relative to the SVG container
+      const [x, y] = d3.pointer(event.sourceEvent, svg.node());
+    
+      // Convert pointer position to data coordinates
       let newX = xScale.invert(x);
       let newY = yScale.invert(y);
-  
+    
       // Snap to grid of 1.0 units
       newX = Math.round(newX);
       newY = Math.round(newY);
-  
+    
       // Update the node data
       d.x = newX;
       d.y = newY;
-  
+    
       // Update node position
       d3.select(this)
         .attr('cx', xScale(d.x))
         .attr('cy', yScale(d.y));
-  
+    
       // Update node data map
       nodesDataMap[d.id].x = d.x;
       nodesDataMap[d.id].y = d.y;
-  
+    
       // Update the G Map
       if (G.has(d.id)) {
         G.get(d.id).pos[0] = d.x;
         G.get(d.id).pos[1] = d.y;
       }
-  
+    
       // Update edges
       updateEdges();
-  
-      // Update tooltip position and content
+    
+      // Update tooltip position and content (if using tooltip)
       tooltip.html(`(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`)
-        .style('left', (event.pageX + 10) + 'px')
-        .style('top', (event.pageY - 20) + 'px');
-    }
+        .style('left', (event.sourceEvent.pageX + 10) + 'px')
+        .style('top', (event.sourceEvent.pageY - 20) + 'px');
+    }   
   
     function dragEnded(event, d) {
       d3.select(this).attr('stroke', 'black');
