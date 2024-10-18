@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Add background rectangle behind legend
     svg.append('rect')
-      .attr('x', graphContainer.clientWidth - legendWidth - margin - 4)
+      .attr('x', graphContainer.clientWidth - legendWidth - 4)
       .attr('y', margin + 9)
       .attr('width', legendWidth - margin + 2)
       .attr('height', legendHeight + 2)
