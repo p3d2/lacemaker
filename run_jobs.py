@@ -12,7 +12,7 @@ def process_jobs(csv_filename):
         if pd.isna(row.pattern_id):
             continue  # Skip this row
 
-        pattern_id = str(int(row.pattern_id))
+        pattern_id = str(row.pattern_id)
         dist_particles = str(float(row.dist_particles))
         units = str(float(row.units))
         mass = str(float(row.mass))
