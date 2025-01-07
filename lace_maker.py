@@ -77,6 +77,26 @@ def calc_translations(nodes, path_list):
 
     return spatial_shifts
 
+# Function to generate auxiliary points for twisting
+def twist_points(tw_val, ang):
+    points = []
+    twist = np.abs(tw_val)
+    
+    theta = ang - math.pi/4
+
+    x = -twist
+    y = -twist
+
+    for k in range(2*twist+1):
+        points.append((x, y))
+        if int( ((k-np.sign(tw_val))%4)/2 ) < 1:
+            y += 2
+        else:
+            x += 2
+
+    rotated_points = [(x * np.cos(theta) - y * np.sin(theta), x * np.sin(theta) + y * np.cos(theta)) for x, y in points]
+    return rotated_points
+
 # Calculate angles for special nodes
 def node_angle(trs, paths):
     
@@ -102,7 +122,7 @@ def node_angle(trs, paths):
         if len(indices) != 2:
             raise ValueError(f"Special node '{key}' does not have exactly one 'l' and one 'r' entries, which is required to represent the twist between two yarns.")
 
-    for _, indices in special_node_indices.items():
+    for key, indices in special_node_indices.items():
         (l1, u1), (l2, u2) = indices
         size1 = len(trs[l1])
         size2 = len(trs[l2])
@@ -117,6 +137,7 @@ def node_angle(trs, paths):
         ) # the mod operator ensures cyclic calculation of the 2 vectors
         trs[l1][u1-1] = trs[l1][u1-1][:3] + ((angle1+angle2)/2,)
         trs[l2][u2-1] = trs[l2][u2-1][:3] + ((angle1+angle2)/2,)
+        #print((indices, angle1, angle2))
 
     return trs
 
@@ -398,19 +419,80 @@ def main():
     # Parse arguments
     args = parser.parse_args()
     
-    # Load data from the specified JSON file
+    # Load data from the specified JSON file (note json structure changed and this file is still trying to keep the old structure while reading the new format)
     data = load_data(args.json_file)
-    nodes = data['nodes']
-    # Load default value to type of crossing (0 is simple crossing)
-    for _, values in nodes.items():        
-        if len(values) == 2:
-            values.append(0)
 
-    paths = data['paths']
-    unit_yarns = data['unit_yarns']
-    unit_rep = data['unit_repetion']
-    roi_bounds = data['roi_bounds']
-    
+    new_nodes = data["nodes"]  # new style
+    old_nodes = {}
+    for node_id_str, node_data in new_nodes.items():
+        node_id = str(node_id_str)
+        x = node_data["x"]
+        y = node_data["y"]
+        twist = node_data["twist"]
+        old_nodes[node_id] = [x, y, twist]
+    data["nodes"] = old_nodes
+
+    # 2) Convert each path's "shifts" from a list of objects to a dict with keys like "[from, to]"
+    #    so that data["paths"][i]["shifts"] is consistent with your old usage.
+    for path_dict in data["paths"]:
+        new_shifts_list = path_dict.get("shifts", [])
+        old_shifts_dict = {}
+        for shift_obj in new_shifts_list:
+            key = f"[{shift_obj['from']}, {shift_obj['to']}]"
+            old_shifts_dict[key] = [shift_obj["dx"], shift_obj["dy"]]
+        path_dict["shifts"] = old_shifts_dict
+
+    # 3) If your old code used 'unit_rep = data["unit_repetion"]', then reconstruct
+    new_unit_yarns = data["unit_yarns"]
+    old_unit_yarns = {}
+    for yarn_id_str, yarn_info in new_unit_yarns.items():
+        # Build the old 5-element list
+        arr = [
+            yarn_info["path_id"],          # index 0
+            yarn_info["starting_node"],    # index 1
+            yarn_info["start_path_index"], # index 2
+            yarn_info["z_sign"],           # index 3
+            yarn_info["z_height"]          # index 4
+        ]
+        old_unit_yarns[yarn_id_str] = arr
+    data["unit_yarns"] = old_unit_yarns
+
+    old_unit_rep = {}
+    # We need to grab the "repetitions" from the original new_unit_yarns dict,
+    # because we just overwrote data["unit_yarns"] with the old arrays.
+    for yarn_id_str, yarn_info in new_unit_yarns.items():
+        reps = yarn_info["repetitions"]
+        name = yarn_info["name"]  # or any other field your old code expected
+        # Example: build a 7-element array [count1, dx1, dy1, count2, dx2, dy2, name]
+        # If you have more or fewer repetitions, adapt accordingly.
+        if len(reps) >= 2:
+            rep_array = [
+                reps[0]["count"], reps[0]["dx"], reps[0]["dy"],
+                reps[1]["count"], reps[1]["dx"], reps[1]["dy"],
+                name
+            ]
+        elif len(reps) == 1:
+            # If there's only one repetition object
+            rep_array = [
+                reps[0]["count"], reps[0]["dx"], reps[0]["dy"],
+                0, 0.0, 0.0, name
+            ]
+        else:
+            # No repetitions? Just fill with zeros
+            rep_array = [0, 0.0, 0.0, 0, 0.0, 0.0, name]
+
+        old_unit_rep[yarn_id_str] = rep_array
+
+    data["unit_repetion"] = old_unit_rep
+
+    # 4) For convenience, rename some data keys into your old variables,
+    #    so the rest of your code can use them just as before:
+    nodes        = data["nodes"]
+    paths        = data["paths"]
+    unit_yarns   = data["unit_yarns"]
+    unit_rep     = data["unit_repetion"]
+    roi_bounds   = data["roi_bounds"]
+
     dist_particles = args.dist_particles
     units = args.units
     mass = args.mass
