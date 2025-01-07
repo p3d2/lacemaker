@@ -1,0 +1,72 @@
+{
+    "nodes": {
+        "0": { "x": 18, "y": 2, "twist": 0 },
+        "1": { "x": 20, "y": 4, "twist": 1 },
+        "2": { "x": 18, "y": 6, "twist": 0 },
+        "3": { "x": 4, "y": 0, "twist": 0 },
+        "4": { "x": 2, "y": 2, "twist": 0 },
+        "5": { "x": 2, "y": 6, "twist": 0 },
+        "6": { "x": 4, "y": 8, "twist": 0 },
+        "7": { "x": 12, "y": 12, "twist": 0 },
+        "8": { "x": 20, "y": 0, "twist": 1 },
+        "9": { "x": 20, "y": 8, "twist": 0 },
+        "10": { "x": 22, "y": 2, "twist": 0 },
+        "11": { "x": 22, "y": 6, "twist": 0 },
+        "12": { "x": 6, "y": 2, "twist": 0 },
+        "13": { "x": 4, "y": 4, "twist": 1 },
+        "14": { "x": 6, "y": 6, "twist": 0 },
+        "15": { "x": 28, "y": 12, "twist": 0 }
+    },
+
+    "paths": [
+        {
+            "path": [0, "1r", 2, 3, 4, 5, 6, 7, "8r", 0, 2, 9, "8l", 10, 11, 9, 12, "13l", 14, 7, 0],
+            "shifts": [
+                { "from":7, "to":8, "dx":0.0, "dy":16.0 },
+                { "from":9, "to":8, "dx":0.0, "dy":16.0 },
+                { "from":7, "to":0, "dx":0.0, "dy":16.0 }
+            ]
+        },
+        {
+            "path": [4, "13r", 5, 15, 10, "1l", 11, 15, 4],
+            "shifts": [
+                { "from":5, "to":15, "dx":-32.0, "dy":0.0 },
+                { "from":15, "to":10, "dx":0.0, "dy":16.0 },
+                { "from":15, "to":4, "dx":32.0, "dy":16.0 }
+            ]
+        },
+        {
+            "path": [3, 12, 14, 6, 3],
+            "shifts": [
+                { "from":6, "to":3, "dx":0.0, "dy":16.0 }
+            ]
+        }
+    ],
+
+    "unit_yarns": {
+        "0": { "path_id": 0, "starting_node": 0, "start_path_index": 0, "z_sign": -1, "z_height": 0.5 },
+        "1": { "path_id": 0, "starting_node": 8, "start_path_index": 8, "z_sign": 1, "z_height": 0.5 },
+        "2": { "path_id": 0, "starting_node": 8, "start_path_index": 12, "z_sign": -1, "z_height": 0.5 },
+        "3": { "path_id": 1, "starting_node": 4, "start_path_index": 0, "z_sign": -1, "z_height": 0.5 },
+        "4": { "path_id": 1, "starting_node": 10, "start_path_index": 4, "z_sign": 1, "z_height": 0.5 },
+        "5": { "path_id": 2, "starting_node": 3, "start_path_index": 0, "z_sign": 1, "z_height": 0.5 }
+    },
+
+    "unit_repetition": {
+        "0": { "rep1_count": 5, "rep1_dx": 0.0, "rep1_dy": 48.0, "rep2_count": 6, "rep2_dx": 32.0, "rep2_dy": 0.0, "yarn_id": 1 },
+        "1": { "rep1_count": 5, "rep1_dx": 0.0, "rep1_dy": 48.0, "rep2_count": 6, "rep2_dx": 32.0, "rep2_dy": 0.0, "yarn_id": 2 },
+        "2": { "rep1_count": 5, "rep1_dx": 0.0, "rep1_dy": 48.0, "rep2_count": 6, "rep2_dx": 32.0, "rep2_dy": 0.0, "yarn_id": 3 },
+        "3": { "rep1_count": 6, "rep1_dx": 0.0, "rep1_dy": 32.0, "rep2_count": 6, "rep2_dx": 32.0, "rep2_dy": 0.0, "yarn_id": 4 },
+        "4": { "rep1_count": 6, "rep1_dx": 0.0, "rep1_dy": 32.0, "rep2_count": 6, "rep2_dx": 32.0, "rep2_dy": 0.0, "yarn_id": 5 },
+        "5": { "rep1_count": 12, "rep1_dx": 0.0, "rep1_dy": 16.0, "rep2_count": 6, "rep2_dx": 32.0, "rep2_dy": 0.0, "yarn_id": 6 }
+    },
+
+    "roi_bounds": {
+        "x_min": 16.0,
+        "x_max": 144.0,
+        "y_min": 12.0,
+        "y_max": 140.0,
+        "z_min": -4.0,
+        "z_max": 4.0
+    }
+}
