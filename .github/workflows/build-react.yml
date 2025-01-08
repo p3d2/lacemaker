@@ -28,7 +28,7 @@ jobs:
       - name: Install and build React app
         working-directory: react-app
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build
 
       # Step 4: Deploy React build to Jekyll assets
