@@ -35,7 +35,7 @@ jobs:
       - name: Copy React build to Jekyll assets
         run: |
           mkdir -p assets/react-create
-          cp -r react-create/build/* assets/react-create/
+          cp -r react-create/build/* assets/react-app/
 
       # Step 5: Commit and push changes
       - name: Commit changes
