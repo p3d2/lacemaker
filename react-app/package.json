@@ -20,7 +20,9 @@
     "react-split": "2.0.14",
     "@react-three/fiber": "8.17.10",
     "cubic-spline": "3.0.3",
-    "papaparse": "5.4.1"
+    "papaparse": "5.4.1",
+    "ajv": "^8.0.0",
+    "ajv-keywords": "^5.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
