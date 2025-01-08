@@ -17,7 +17,7 @@
     "@mui/icons-material": "6.2.0",
     "@mui/x-data-grid": "7.23.2",
     "three": "0.171.0",
-    "react-split": "2.0.14", // Replaced react-split-pane
+    "react-split": "2.0.14",
     "@react-three/fiber": "8.17.10",
     "cubic-spline": "3.0.3",
     "papaparse": "5.4.1"
