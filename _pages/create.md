@@ -1,7 +1,7 @@
 ---
 title: "Create a pattern"
 permalink: /create/
-layout: blank
+layout: single
 ---
 
 <iframe 
