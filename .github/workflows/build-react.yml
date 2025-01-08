@@ -26,22 +26,22 @@ jobs:
 
       # Step 3: Install dependencies and build React app
       - name: Install and build React app
-        working-directory: react-create
+        working-directory: react-app
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build
 
       # Step 4: Deploy React build to Jekyll assets
       - name: Copy React build to Jekyll assets
         run: |
-          mkdir -p assets/react-create
-          cp -r react-create/build/* assets/react-create/
+          mkdir -p assets/react-app
+          cp -r react-app/build/* assets/react-app/
 
       # Step 5: Commit and push changes
       - name: Commit changes
         run: |
           git config --local user.name "p3d2"
           git config --local user.email "pess@ua.pt"
-          git add assets/react-create/
+          git add assets/react-app/
           git commit -m "Deploy React app build"
           git push origin main
