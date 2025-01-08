@@ -8,7 +8,7 @@
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-scripts": "^5.0.0",
+    "react-scripts": "^5.0.1",
     "d": "1.0.2",
     "d3": "7.9.0",
     "@mui/material": "6.2.0",
@@ -17,17 +17,16 @@
     "@mui/icons-material": "6.2.0",
     "@mui/x-data-grid": "7.23.2",
     "three": "0.171.0",
-    "react-split-pane": "0.1.92",
-    "react-split": "2.0.14",
+    "react-split": "2.0.14", // Replaced react-split-pane
     "@react-three/fiber": "8.17.10",
     "cubic-spline": "3.0.3",
     "papaparse": "5.4.1"
   },
   "devDependencies": {
-    "@types/react": "19.0.0",
-    "@types/react-dom": "19.0.0",
-    "loader-utils": "3.2.1",
-    "typescript": "5.7.2"
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "loader-utils": "^3.2.1",
+    "typescript": "^5.7.2"
   },
   "scripts": {
     "start": "react-scripts start",
