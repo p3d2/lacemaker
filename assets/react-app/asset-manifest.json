@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/lacemaker/create/static/css/main.0e8cbe55.css",
-    "main.js": "/lacemaker/create/static/js/main.83a0a60c.js",
-    "index.html": "/lacemaker/create/index.html",
-    "main.0e8cbe55.css.map": "/lacemaker/create/static/css/main.0e8cbe55.css.map",
-    "main.83a0a60c.js.map": "/lacemaker/create/static/js/main.83a0a60c.js.map"
+    "main.css": "/static/css/main.0e8cbe55.css",
+    "main.js": "/static/js/main.3eaabf30.js",
+    "index.html": "/index.html",
+    "main.0e8cbe55.css.map": "/static/css/main.0e8cbe55.css.map",
+    "main.3eaabf30.js.map": "/static/js/main.3eaabf30.js.map"
   },
   "entrypoints": [
     "static/css/main.0e8cbe55.css",
-    "static/js/main.83a0a60c.js"
+    "static/js/main.3eaabf30.js"
   ]
 }
