@@ -1,0 +1,47 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Step 3: Install dependencies and build React app
+      - name: Install and build React app
+        working-directory: react-create
+        run: |
+          npm install
+          npm run build
+
+      # Step 4: Deploy React build to Jekyll assets
+      - name: Copy React build to Jekyll assets
+        run: |
+          mkdir -p assets/react-create
+          cp -r react-create/build/* assets/react-create/
+
+      # Step 5: Commit and push changes
+      - name: Commit changes
+        run: |
+          git config --local user.name "p3d2"
+          git config --local user.email "pess@ua.pt"
+          git add assets/react-create/
+          git commit -m "Deploy React app build"
+          git push origin main
