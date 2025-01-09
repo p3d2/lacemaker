@@ -17,8 +17,8 @@ exclude:
   - vendor/cache
   - vendor/gems
   - vendor/ruby
-  - "assets"
-  - "assets/*"
+  - "assets/react-app"
+  - "assets/react-app/*"
 
 include:
   - "_pages"
