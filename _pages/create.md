@@ -4,12 +4,6 @@ permalink: /create/
 layout: default
 ---
 
-<main>
-    <div id="react-app"></div>
-  </main>
-
-
-<!-- React App Mount Point -->
 <div id="react-app"></div>
 
 <!-- React App's CSS -->
