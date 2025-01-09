@@ -211,5 +211,5 @@ srun lmp -var sim1_data {sim1_data} -var folderrestart {folder_restart} -var sim
                     os.remove(script_filename)
 
 if __name__ == "__main__":
-    csv_filename = 'jobs.csv'
+    csv_filename = os.path.join('assets', 'data', 'jobs.tsv')
     process_jobs(csv_filename)
