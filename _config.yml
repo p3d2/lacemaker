@@ -74,3 +74,11 @@ defaults:
         nav_menu: "main"
       sidebar:
         nav: "docs"
+  - scope:
+      path: "_create"
+      type: "create"
+    values:
+      layout: "single"
+      navigation:
+        enabled: true
+        nav_menu: "main"
