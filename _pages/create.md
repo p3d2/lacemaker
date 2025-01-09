@@ -4,16 +4,11 @@ permalink: /create/
 layout: default
 ---
 
-<main>
-    <div id="react-app"></div>
-  </main>
+<!-- Container for React App -->
+<div class="react-app-container">
+  <div id="root"></div>
+</div>
 
-
-<!-- React App Mount Point -->
-<div id="react-app"></div>
-
-<!-- React App's CSS -->
-<link rel="stylesheet" href="{{ '/app/static/css/main.0e8cbe55.css' | relative_url }}">
-
-<!-- React App's JS -->
- <script src="{{ '/app/static/js/main.15cd5b0a.js' | relative_url }}"></script> 
+<!-- Include React App Scripts -->
+<script src="{{ '/assets/react-app/static/js/main.5ce6ad9b.js' | relative_url }}"></script>
+<link rel="stylesheet" href="{{ '/assets/react-app/static/css/main.0e8cbe55.css' | relative_url }}">

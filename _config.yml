@@ -17,8 +17,6 @@ exclude:
   - vendor/cache
   - vendor/gems
   - vendor/ruby
-  - "create"
-  - "create/*"
 
 include:
   - "_pages"
