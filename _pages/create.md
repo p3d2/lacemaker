@@ -5,7 +5,9 @@ layout: default
 ---
 
 <!-- Container for React App -->
-<div id="root"></div>
+<div class="react-app-container">
+  <div id="root"></div>
+</div>
 
 <!-- Include React App Scripts -->
 <script src="{{ '/assets/react-app/static/js/main.5ce6ad9b.js' | relative_url }}"></script>
