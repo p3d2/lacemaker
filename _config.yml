@@ -17,8 +17,8 @@ exclude:
   - vendor/cache
   - vendor/gems
   - vendor/ruby
-  - "app"
-  - "app/*"
+  - "assets"
+  - "assets/*"
 
 include:
   - "_pages"
