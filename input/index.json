@@ -140,6 +140,10 @@
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3059.json"
   },
   {
+    "name": "pattern8001",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern8001.json"
+  },
+  {
     "name": "patternStar",
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/patternStar.json"
   },
