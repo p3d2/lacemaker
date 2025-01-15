@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const folderPath = path.join(__dirname, "..", "input", "json_patterns");
+const folderPath = path.join(__dirname, "input", "json_patterns");
 const manifest = [];
 
 // Adjust these values as needed.
