@@ -15,11 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
-
-      # (Optional) If your project requires installing dependencies:
-      - name: Install dependencies
-        run: npm install
+          node-version: '20'
 
       - name: Generate Manifest
         working-directory: ./assets
