@@ -26,4 +26,5 @@ jobs:
            git config --global user.email "pess@ua.pt"
            git add input/index.json
            git diff --cached --quiet || git commit -m "Update manifest file"
+           git pull --rebase
            git push
