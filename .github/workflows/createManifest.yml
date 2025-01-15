@@ -20,11 +20,15 @@ jobs:
         working-directory: ./assets
         run: node generateManifest.js
 
-      - name: Commit and push changes
-        run: |
-           git config --global user.name "p3d2"
-           git config --global user.email "pess@ua.pt"
-           git add input/index.json
-           git diff --cached --quiet || git commit -m "Update manifest file"
-           git pull --rebase
-           git push
+- name: Commit and push changes
+  run: |
+     git config --global user.name "p3d2"
+     git config --global user.email "pess@ua.pt"
+     git add input/index.json
+     git diff --cached --quiet || git commit -m "Update manifest file"
+     git stash
+     git pull --rebase
+     git stash pop
+     git add input/index.json  # Re-stage in case of merge conflicts
+     git diff --cached --quiet || git commit -m "Resolve conflicts and update manifest file"
+     git push
