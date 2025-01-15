@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const folderPath = path.join(__dirname, "..", "input", "json_patterns");
+const savePath = path.join(__dirname, "..", "input");
 const manifest = [];
 
 // Adjust these values as needed.
@@ -20,7 +21,7 @@ fs.readdirSync(folderPath).forEach((file) => {
 });
 
 fs.writeFileSync(
-  path.join(folderPath, "index.json"),
+  path.join(savePath, "index.json"),
   JSON.stringify(manifest, null, 2)
 );
 
