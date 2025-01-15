@@ -1,9 +1,9 @@
 name: Update Manifest
-
 on:
   push:
     paths:
-      - 'input/json_patterns/*.json'  # Trigger when any JSON file (except index.json if needed) changes
+      - 'input/json_patterns/*.json'
+  workflow_dispatch:
 
 jobs:
   update-manifest:
