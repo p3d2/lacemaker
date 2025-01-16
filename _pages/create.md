@@ -10,5 +10,5 @@ layout: default
 </div>
 
 <!-- Include React App Scripts -->
-<script src="{{ '/assets/react-app/static/js/main.91efdb6e.js' | relative_url }}"></script>
+<script src="{{ '/assets/react-app/static/js/main.b47c3312.js' | relative_url }}"></script>
 <link rel="stylesheet" href="{{ '/assets/react-app/static/css/main.7352e1f8.css' | relative_url }}">
