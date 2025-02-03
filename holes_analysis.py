@@ -25,7 +25,7 @@ def plot_from_json(json_file, pattern_folder, dump_file, method='log10'):
     frames = []
     x_list = []
     density_list = []
-    cmap = plt.get_cmap('jet')
+    cmap = plt.get_cmap('turbo')
 
     # Prepare figures for KDE and histogram plots
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -92,13 +92,13 @@ def plot_from_json(json_file, pattern_folder, dump_file, method='log10'):
         alpha3 = 1.0
 
         mask = (x_hist < bin_edges[0])
-        ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, color=colors[0], alpha=alpha3, zorder=-int(t))
+        ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, color=colors[0], alpha=alpha3, zorder=-idx)
         for i, (left, right, color) in enumerate(zip(bin_edges[:-1], bin_edges[1:], colors)):
             mask = (x_hist >= left) & (x_hist < right)
-            ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, color=color, alpha=alpha3, zorder=-int(t))
+            ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, color=color, alpha=alpha3, zorder=-idx)
         mask = x_hist >= bin_edges[-1]
-        ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, color=colors[-1], alpha=alpha3, zorder=-int(t))
-        ax2.plot(shift + density * peak_size, x_values, color='black', lw=1, label='Epanechnikov KDE', zorder=-int(t-1))
+        ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, color=colors[-1], alpha=alpha3, zorder=-idx)
+        ax2.plot(shift + density * peak_size, x_values, color='black', lw=1, label='Epanechnikov KDE', zorder=-idx)
 
     # Finalize histogram plot
     ax2.set_xlim(0.0, len(density_list) + 0.5)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         print("Usage: python holes_analysis.py <pattern_folder> <dump_file>")
         sys.exit(1)
 
-    pattern_folder = sys.argv[1]
+    pattern_folder = os.path.join('output', 'simulations', sys.argv[1])
     dump_file = sys.argv[2]
 
     # Construct the JSON file path
