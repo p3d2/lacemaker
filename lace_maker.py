@@ -195,7 +195,16 @@ def extend_points(points, n, vx, vy):
             extended_points.append((new_x, new_y, point[2]))
     return extended_points
 
-def smooth_yarn(points, arc_length=1.0, smoothness=0.1, num_points=int(2e5)):
+def replicate_points(points, nmol, vx, vy):
+    replicated_points = []
+    for point in points:
+       # Calculate new x and y with the respective shifts
+       new_x = point[0] + vx
+       new_y = point[1] + vy
+       replicated_points.append((nmol, new_x, new_y, point[2]))
+    return replicated_points
+
+def smooth_yarn(points, arc_length=1.0, smoothness=0.1, num_points=int(1e6)):
     # Convert points to numpy array
     points = np.array(points)
     x, y, z = points.T
@@ -219,15 +228,6 @@ def smooth_yarn(points, arc_length=1.0, smoothness=0.1, num_points=int(2e5)):
             last_point = current_point
 
     return result_list
-
-def replicate_points(points, nmol, vx, vy):
-    replicated_points = []
-    for point in points:
-       # Calculate new x and y with the respective shifts
-       new_x = point[0] + vx
-       new_y = point[1] + vy
-       replicated_points.append((nmol, new_x, new_y, point[2]))
-    return replicated_points
 
 def point_in_roi(point, roi_bounds):
     x, y, z = point[1:]
