@@ -142,6 +142,7 @@ srun lmp -var sim0_data {sim0_data} -var folderdata {input_data} -var sim0_log {
         contract = float(row.contract)
         exp = json.loads(row.exp)
         folder_restart = os.path.join(folder_pattern, 'sim1.restart')
+
         for k in range(len(exp)):
             
             v_exp = [int(i) for i in exp[k]]
@@ -209,6 +210,55 @@ srun lmp -var sim1_data {sim1_data} -var folderrestart {folder_restart} -var sim
                 finally:
                     # Clean up the script file
                     os.remove(script_filename)
+
+        # JOB 4: Analysis of *.lammpstrj
+        # -------------------------------------
+        lammpstrj_files = [f for f in os.listdir(folder_pattern) if f.endswith('.lammpstrj')]
+        for lammpstrj_file in lammpstrj_files:
+            base_name = lammpstrj_file[:-10]  # remove the ".lammpstrj" extension
+
+            plots_folder = os.path.join(folder_pattern, 'plots')
+            if not os.path.exists(plots_folder):
+                os.makedirs(plots_folder)
+
+            # If the GIF already exists, skip processing
+            gif_file = base_name + '_area_dist.gif'
+            gif_path = os.path.join(plots_folder, gif_file)
+            if os.path.exists(gif_path):
+                print(f"Analysis for {lammpstrj_file} already done. Skipping.")
+                continue
+
+            # Create SBATCH script for analyzing this lammpstrj
+            sbatch_script_content = f"""#!/bin/bash
+#SBATCH --job-name=an_{pattern_id}
+#SBATCH --time=00:10:00
+#SBATCH --mem=4GB
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --output=analysis.log
+
+module load scicomp-python-env
+python sim_holes_extract.py {folder_pattern} {base_name} --roi 1.0 127.0 1.0 127.0
+"""
+            script_filename = 'sbatch_analyze.sh'
+            try:
+                with open(script_filename, 'w') as file:
+                    file.write(sbatch_script_content)
+            except IOError as e:
+                print(f"Failed to write analysis SBATCH script for {pattern_id}: {e}")
+                return False
+
+            try:
+                result = subprocess.run(['sbatch', script_filename],
+                                        capture_output=True, text=True, check=True)
+                # Optionally parse job ID from result.stdout
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to submit analysis job for {pattern_id}: {e.stderr.strip()}")
+                return False
+            finally:
+                os.remove(script_filename)
+
 
 if __name__ == "__main__":
     tsv_filename = os.path.join('assets', 'data', 'jobs.tsv')
