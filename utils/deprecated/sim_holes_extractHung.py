@@ -20,7 +20,7 @@ from matplotlib.patches import Polygon
 from shapely.geometry import Point, LineString
 from shapely.geometry import Polygon as ShapelyPolygon
 from shapely.ops import unary_union
-import cv2
+from scipy.optimize import linear_sum_assignment
 
 fg_color = 'black'
 bg_color = 'none'
@@ -29,11 +29,9 @@ mpl.rcParams['font.family'] = 'sans-serif'
 mpl.rcParams['font.sans-serif'] = ['DejaVu Sans']
 mpl.rcParams['font.size'] = 20
 
-MIN_HOLE_AREA = 0.1  # area threshold
+MIN_HOLE_AREA = 1.0  # area threshold
 MAX_CENTROID_DIST = 2.5  # tweak this distance threshold to match holes from frame to frame
 radius = 0.1# yarn radiues
-
-CSTEP = 10
 
 # Create the colormap
 cmap = plt.cm.turbo
@@ -139,9 +137,8 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
 
     data = []
     frames = []
-    frames2 = []
     method = 'log10'
-    max_area = 200.0  # for color scale in plot
+    max_area = 1000.0  # for color scale in plot
 
     for t in range(len(positions)):
         pos_0 = np.array(positions[t])
@@ -150,9 +147,7 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
 
         # Create figure and axis
         fig, ax = plt.subplots(figsize=(8, 8))
-        fig2, ax2 = plt.subplots(figsize=(8, 8))
         ax.set_facecolor('white')
-        ax2.set_facecolor('white')
 
         #circles = [Point(px, py).buffer(radius, resolution=64) for px, py in pos_0[:, :2]]
         #merged = unary_union(circles)
@@ -176,13 +171,9 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
 
             for interior in poly.interiors:
                 interior_coords = np.array(interior.coords)
-                sim2exp = (50 / 128) ** 2
-                area = ShapelyPolygon(interior_coords).area * sim2exp
-
-                # Collect in "areas" list (all holes, big or small)        
+                area = ShapelyPolygon(interior_coords).area
                 areas.append(area)
 
-                # Decide the patch color (you can keep the same color scale):
                 if method == 'log10':
                     color = cmap(np.log10(area + 1) / np.log10(max_area))
                 elif method == 'sqrt':
@@ -190,37 +181,31 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
                 else:
                     color = 'grey'
 
-                # Plot this hole (regardless of its size)
-                edge_color = 'red' if area < MIN_HOLE_AREA else 'grey'
-                edge_color2 = 'grey'
+                # Always use the same edge color (remove any thresholding on area)
+                edge_color = 'grey'
                 hole_patch = Polygon(interior_coords, facecolor=color, edgecolor=edge_color, linewidth=1, alpha=1.0)
-                hole_patch2 = Polygon(interior_coords, facecolor=color, edgecolor=edge_color2, linewidth=1, alpha=1.0)
                 ax.add_patch(hole_patch)
-                ax2.add_patch(hole_patch2)
 
-                # Now do the labeling logic, but ONLY store big holes in holes_this_frame.
-                if area >= MIN_HOLE_AREA:
-                    centroid = ShapelyPolygon(interior_coords).centroid
-                    hole_info = {
-                        'area': area,
-                        'centroid': (centroid.x, centroid.y),
-                        'coords': interior_coords
-                    }
-                    holes_this_frame.append(hole_info)
+                # Always add every hole (remove filtering by MIN_HOLE_AREA)
+                centroid = ShapelyPolygon(interior_coords).centroid
+                hole_info = {
+                    'area': area,
+                    'centroid': (centroid.x, centroid.y),
+                    'coords': interior_coords
+                }
+                holes_this_frame.append(hole_info)
 
         # If you want the merged region (the big grey region) displayed:
         collection = PatchCollection(patches, facecolor='grey', edgecolor='black', alpha=0.5, zorder = -1)
-        collection2 = PatchCollection(patches, facecolor='grey', edgecolor='black', alpha=0.5, zorder = -1)
         ax.add_collection(collection)
-        ax2.add_collection(collection2)
 
         # Now that we have all holes >= MIN_HOLE_AREA for this frame:
         # (A) If t == 0, assign new labels to all
         # (B) If t > 0, match holes to existing labels if centroids are close enough
         frame_holes_with_labels = []  # store { 'label': X, 'area': Y }
 
-        if t == 0:
-            # First frame: assign new labels to all holes above threshold
+        if t == 0 or len(hole_labels) == 0:
+            # First frame (or no previous labels): assign new labels to all holes
             for hole_info in holes_this_frame:
                 hole_labels[next_label_id] = hole_info['centroid']
                 frame_holes_with_labels.append({
@@ -229,75 +214,46 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
                     'centroid': hole_info['centroid']
                 })
                 next_label_id += 1
-        # else:
-        #     # Subsequent frames: try to match holes to existing labels
-        #     used_labels = set()
-        #     for hole_info in holes_this_frame:
-        #         cx, cy = hole_info['centroid']
-        #         best_label = None
-        #         best_dist = float('inf')
-
-        #         for label_id, old_centroid in hole_labels.items():
-        #             ox, oy = old_centroid
-        #             dist = np.sqrt((cx - ox)**2 + (cy - oy)**2)
-        #             if dist < best_dist and dist < MAX_CENTROID_DIST:
-        #                 best_label = label_id
-        #                 best_dist = dist
-
-        #         if best_label is not None:
-        #             # update that label’s centroid
-        #             hole_labels[best_label] = (cx, cy)
-        #             frame_holes_with_labels.append({
-        #               'label': best_label,
-        #               'area': hole_info['area'],
-        #               'centroid': (cx, cy)
-        #           })
-        #             used_labels.add(best_label)
-        #         else:
-        #             # no good match => new label
-        #             hole_labels[next_label_id] = (cx, cy)
-        #             frame_holes_with_labels.append({
-        #                 'label': next_label_id,
-        #                 'area': hole_info['area'],
-        #                 'centroid': (cx, cy)
-        #             })
-        #             used_labels.add(next_label_id)
-        #             next_label_id += 1
         else:
-            # Subsequent frames: one-to-one matching between existing labels and current holes.
-            candidate_matches = []
-            for idx, hole_info in enumerate(holes_this_frame):
-                cx, cy = hole_info['centroid']
-                for label_id, old_centroid in hole_labels.items():
-                    ox, oy = old_centroid
-                    dist = np.sqrt((cx - ox)**2 + (cy - oy)**2)
-                    if dist < MAX_CENTROID_DIST:
-                        candidate_matches.append((dist, label_id, idx))
-            
-            # Sort all candidate matches by distance (smallest first)
-            candidate_matches.sort(key=lambda x: x[0])
-            
-            assigned_labels = set()
-            assigned_holes = set()
-            for dist, label_id, idx in candidate_matches:
-                # Assign the label if it hasn't been used and this hole hasn't been matched yet.
-                if label_id not in assigned_labels and idx not in assigned_holes:
-                    hole_info = holes_this_frame[idx]
-                    cx, cy = hole_info['centroid']
-                    # Update the centroid for the matched label.
-                    hole_labels[label_id] = (cx, cy)
-                    frame_holes_with_labels.append({
-                        'label': label_id,
-                        'area': hole_info['area'],
-                        'centroid': (cx, cy)
-                    })
-                    assigned_labels.add(label_id)
-                    assigned_holes.add(idx)
+            # For subsequent frames, build a cost matrix between previous holes and current holes
+            prev_labels = list(hole_labels.items())  # each item is (label, centroid)
+            num_prev = len(prev_labels)
+            num_curr = len(holes_this_frame)
+            cost_matrix = np.zeros((num_prev, num_curr))
+            for i, (label, prev_centroid) in enumerate(prev_labels):
+                for j, hole_info in enumerate(holes_this_frame):
+                    curr_centroid = hole_info['centroid']
+                    cost_matrix[i, j] = np.sqrt((prev_centroid[0] - curr_centroid[0])**2 +
+                                                (prev_centroid[1] - curr_centroid[1])**2)
 
-            # (Optional) remove labels that didn't appear at all this frame
-            # hole_labels = {
-            #     lid: c for lid, c in hole_labels.items() if lid in used_labels
-            # }
+            # Solve the assignment problem using the Hungarian algorithm
+            row_ind, col_ind = linear_sum_assignment(cost_matrix)
+            
+            new_labels = {}
+            assigned_curr = set()
+            # For each matched pair, use the old label if the distance is acceptable
+            for i, j in zip(row_ind, col_ind):
+                if cost_matrix[i, j] <= MAX_CENTROID_DIST:
+                    label = prev_labels[i][0]
+                    new_labels[label] = holes_this_frame[j]['centroid']
+                    frame_holes_with_labels.append({
+                        'label': label,
+                        'area': holes_this_frame[j]['area'],
+                        'centroid': holes_this_frame[j]['centroid']
+                    })
+                    assigned_curr.add(j)
+            # For any current hole not matched, assign a new label
+            for j, hole_info in enumerate(holes_this_frame):
+                if j not in assigned_curr:
+                    label = next_label_id
+                    new_labels[label] = hole_info['centroid']
+                    frame_holes_with_labels.append({
+                        'label': label,
+                        'area': hole_info['area'],
+                        'centroid': hole_info['centroid']
+                    })
+                    next_label_id += 1
+            hole_labels = new_labels
 
         for hole_dict in frame_holes_with_labels:
             cx, cy = hole_dict['centroid']
@@ -325,21 +281,6 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
         frames.append(frame_filename)
         plt.close(fig)
 
-        ax2.set_xlim(x.min() - radius, x.max() + radius)
-        ax2.set_ylim(y.min() - radius, y.max() + radius)
-        ax2.set_xlabel('')
-        ax2.set_ylabel('')
-        ax2.set_xticklabels([])
-        ax2.set_yticklabels([])
-        ax2.set_xticks([])
-        ax2.set_yticks([])
-
-        if t % CSTEP == 0:
-            frame_filename2 = os.path.join(pattern_folder, 'plots', f"{dump_file}_frame2_{t}.png")
-            fig2.savefig(frame_filename2, dpi=96, bbox_inches='tight', pad_inches=0.01)
-            frames2.append(frame_filename2)
-            plt.close(fig2)
-
 
     # Write holes to JSON
     output_file = os.path.join(pattern_folder, 'plots', f"{dump_file}_holes.json")
@@ -353,35 +294,8 @@ def save_holes(positions, pattern_folder, dump_file, roi_area):
             image = imageio.imread(filename)
             writer.append_data(image)
 
-    png_filename = os.path.join(pattern_folder, 'plots', f"{dump_file}_area_dist.png")
-    images = []
-    for k in range(len(frames2)):
-        image = imageio.imread(frames2[k])
-        cv2.putText(image, f"Step {CSTEP*k}", (10, 560), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 15)
-        cv2.putText(image, f"Step {CSTEP*k}", (10, 560), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 5)
-        images.append(image)
-    # Combine images side by side (horizontally)
-    thumbnail = np.hstack(images)
-    
-    #ROWS
-    #row1 = np.hstack(images[:2]) # First row: Stack first two images horizontally
-    # Second row: The third image needs to be aligned with the first column
-    #empty_space = np.ones_like(images[0]) * 255  # Create a blank white image as a placeholder
-    #row2 = np.hstack([images[2], empty_space])  # Align third image to the first column
-    # Stack both rows vertically
-    #thumbnail = np.vstack([row1, row2])
-    
-    # Save the combined image
-    thumbnail_rgb = cv2.cvtColor(thumbnail, cv2.COLOR_BGR2RGB)
-    jpeg_filename = png_filename.replace('.png', '.jpg')
-    cv2.imwrite(jpeg_filename, thumbnail_rgb, [cv2.IMWRITE_JPEG_QUALITY, 80]) 
-    imageio.imwrite(png_filename, cv2.cvtColor(thumbnail_rgb, cv2.COLOR_RGB2BGR))
-
     # Clean up frames
     for filename in frames:
-        os.remove(filename)
-
-    for filename in frames2:
         os.remove(filename)
 
 def main():
