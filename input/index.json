@@ -20,8 +20,8 @@
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern1084.json"
   },
   {
-    "name": "pattern1092knitting",
-    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern1092knitting.json"
+    "name": "pattern1092",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern1092.json"
   },
   {
     "name": "pattern1093",
@@ -112,8 +112,16 @@
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3018.json"
   },
   {
+    "name": "pattern3021",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3021.json"
+  },
+  {
     "name": "pattern3023",
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3023.json"
+  },
+  {
+    "name": "pattern3023v2",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3023v2.json"
   },
   {
     "name": "pattern3024",
