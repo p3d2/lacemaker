@@ -140,12 +140,20 @@
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3026.json"
   },
   {
+    "name": "pattern3034",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3034.json"
+  },
+  {
     "name": "pattern3043",
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3043.json"
   },
   {
     "name": "pattern3051_1t",
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3051_1t.json"
+  },
+  {
+    "name": "pattern3052",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3052.json"
   },
   {
     "name": "pattern3059",
