@@ -48,6 +48,10 @@
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern2002.json"
   },
   {
+    "name": "pattern2003",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern2003.json"
+  },
+  {
     "name": "pattern2004",
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern2004.json"
   },
