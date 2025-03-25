@@ -113,12 +113,12 @@
       "name": 1,
       "repetitions": [
         {
-          "count": 20,
+          "count": 25,
           "dx": 16.0,
           "dy": 48.0
         },
         {
-          "count": 20,
+          "count": 25,
           "dx": 24.0,
           "dy": 24.0
         }
@@ -133,12 +133,12 @@
       "name": 2,
       "repetitions": [
         {
-          "count": 20,
+          "count": 25,
           "dx": 16.0,
           "dy": 48.0
         },
         {
-          "count": 20,
+          "count": 25,
           "dx": 24.0,
           "dy": 24.0
         }
@@ -153,12 +153,12 @@
       "name": 3,
       "repetitions": [
         {
-          "count": 20,
+          "count": 25,
           "dx": 16.0,
           "dy": 48.0
         },
         {
-          "count": 20,
+          "count": 25,
           "dx": 24.0,
           "dy": 24.0
         }
@@ -173,12 +173,12 @@
       "name": 4,
       "repetitions": [
         {
-          "count": 20,
+          "count": 25,
           "dx": -16.0,
           "dy": 16.0
         },
         {
-          "count": 20,
+          "count": 25,
           "dx": 16.0,
           "dy": 16.0
         }
@@ -193,12 +193,12 @@
       "name": 5,
       "repetitions": [
         {
-          "count": 20,
+          "count": 25,
           "dx": -16.0,
           "dy": 16.0
         },
         {
-          "count": 20,
+          "count": 25,
           "dx": 16.0,
           "dy": 16.0
         }
@@ -207,9 +207,9 @@
   },
   "roi_bounds": {
     "x_min": 116.0,
-    "x_max": 254.0,
-    "y_min": 222.0,
-    "y_max": 380.0,
+    "x_max": 244.0,
+    "y_min": 246.0,
+    "y_max": 374.0,
     "z_min": -4.0,
     "z_max": 4.0
   }
