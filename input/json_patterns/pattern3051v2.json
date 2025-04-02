@@ -1,0 +1,322 @@
+{
+  "nodes": {
+    "0": {
+      "x": 1,
+      "y": 0,
+      "twist": 0
+    },
+    "1": {
+      "x": 4,
+      "y": 0,
+      "twist": 0
+    },
+    "2": {
+      "x": 7,
+      "y": 0,
+      "twist": 0
+    },
+    "3": {
+      "x": 12,
+      "y": 0,
+      "twist": 0
+    },
+    "4": {
+      "x": 15,
+      "y": 8,
+      "twist": 1
+    },
+    "5": {
+      "x": 12,
+      "y": 16,
+      "twist": 0
+    },
+    "6": {
+      "x": 23,
+      "y": 0,
+      "twist": 0
+    },
+    "7": {
+      "x": 20,
+      "y": 0,
+      "twist": 0
+    },
+    "8": {
+      "x": 17,
+      "y": 0,
+      "twist": 0
+    },
+    "9": {
+      "x": 9,
+      "y": 8,
+      "twist": 1
+    },
+    "10": {
+      "x": 2.5,
+      "y": 8,
+      "twist": 0
+    },
+    "11": {
+      "x": 21.5,
+      "y": 8,
+      "twist": 0
+    }
+  },
+  "paths": [
+    {
+      "path": [
+        0,
+        1,
+        2,
+        3,
+        "4r",
+        5,
+        6,
+        7,
+        8,
+        3,
+        "9l",
+        5,
+        0
+      ],
+      "shifts": [
+        {
+          "from": 5,
+          "to": 6,
+          "dx": -16,
+          "dy": 16
+        },
+        {
+          "from": 5,
+          "to": 0,
+          "dx": 16,
+          "dy": 16
+        }
+      ]
+    },
+    {
+      "path": [
+        0,
+        10,
+        7,
+        11,
+        2,
+        "9r",
+        6,
+        11,
+        1,
+        10,
+        8,
+        "4l",
+        0
+      ],
+      "shifts": [
+        {
+          "from": 10,
+          "to": 7,
+          "dx": -16,
+          "dy": 16
+        },
+        {
+          "from": 11,
+          "to": 2,
+          "dx": 16,
+          "dy": 16
+        },
+        {
+          "from": 9,
+          "to": 6,
+          "dx": -16,
+          "dy": 16
+        },
+        {
+          "from": 11,
+          "to": 1,
+          "dx": 16,
+          "dy": 16
+        },
+        {
+          "from": 10,
+          "to": 8,
+          "dx": -16,
+          "dy": 16
+        },
+        {
+          "from": 4,
+          "to": 0,
+          "dx": 16,
+          "dy": 16
+        }
+      ]
+    }
+  ],
+  "unit_yarns": {
+    "0": {
+      "path_id": 0,
+      "starting_node": 0,
+      "start_path_index": 0,
+      "z_sign": -1,
+      "z_height": 0.5,
+      "name": 1,
+      "repetitions": [
+        {
+          "count": 6,
+          "dx": 0,
+          "dy": 32
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "1": {
+      "path_id": 0,
+      "starting_node": 6,
+      "start_path_index": 6,
+      "z_sign": 1,
+      "z_height": 0.5,
+      "name": 2,
+      "repetitions": [
+        {
+          "count": 6,
+          "dx": 0,
+          "dy": 32
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "2": {
+      "path_id": 1,
+      "starting_node": 0,
+      "start_path_index": 0,
+      "z_sign": 1,
+      "z_height": 0.5,
+      "name": 3,
+      "repetitions": [
+        {
+          "count": 2,
+          "dx": 0,
+          "dy": 96
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "3": {
+      "path_id": 1,
+      "starting_node": 1,
+      "start_path_index": 8,
+      "z_sign": -1,
+      "z_height": 0.5,
+      "name": 4,
+      "repetitions": [
+        {
+          "count": 2,
+          "dx": 0,
+          "dy": 96
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "4": {
+      "path_id": 1,
+      "starting_node": 2,
+      "start_path_index": 4,
+      "z_sign": 1,
+      "z_height": 0.5,
+      "name": 5,
+      "repetitions": [
+        {
+          "count": 2,
+          "dx": 0,
+          "dy": 96
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "5": {
+      "path_id": 1,
+      "starting_node": 8,
+      "start_path_index": 10,
+      "z_sign": -1,
+      "z_height": 0.5,
+      "name": 6,
+      "repetitions": [
+        {
+          "count": 2,
+          "dx": 0,
+          "dy": 96
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "6": {
+      "path_id": 1,
+      "starting_node": 7,
+      "start_path_index": 2,
+      "z_sign": 1,
+      "z_height": 0.5,
+      "name": 7,
+      "repetitions": [
+        {
+          "count": 2,
+          "dx": 0,
+          "dy": 96
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    },
+    "7": {
+      "path_id": 1,
+      "starting_node": 6,
+      "start_path_index": 6,
+      "z_sign": -1,
+      "z_height": 0.5,
+      "name": 8,
+      "repetitions": [
+        {
+          "count": 2,
+          "dx": 0,
+          "dy": 96
+        },
+        {
+          "count": 5,
+          "dx": 32,
+          "dy": 0
+        }
+      ]
+    }
+  },
+  "roi_bounds": {
+    "x_min": 14,
+    "x_max": 142,
+    "y_min": 12,
+    "y_max": 140,
+    "z_min": -4,
+    "z_max": 4
+  }
+}
