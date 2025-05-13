@@ -1,77 +1,56 @@
 import pandas as pd
+import numpy as np
 import plotly.express as px
 
-# 1) Read the aggregated results
-df = pd.read_csv("output/simulations/aggregated_area_change.csv")
+# 1) Read the aggregated results from the CSV file
+df = pd.read_csv("all_results.csv")
 
-# 2) Exclude results if 'holes_file' does NOT contain 'contract'
-df = df[df["holes_file"].str.contains("contract")]
+# 2) Create a new column 'recoverability' as the difference between t10 and t20 area change
+df["rel_max_contraction"] = -df["rel_max_contraction"]
+epsilon = 0.01
+# df["recoverability"] = np.exp(-df["area_change_t20"]/(df["area_change_t10"] + epsilon))
+df["recoverability"] = df["area_change_t10"]-df["area_change_t20"]
 
-# 3) Filter for rows where time == 10
-df_t10 = df[df["time"] == 10].copy()
-
-# 4) Create an interactive scatter plot
-fig = px.scatter(
-    df_t10,
-    x="max_shrinking",
-    y="overall_relative_area_change",
-    color="pattern",  # or "pattern_folder" if that's your CSV column
-    hover_data=["pattern", "holes_file"],
-    template="plotly_white",                  # A clean white background
-    color_discrete_sequence=px.colors.qualitative.Set3,  # Pleasant pastel palette
-    symbol="pattern",                         # Each pattern gets a unique symbol
-    symbol_sequence=[
-        "circle", "diamond", "square", "x", 
-        "triangle-up", "star", "triangle-down"
-    ],
+# 3) Create an interactive 3D scatter plot
+fig = px.scatter_3d(
+	df,
+	x="rel_max_contraction",		# x-axis: relative contraction at t=10
+	y="area_change_t10",			# y-axis: area change at t=10
+	z="recoverability",				# z-axis: recoverability = t10 - t20
+	color="exp",					# Group by the experiment identifier
+	symbol="exp",					# Use the same grouping for symbols
+	hover_data=["exp", "contract"],	# Display additional info on hover (adjust as needed)
+	template="plotly_white",
+	color_discrete_sequence=px.colors.qualitative.Set3,
+	symbol_sequence=[
+		"circle", "circle-open", "cross", "diamond",
+		"diamond-open", "square", "square-open", "x"
+	],
 )
 
-# 5) Update marker styling (size, outline, etc.)
+# 4) Update marker styling (you might want to adjust size for 3D)
 fig.update_traces(
-    marker=dict(
-        size=12, 
-        line=dict(width=1, color='DarkSlateGrey')
-    ),
-    selector=dict(mode='markers')
+	marker=dict(
+		size=8,
+		line=dict(width=1, color='DarkSlateGrey')
+	)
 )
 
-# 6) Improve axes and layout
+# 5) Update axes and layout for the 3D scene
 fig.update_layout(
-    title="Max Contraction vs. Relative Area Change at t=10 (Contract-Only)",
-    xaxis_title="Max Contraction (t=10)",
-    yaxis_title="Overall Relative Area Change (t=10)",
-    font=dict(size=16),
-    legend=dict(
-        title="Pattern",
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ),
-    margin=dict(l=80, r=80, t=300, b=80),
-    width=800,
-    height=800
+	title="3D Scatter Plot: Relative Contraction, Area Change (t=10), and Recoverability",
+	scene=dict(
+		xaxis=dict(title="Relative Contraction (t=10)", range=[-0.05, 0.25]),
+		yaxis=dict(title="Area Change (t=10)", range=[-0.05, 0.75]),
+		zaxis=dict(title="Recoverability (1 - t20)", range=[-0.05, 1.0]),
+		aspectmode='manual',
+		aspectratio=dict(x=1, y=1, z=1) 
+	),
+	font=dict(size=16),
+	margin=dict(l=100, r=100, t=100, b=100),
+	width=1500,
+	height=1200
 )
 
-# Make axes lines and faint gridlines
-fig.update_xaxes(
-    showline=True, 
-    linewidth=2, 
-    linecolor='black',
-    mirror=True,
-    gridcolor="#eeeeee"
-)
-fig.update_yaxes(
-    showline=True, 
-    linewidth=2, 
-    linecolor='black',
-    mirror=True,
-    gridcolor="#eeeeee"
-)
-
-# 7) Show interactive figure
-fig.show()
-
-# 8) Optionally save to HTML
-fig.write_html("my_interactive_plot.html")
+# 6) Show interactive figure and optionally save to HTML
+fig.write_html("my_interactive_3d_plot.html")
