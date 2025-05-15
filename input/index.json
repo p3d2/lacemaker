@@ -152,6 +152,10 @@
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3051_1t.json"
   },
   {
+    "name": "pattern3051v2",
+    "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3051v2.json"
+  },
+  {
     "name": "pattern3052",
     "url": "https://raw.githubusercontent.com/p3d2/lacemaker/main/input/json_patterns/pattern3052.json"
   },
