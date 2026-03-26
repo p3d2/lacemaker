@@ -5,6 +5,10 @@ log.lammps
 log.out
 old_files/
 input/json_patterns_small/custom/
+analysis.log
+sim_run.lmp
+*.pdf
+*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
