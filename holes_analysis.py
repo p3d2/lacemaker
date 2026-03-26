@@ -32,9 +32,8 @@ def convert_fonts_to_outlines(input_pdf, output_pdf):
     ]
     subprocess.run(gs_command, check=True)
 
-    subprocess.run(gs_command, check=True)
-
 def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, bw=0.1):
+    sim = True
     # Create directories if they don't exist
     plots_dir = os.path.join(pattern_folder, 'plots')
     os.makedirs(plots_dir, exist_ok=True)
@@ -47,14 +46,18 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
     cmap = plt.get_cmap('turbo')
 
     # Prepare figures for KDE and histogram plots
-    if False:
-        fig, ax = plt.subplots(figsize=(8.5 / 2.54, 5.5 / 2.54))
-        fig2, ax2 = plt.subplots(figsize=(8.5 / 2.54, 5.5 / 2.54))
-        fig3, ax3 = plt.subplots(figsize=(8.5 / 2.54, 5.5 / 2.54))
-    else:
-        fig, ax = plt.subplots(figsize=(4.5 / 2.54, 5 / 2.54))
-        fig2, ax2 = plt.subplots(figsize=(4.5 / 2.54, 5 / 2.54))
-        fig3, ax3 = plt.subplots(figsize=(4.5 / 2.54, 5 / 2.54))
+    if sim:
+        fig, ax = plt.subplots(figsize=(5.5 / 2.54, 5.0 / 2.54))
+        fig2, ax2 = plt.subplots(figsize=(5.5 / 2.54, 5.0 / 2.54))
+        fig3, ax3 = plt.subplots(figsize=(5.0 / 2.54, 5.0 / 2.54))
+    # if False:
+    #     fig, ax = plt.subplots(figsize=(8.5 / 2.54, 5.5 / 2.54))
+    #     fig2, ax2 = plt.subplots(figsize=(8.5 / 2.54, 5.5 / 2.54))
+    #     fig3, ax3 = plt.subplots(figsize=(8.5 / 2.54, 5.5 / 2.54))
+    # else:
+    #     fig, ax = plt.subplots(figsize=(4.5 / 2.54, 5 / 2.54))
+    #     fig2, ax2 = plt.subplots(figsize=(4.5 / 2.54, 5 / 2.54))
+    #     fig3, ax3 = plt.subplots(figsize=(4.5 / 2.54, 5 / 2.54))
 
     times = []
     tot_areas = []
@@ -65,6 +68,7 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
         tot_areas2 = []  # single representative peak
 
     for idx, time_data in enumerate(data):
+        
         t = time_data['time']
         times.append(t)
         areas = np.array(time_data['areas'])
@@ -89,7 +93,7 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
         wavg_plot_val = np.log10(weighted_avg + 1)
 
         # KDE setup
-        x_min, x_max = 0.0, np.log10(max_area)
+        x_min, x_max = 0.0, np.log10(max_area+1)
         x_values = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
 
         kde = KernelDensity(kernel='epanechnikov', bandwidth=bw)
@@ -119,14 +123,15 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
 
         alpha3 = 1.0
 
-        mask = (x_hist < bin_edges[0])
-        ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, lw=0.25, color=colors[0], alpha=alpha3, zorder=-idx, rasterized=True)
-        for i, (left, right, color) in enumerate(zip(bin_edges[:-1], bin_edges[1:], colors)):
-            mask = (x_hist >= left) & (x_hist < right)
-            ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, lw=0.25, color=color, alpha=alpha3, zorder=-idx, rasterized=True)
-        mask = x_hist >= bin_edges[-1]
-        ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, lw=0.25, color=colors[-1], alpha=alpha3, zorder=-idx, rasterized=True)
-        ax2.plot(shift + density * peak_size, x_values, color='black', lw=0.5, label='Epanechnikov KDE', zorder=-idx)
+        if True:
+            mask = (x_hist < bin_edges[0])
+            ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, lw=0.25, color=colors[0], alpha=alpha3, zorder=-idx, rasterized=True)
+            for i, (left, right, color) in enumerate(zip(bin_edges[:-1], bin_edges[1:], colors)):
+                mask = (x_hist >= left) & (x_hist < right)
+                ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, lw=0.25, color=color, alpha=alpha3, zorder=-idx, rasterized=True)
+            mask = x_hist >= bin_edges[-1]
+            ax2.fill_betweenx(x_hist[mask], shift, shift + density[mask] * peak_size, lw=0.25, color=colors[-1], alpha=alpha3, zorder=-idx, rasterized=True)
+            ax2.plot(shift + density * peak_size, x_values, color='black', lw=0.5, label='Epanechnikov KDE', zorder=-idx)
         
         # Handle peak extraction based on analysis mode:
         if split_analysis:
@@ -157,6 +162,7 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
         else:
             # Default: use the last peak
             tot_areas2.append(10 ** x_values[peaks_idx[-1]] - 1)
+            #tot_areas2.append(areas_array.max())
             #ax2.scatter(shift + density[peaks_idx[-1]] * peak_size, x_values[peaks_idx[-1]], color='black', marker='o', s=1)
 
         #ax2.scatter(shift, np.log10(tot_areas[-1] + 1), color='red', marker='x', s=2)
@@ -196,10 +202,16 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
         maxH = rel_val2[-1][0] #np.max(rel_val2_higher)
         ax3.plot(times, rel_val2, 'k', lw=1)
         ax3.scatter(times, rel_val2, color='black', marker='o', s=2)
-        ax3.annotate(r'$\delta_\mathrm{{end}}={:.2f}$'.format(maxH),  
-             xy=(times[-2], maxH+0.05),    # Point where annotation appears
-             xytext=(times[-2], maxH+0.05),  # Offset text slightly above point
-             fontsize=7, color=color1, ha='right', va='bottom')
+        if not sim:
+            ax3.annotate(r'$\delta_\mathrm{{end}}={:.2f}$'.format(maxH),  
+                xy=(times[-2], maxH+0.05),    # Point where annotation appears
+                xytext=(times[-2], maxH+0.05),  # Offset text slightly above point
+                fontsize=7, color=color1, ha='right', va='bottom')
+        else:
+            ax3.annotate(r'$\delta_\mathrm{{10}}={:.2f}$'.format(rel_val2[10][0]),  
+                xy=(times[10], maxH+0.05),    # Point where annotation appears
+                xytext=(times[10], maxH+0.05),  # Offset text slightly above point
+                fontsize=7, color=color1, ha='center', va='bottom')
 
     ax3.set_ylim(min_y, 1.1)
     #ax3.set_ylim(-0.35, 1.1)
@@ -210,8 +222,12 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
     ytick_positions = [np.log10(a + 1) for a in area_labels]
     ytick_labels = [f"${a}$" for a in area_labels] 
 
-    #ax3.yaxis.set_major_locator(ticker.MultipleLocator(0.05)) # Major ticks every 0.5 units
-    #ax3.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+    ax3.xaxis.set_major_locator(ticker.MultipleLocator(10))   # Major ticks every 5 units
+    ax3.xaxis.set_minor_locator(ticker.MultipleLocator(2))   # Minor ticks every 1 unit
+
+    ax3.yaxis.set_major_locator(ticker.MultipleLocator(0.2)) # Major ticks every 0.5 units
+    ax3.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
+
     # Then apply them to your axis:
     ax2.set_yticks(ytick_positions)
     ax2.set_yticklabels(ytick_labels)
@@ -253,7 +269,7 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
 
     # Plot KDE contour
     ax.pcolormesh(T_grid, X_grid, density_interpolated.T, shading='auto', cmap='magma')
-    if False:
+    if not sim:
         ax.set_xlabel(r'Time $(\mathrm{s})$')
         ax2.set_xlabel(r'Time $(\mathrm{s})$')
         ax3.set_xlabel(r'Time $(\mathrm{s})$')
@@ -272,10 +288,10 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
     ax3.set_xlim(0.0, data[-1]['time'])
 
     # Save the plots
-    fig_filename = os.path.join(plots_dir, dump_file + '_kde.png')
-    fig2_filename = os.path.join(plots_dir, dump_file + '_hist.pdf')
-    fig3_filename = os.path.join(plots_dir, dump_file + '_relArea.pdf')
-    fig4_filename = os.path.join(plots_dir, dump_file + '_relArea.png')
+    fig_filename = os.path.join(plots_dir, dump_file + 'b_kde.png')
+    fig2_filename = os.path.join(plots_dir, dump_file + 'b_hist.pdf')
+    fig3_filename = os.path.join(plots_dir, dump_file + 'b_relArea.pdf')
+    fig4_filename = os.path.join(plots_dir, dump_file + 'b_relArea.png')
     fig.savefig(fig_filename, format='png', dpi=300, bbox_inches='tight')
     fig2.savefig(fig2_filename, format='pdf', dpi=300, bbox_inches='tight')
     fig3.savefig(fig3_filename, format='pdf', dpi=300, bbox_inches='tight')

@@ -29,7 +29,8 @@ def convert_fonts_to_outlines(input_pdf, output_pdf):
 
 def analyze_area_changes(pattern, base_dir="output/simulations"):
     # Get all pattern folders (assumed to start with "Pattern_3025")
-    bigA = False
+    bigA = True
+    main = True
     pattern_dirs = [
             d for d in os.listdir(base_dir)
             if d.startswith(pattern) and os.path.isdir(os.path.join(base_dir, d))
@@ -204,29 +205,38 @@ def analyze_area_changes(pattern, base_dir="output/simulations"):
             if bigA == True:
                 for label in biggest_labels:
                     rel_list = [hole_relative_changes[label][t] for t in times_list]
-                    line3, = ax1.plot(times_list, rel_list, '-', linewidth=1, color="pink", alpha = 0.5, zorder = 5, label="12 Largest Areas" if label==biggest_labels[0] else "")
+                    if label==biggest_labels[0]:
+                        line3, = ax1.plot(times_list, rel_list, '-', linewidth=1, color="pink", alpha = 0.5, zorder = 5, label="12 Largest Areas")
+                    else:
+                        line4, = ax1.plot(times_list, rel_list, '-', linewidth=1, color="pink", alpha = 0.5, zorder = 5)
             ax1.set_xlabel(r'Simulation Step')
             ax1.set_ylabel("Relative Area Change")
-            ax1.set_ylim((0,1))
-            # Add a secondary axis for loss fraction in red.
-            ax2 = ax1.twinx()
-            loss_values = [loss_fraction[t] for t in times_list]
-            line2, = ax2.plot(times_list, loss_values, '--', label="Loss Fraction", linewidth=1, color="red", zorder=10)
-            ax2.set_ylabel("Loss Fraction")
-            ax1.set_xlim((0,20))
-            ax2.set_ylim((0,0.1))
     
-            lines = [line1, line2]  # Collect handles
+            ax1.set_xlim((0,20))         
+            ax1.set_ylim((0,1.1))
+            
+            lines = [line1]
+            if not main:
+                lines.append(line2)
+            if bigA == True:
+                lines.append(line3)  # Collect handles
             labels = [l.get_label() for l in lines]  # Extract labels
-            ax1.legend(lines, labels, loc="upper left", fontsize=7)  # Set combined legend
+            ax1.legend(lines, labels, loc="upper left", fontsize=6)  # Set combined legend
 
             ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))   # Major ticks every 5 units
             ax1.xaxis.set_minor_locator(ticker.MultipleLocator(2))   # Minor ticks every 1 unit
 
             ax1.yaxis.set_major_locator(ticker.MultipleLocator(0.2)) # Major ticks every 0.5 units
             ax1.yaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-            ax2.yaxis.set_major_locator(ticker.MultipleLocator(0.02)) # Major ticks every 0.5 units
-            ax2.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
+            # Add a secondary axis for loss fraction in red.
+            if not main:
+                ax2 = ax1.twinx()
+                loss_values = [loss_fraction[t] for t in times_list]
+                line2, = ax2.plot(times_list, loss_values, '--', label="Loss Fraction", linewidth=1, color="red", zorder=10)
+                ax2.set_ylabel("Loss Fraction")
+                ax2.set_ylim((0,0.1))
+                ax2.yaxis.set_major_locator(ticker.MultipleLocator(0.1)) # Major ticks every 0.5 units
+                ax2.yaxis.set_minor_locator(ticker.MultipleLocator(0.01))
     
 
             fig.tight_layout()
@@ -259,7 +269,9 @@ def analyze_area_changes(pattern, base_dir="output/simulations"):
     # ---------------------------------------
     if overall_results:
         df = pd.DataFrame(overall_results)
-        output_csv = os.path.join(base_dir, "aggregated_area_change.csv")
+        output_csv = os.path.join(
+                plots_folder,
+                pattern + "_areaResults.csv")
         df.to_csv(output_csv, index=False)
         print(f"Aggregated results (including max shrinking) written to {output_csv}")
     else:

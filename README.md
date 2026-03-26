@@ -1,41 +1,172 @@
-# Lacemaker Project
+# Lacemaker
 
-## Overview
+Software to simulate and analyse the mechanical behaviour of bobbin lace patterns under selective yarn contraction. Patterns are modelled as bead-spring networks and simulated with LAMMPS. Pore geometry is tracked over time and compared against physical experiments.
 
-**Lacemaker** is a software tool designed to generate meshed yarn structures for simulation and analysis of laces. The output files can be read by LAMMPS (Large-scale Atomic/Molecular Massively Parallel Simulator).
-
-## Features
-
-- **JSON File Generation**: Create structured JSON files that accurately represent yarn meshes, including details on yarn crossings, nodes, paths, and repetitions.
-- **LAMMPS Integration**: Designed to seamlessly export the generated mesh structures into LAMMPS for further simulation and analysis.
-- **Yarn Pattern Analysis**: Tools and guidelines for analyzing yarn patterns, identifying repetition, and understanding structural characteristics.
-- **Region of Interest (ROI) Definition**: Ability to define and refine Regions of Interest within the yarn mesh for focused simulation.
-- **Flexible Mesh Representation**: Supports multiple approaches to defining the mesh structure, allowing for both detailed and simplified representations depending on the project's needs.
-
-## Getting Started
-
-1. **Installation**: Clone the Lacemaker repository to your local machine. Ensure that Python is installed and properly configured.
-
-2. **Generate JSON Files**: Follow the guide included in the project to create JSON representations of your yarn mesh. The guide provides step-by-step instructions on how to analyze the yarn pattern, identify nodes and paths, and define the characteristics of each yarn.
-
-3. **Export to LAMMPS**: Once your JSON file is ready, use the provided `lace_maker.py` script to generate the input files for LAMMPS. This script converts the JSON structure into a format that LAMMPS can understand.
-
-4. **Simulation and Analysis**: With the LAMMPS input files prepared, you can now proceed to simulate the yarn mesh. Use LAMMPS to analyze the mechanical properties, dynamics, and interactions within the mesh.
-
-5. **Visualize Results**: Tools like OVITO and VMD can be used to visualize the simulation results, offering insights into the structural integrity and behavior of the yarn mesh under various conditions.
-
-## Contribution
-
-Lacemaker is an open-source project, and contributions are welcome. Whether you're interested in adding new features, improving the documentation, or reporting bugs, your contributions can help advance the field of computational textiles.
-
-## License
-
-Lacemaker is released under [MIT License](https://opensource.org/licenses/MIT). Feel free to use, modify, and distribute the software as per the license terms.
-
-## Acknowledgments
-
-This project is the result of collaborative efforts among researchers, engineers, and developers passionate about advancing computational methods in textile engineering. We express our gratitude to all contributors and the broader scientific community for their support and feedback.
+Associated article: [Title] — [Authors], [Journal], [Year], DOI: [DOI]
 
 ---
 
-This README is a starting point for the Lacemaker project, providing users and contributors with a clear understanding of the project's purpose, features, and how to engage with it. Adjustments and enhancements should be made as the project evolves and grows.
+## Requirements
+
+Create and activate the conda environment:
+
+```bash
+conda env create -f environment.yml
+conda activate lacemaker
+```
+
+Additional requirements:
+- **LAMMPS** — compiled with the custom pair style from `utils/pair_soft_exclude.cpp` (see [Custom pair potential](#custom-pair-potential))
+- **Ghostscript** — used by figure scripts to convert PDF fonts to outlines (`gs` must be on PATH)
+
+---
+
+## Repository structure
+
+```
+lacemaker/
++-- lace_maker.py            Convert JSON pattern to LAMMPS data file
++-- run_jobs.py              Orchestrate full simulation pipeline (SLURM)
++-- sim_holes_extract.py     Extract pore geometry from simulation trajectories
++-- vid_holes_extract.py     Extract pore geometry from experimental videos
++-- holes_analysis.py        KDE analysis and plots of pore size distributions
++-- analyze_area_changes.py  Compute relative area changes over time
++-- performanceAnalysis.py   Aggregate results across all patterns -> all_results.csv
++-- assets/data/jobs.tsv     Simulation parameter table (one row per pattern)
++-- input/
+|   +-- json_patterns/       Pattern geometry definitions (JSON)
+|   +-- lammps_input/        LAMMPS input scripts (in_jobs8.lmp, in_contract_jobs8.lmp, ...)
++-- utils/
+|   +-- fig2.py              Reproduce Figure 2 (experimental results)
+|   +-- fig3_bar.py          Reproduce Figure 3 (simulation bar plots)
+|   +-- genResults.py        Generate interactive 3D results plot
+|   +-- lengths_analysis.py  Per-pattern yarn length plots
+|   +-- pair_soft_exclude.cpp  Custom LAMMPS pair potential (source)
+|   +-- pair_soft_exclude.h
+|   \-- deprecated/          Unused/superseded scripts
++-- guides/
+|   +-- create_json.md       Guide for defining new patterns
+|   \-- diagrams.md          Pattern diagram conventions
++-- all_results.csv          Aggregated simulation results (produced by performanceAnalysis.py)
+```
+
+---
+
+## Pipeline
+
+### Step 1 — Define a pattern
+
+Pattern geometries are defined as JSON files in `input/json_patterns/`. See [guides/create_json.md](guides/create_json.md) for the full format specification.
+
+### Step 2 — Generate LAMMPS input
+
+Convert a JSON pattern to a LAMMPS data file:
+
+```bash
+python lace_maker.py input/json_patterns/pattern3023v2.json \
+  --dist_particles=0.25 --units=1 --mass=1 --threshold=0 --ks1=30 --kb=0.1
+```
+
+Output: `output/lammps_data/pattern3023v2_0.25_1.0_0.0_30.0_0.1.data`
+
+The parameters used for each pattern in the article are listed in `assets/data/jobs.tsv`.
+
+### Step 3 — Run simulations
+
+`run_jobs.py` reads `assets/data/jobs.tsv` and submits the full pipeline to a SLURM cluster:
+
+```bash
+python run_jobs.py assets/data/jobs.tsv
+```
+
+This runs for each pattern with `analyse=1` in the TSV:
+1. Mesh generation via `lace_maker.py`
+2. Stabilisation simulation (`input/lammps_input/in_jobs8.lmp`)
+3. Contraction simulations for each yarn combination (`input/lammps_input/in_contract_jobs8.lmp`)
+4. Hole extraction via `sim_holes_extract.py`
+
+Output is written to `output/simulations/Pattern_{ID}/`.
+
+### Step 4 — Extract pore geometry from simulations
+
+If running the analysis step independently:
+
+```bash
+python sim_holes_extract.py output/simulations/Pattern_3023v2
+```
+
+### Step 5 — Extract pore geometry from experimental videos
+
+```bash
+python vid_holes_extract.py path/to/video.MOV
+```
+
+### Step 6 — Compute pore area statistics
+
+```bash
+python holes_analysis.py output/simulations/Pattern_3023v2/plots
+```
+
+Produces `*_holes.json` and distribution plots inside the `plots/` subfolder.
+
+### Step 7 — Aggregate results across all patterns
+
+```bash
+python performanceAnalysis.py
+```
+
+Reads all per-experiment `*_analysis.json` files and produces `all_results.csv`, which is required by the figure scripts.
+
+### Step 8 — Yarn length plots (per pattern)
+
+```bash
+python utils/lengths_analysis.py Pattern_3023v2
+```
+
+Output: `output/simulations/Pattern_3023v2/plots/*_lengths_subplots.pdf`
+
+---
+
+## Reproducing the figures
+
+### Figure 2 — experimental results
+
+```bash
+python utils/fig2.py
+```
+
+Output: `fig.pdf`. Performance values are entered manually in the script's `data` list.
+
+### Figure 3 — simulation bar plots
+
+Requires `all_results.csv` (produced by Step 7 above).
+
+```bash
+python utils/fig3_bar.py
+```
+
+Output: `barplots_part1.pdf`, `barplots_part2.pdf`
+
+### Interactive 3D results
+
+Requires `all_results.csv`.
+
+```bash
+python utils/genResults.py
+```
+
+Output: `my_interactive_3d_plot.html` (open in a browser)
+
+---
+
+## Custom pair potential
+
+The simulations use a custom soft-exclude pair potential defined in `utils/pair_soft_exclude.cpp`. To compile it into LAMMPS, follow the LAMMPS documentation for [adding a custom pair style](https://docs.lammps.org/Developer_write_pair.html) and copy the `.cpp` and `.h` files into the LAMMPS `src/` directory before building.
+
+---
+
+## Dataset
+
+Simulation trajectories and experimental data are available on Zenodo: DOI [Zenodo DOI]
+
+See [README_dataset.md](README_dataset.md) for a full description of the dataset structure, pattern naming, and how to visualise trajectories in OVITO.
