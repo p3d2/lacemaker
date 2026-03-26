@@ -84,12 +84,12 @@ def process_jobs(tsv_filename):
         else:
             sbatch_script_content = f"""#!/bin/bash
 #SBATCH --job-name={pattern_id}_0
-#SBATCH --time=00:20:00
+#SBATCH --time=02:00:00
 #SBATCH --mem=2GB
 #SBATCH --nodes=1
-#SBATCH --ntasks=8
+#SBATCH --ntasks=16
 #SBATCH --cpus-per-task=1
-#SBATCH --ntasks-per-node=8
+#SBATCH --ntasks-per-node=16
 #SBATCH --output=log.out
 
 module load gcc/12.3.0 openmpi/4.1.6 openblas fftw eigen
@@ -231,7 +231,7 @@ srun lmp -var sim1_data {sim1_data} -var folderrestart {folder_restart} -var sim
             # Create SBATCH script for analyzing this lammpstrj
             sbatch_script_content = f"""#!/bin/bash
 #SBATCH --job-name=an_{pattern_id}
-#SBATCH --time=00:10:00
+#SBATCH --time=00:30:00
 #SBATCH --mem=4GB
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

@@ -1,0 +1,168 @@
+{
+  "nodes": {
+    "0": {
+      "x": -3,
+      "y": -6,
+      "twist": 1
+    },
+    "1": {
+      "x": 14,
+      "y": 0,
+      "twist": 1
+    },
+    "2": {
+      "x": -5,
+      "y": -6,
+      "twist": 0
+    },
+    "3": {
+      "x": -4,
+      "y": 0,
+      "twist": 0
+    }
+  },
+  "paths": [
+    {
+      "path": [
+        0,
+        "1r",
+        "0l"
+      ],
+      "shifts": [
+        {
+          "from": 1,
+          "to": 0,
+          "dx": 0,
+          "dy": 12
+        }
+      ]
+    },
+    {
+      "path": [
+        0,
+        3,
+        2,
+        "1l",
+        2,
+        3,
+        "0r"
+      ],
+      "shifts": [
+        {
+          "from": 3,
+          "to": 2,
+          "dx": 0,
+          "dy": 12
+        },
+        {
+          "from": 2,
+          "to": 1,
+          "dx": -20,
+          "dy": 0
+        },
+        {
+          "from": 1,
+          "to": 2,
+          "dx": 20,
+          "dy": 12
+        },
+        {
+          "from": 3,
+          "to": 0,
+          "dx": 0,
+          "dy": 12
+        }
+      ]
+    }
+  ],
+  "unit_yarns": {
+    "0": {
+      "path_id": 0,
+      "starting_node": 0,
+      "start_path_index": 0,
+      "z_sign": 1,
+      "z_height": 0.5,
+      "name": 1,
+      "repetitions": [
+        {
+          "count": 18,
+          "dx": 0,
+          "dy": 12
+        },
+        {
+          "count": 12,
+          "dx": 20,
+          "dy": 0
+        }
+      ]
+    },
+    "1": {
+      "path_id": 1,
+      "starting_node": 0,
+      "start_path_index": 0,
+      "z_sign": -1,
+      "z_height": 0.5,
+      "name": 2,
+      "repetitions": [
+        {
+          "count": 7,
+          "dx": 0,
+          "dy": 36
+        },
+        {
+          "count": 12,
+          "dx": 20,
+          "dy": 0
+        }
+      ]
+    },
+    "2": {
+      "path_id": 1,
+      "starting_node": 2,
+      "start_path_index": 2,
+      "z_sign": 1,
+      "z_height": 0.5,
+      "name": 3,
+      "repetitions": [
+        {
+          "count": 7,
+          "dx": 0,
+          "dy": 36
+        },
+        {
+          "count": 12,
+          "dx": 20,
+          "dy": 0
+        }
+      ]
+    },
+    "3": {
+      "path_id": 1,
+      "starting_node": 2,
+      "start_path_index": 4,
+      "z_sign": -1,
+      "z_height": 0.5,
+      "name": 4,
+      "repetitions": [
+        {
+          "count": 7,
+          "dx": 0,
+          "dy": 36
+        },
+        {
+          "count": 12,
+          "dx": 20,
+          "dy": 0
+        }
+      ]
+    }
+  },
+  "roi_bounds": {
+    "x_min": 36,
+    "y_min": 36,
+    "z_min": -4,
+    "x_max": 164,
+    "y_max": 164,
+    "z_max": 4
+  }
+}
