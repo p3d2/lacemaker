@@ -239,7 +239,7 @@ srun lmp -var sim1_data {sim1_data} -var folderrestart {folder_restart} -var sim
 #SBATCH --output=analysis.log
 
 module load scicomp-python-env
-python sim_holes_extract.py {folder_pattern} {base_name} --roi 1.0 127.0 1.0 127.0
+python utils/sim_holes_extract.py {folder_pattern} {base_name} --roi 1.0 127.0 1.0 127.0
 """
             script_filename = 'sbatch_analyze.sh'
             try:

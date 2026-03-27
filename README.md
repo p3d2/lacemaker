@@ -27,13 +27,13 @@ Additional requirements:
 lacemaker/
 +-- lace_maker.py            Convert JSON pattern to LAMMPS data file
 +-- run_jobs.py              Orchestrate full simulation pipeline (SLURM)
-+-- sim_holes_extract.py     Extract pore geometry from simulation trajectories
 +-- assets/data/jobs.tsv     Simulation parameter table (one row per pattern)
 +-- all_results.csv          Aggregated simulation results (produced by performanceAnalysis.py)
 +-- input/
 |   +-- json_patterns/       Pattern geometry definitions (JSON)
 |   \-- lammps_input/        LAMMPS input scripts (in_jobs8.lmp, in_contract_jobs8.lmp)
 +-- utils/
+|   +-- sim_holes_extract.py   Extract pore geometry from simulation trajectories
 |   +-- vid_holes_extract.py   Extract pore geometry from experimental videos
 |   +-- holes_analysis.py      KDE analysis and plots of pore size distributions
 |   +-- analyze_area_changes.py  Compute relative area changes over time
@@ -83,7 +83,7 @@ This runs for each pattern with `analyse=1` in the TSV:
 1. Mesh generation via `lace_maker.py`
 2. Stabilisation simulation (`input/lammps_input/in_jobs8.lmp`)
 3. Contraction simulations for each yarn combination (`input/lammps_input/in_contract_jobs8.lmp`)
-4. Hole extraction via `sim_holes_extract.py`
+4. Hole extraction via `utils/sim_holes_extract.py`
 
 Output is written to `output/simulations/Pattern_{ID}/`.
 
@@ -94,7 +94,7 @@ Output is written to `output/simulations/Pattern_{ID}/`.
 If running the analysis step independently:
 
 ```bash
-python sim_holes_extract.py output/simulations/Pattern_3023v2
+python utils/sim_holes_extract.py output/simulations/Pattern_3023v2
 ```
 
 ### Step 5 — Extract pore geometry from experimental videos
