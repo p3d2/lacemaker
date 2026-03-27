@@ -28,7 +28,7 @@ ASSETS   = Path("assets/plots")
 JOBS_TSV = Path("assets/data/jobs.tsv")
 # Parameter string embedded in simulation filenames (from lace_maker.py call)
 PARAMS   = "0.25_1.0_0.0_30.0_0.1"
-DPI      = 150   # resolution for PDF → JPG
+DPI      = 300   # resolution for PDF → JPG
 JPEGQ    = 85    # JPEG quality
 
 # ── Pattern map: book_id → (label, full_name, family) ────────────────────────
