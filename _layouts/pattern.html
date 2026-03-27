@@ -1,0 +1,198 @@
+---
+layout: single
+---
+
+{%- comment -%}
+  Pattern page layout — extends Minimal Mistakes' single layout.
+  Reads page.experiments (list of {combo, [variant]}) from front matter.
+  Assets expected at:
+    assets/plots/{label}/{combo}/         — single-variant patterns
+    assets/plots/{label}/{variant}/{combo}/ — multi-variant patterns (e.g. R12)
+{%- endcomment -%}
+
+{%- assign family_colors = "Square:#e6b800,Diamond:#0099CC,Hexa:#33cc33,Rose:#ee0077,Spruce:#009900" | split: "," -%}
+{%- assign fam_color = "#888" -%}
+{%- for entry in family_colors -%}
+  {%- assign kv = entry | split: ":" -%}
+  {%- if kv[0] == page.family -%}
+    {%- assign fam_color = kv[1] -%}
+  {%- endif -%}
+{%- endfor -%}
+
+<div class="pattern-header" style="margin-bottom:1.5rem;padding:.75rem 1rem;background:#f8f8f8;border-radius:6px;border-left:4px solid {{ fam_color }};">
+  <span style="display:inline-block;padding:.2rem .7rem;border-radius:12px;background:{{ fam_color }};color:#fff;font-size:.8em;font-weight:600;margin-right:.75rem;letter-spacing:.03em;">
+    {{ page.family | upcase }}
+  </span>
+  Book ID:&nbsp;<code>{{ page.book_id }}</code>
+  {%- if page.book_id_alt %}&nbsp;&amp;&nbsp;<code>{{ page.book_id_alt }}</code>{% endif %}
+</div>
+
+{{ content }}
+
+{%- if page.has_mesh %}
+<h4 style="margin-top:1.5rem;">Input mesh</h4>
+<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;align-items:flex-start;">
+  <img src="{{ page.mesh_jpg | relative_url }}" alt="Pattern mesh"
+       style="max-height:260px;max-width:100%;border:1px solid #ddd;border-radius:4px;">
+  {%- if page.mesh_svg %}
+  <img src="{{ page.mesh_svg | relative_url }}" alt="Pattern diagram"
+       style="max-height:260px;max-width:100%;border:1px solid #ddd;border-radius:4px;background:#fff;">
+  {%- endif %}
+</div>
+{%- endif %}
+
+<h4 style="margin-top:1.5rem;">Initial state (pre-contraction)</h4>
+<div style="margin-bottom:2rem;">
+  <img src="{{ site.baseurl }}/assets/plots/{{ page.label }}/initial.jpg"
+       alt="Pre-contraction pore area distribution"
+       style="max-width:360px;max-height:300px;border:1px solid #ddd;border-radius:4px;"
+       onerror="this.parentNode.style.display='none'">
+</div>
+
+{%- if page.experiments %}
+<h4>Contraction experiments</h4>
+<p style="font-size:.85em;color:#666;margin-top:-.25rem;margin-bottom:1rem;">
+  Choose a yarn contraction combination below to view simulation results.
+</p>
+
+<div class="exp-tabs">
+
+  <div class="tab-nav" role="tablist" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;">
+    {%- for exp in page.experiments %}
+    {%- assign parts = exp.combo | split: "_" %}
+    {%- if parts.size == 1 %}
+      {%- assign tab_label = "Yarn " | append: exp.combo %}
+    {%- else %}
+      {%- assign yarn_nums = parts | join: ", " %}
+      {%- assign tab_label = "Yarns " | append: yarn_nums %}
+    {%- endif %}
+    {%- if exp.variant %}
+      {%- assign tab_label = tab_label | append: " (" | append: exp.variant | append: ")" %}
+    {%- endif %}
+    <button class="tab-btn"
+            role="tab"
+            data-idx="{{ forloop.index0 }}"
+            aria-selected="{%- if forloop.first %}true{%- else %}false{%- endif %}">
+      {{ tab_label }}
+    </button>
+    {%- endfor %}
+  </div>
+
+  {%- for exp in page.experiments %}
+  {%- if exp.variant %}
+    {%- assign asset_sub = page.label | append: "/" | append: exp.variant | append: "/" | append: exp.combo %}
+  {%- else %}
+    {%- assign asset_sub = page.label | append: "/" | append: exp.combo %}
+  {%- endif %}
+  <div class="tab-panel" role="tabpanel" data-idx="{{ forloop.index0 }}"
+       {%- unless forloop.first %} hidden{% endunless %}>
+    <div class="exp-grid">
+
+      <figure>
+        <img src="{{ site.baseurl }}/assets/plots/{{ asset_sub }}/timelapse.gif"
+             alt="Pore area distribution timelapse"
+             loading="lazy"
+             onerror="this.closest('figure').hidden=true">
+        <figcaption>Pore distribution (timelapse)</figcaption>
+      </figure>
+
+      <figure>
+        <img src="{{ site.baseurl }}/assets/plots/{{ asset_sub }}/lengths.jpg"
+             alt="Yarn length evolution"
+             loading="lazy"
+             onerror="this.closest('figure').hidden=true">
+        <figcaption>Yarn length evolution</figcaption>
+      </figure>
+
+      <figure>
+        <img src="{{ site.baseurl }}/assets/plots/{{ asset_sub }}/hist.jpg"
+             alt="Pore size histogram"
+             loading="lazy"
+             onerror="this.closest('figure').hidden=true">
+        <figcaption>Pore size distribution</figcaption>
+      </figure>
+
+      <figure>
+        <img src="{{ site.baseurl }}/assets/plots/{{ asset_sub }}/relarea.jpg"
+             alt="Relative pore area change"
+             loading="lazy"
+             onerror="this.closest('figure').hidden=true">
+        <figcaption>Relative pore area change</figcaption>
+      </figure>
+
+    </div>
+  </div>
+  {%- endfor %}
+
+</div><!-- .exp-tabs -->
+{%- endif %}
+
+<hr style="margin-top:2rem;">
+<p style="font-size:.85em;color:#666;">
+  Full simulation trajectories available on
+  <a href="https://zenodo.org/records/19232529">Zenodo</a>.
+</p>
+
+<style>
+/* ── Tab navigation ─────────────────────────────── */
+.tab-btn {
+  padding: .35rem .8rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #333;
+  cursor: pointer;
+  font-size: .82em;
+  transition: background .15s, color .15s;
+}
+.tab-btn[aria-selected="true"],
+.tab-btn:hover {
+  background: #2d2d2d;
+  color: #fff;
+  border-color: #2d2d2d;
+}
+
+/* ── Experiment grid ────────────────────────────── */
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: .5rem;
+}
+.exp-grid figure {
+  margin: 0;
+  text-align: center;
+}
+.exp-grid img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: #fff;
+}
+.exp-grid figcaption {
+  margin-top: .4rem;
+  font-size: .78em;
+  color: #666;
+}
+</style>
+
+<script>
+(function () {
+  document.querySelectorAll('.exp-tabs').forEach(function (tabs) {
+    var btns   = Array.from(tabs.querySelectorAll('.tab-btn'));
+    var panels = Array.from(tabs.querySelectorAll('.tab-panel'));
+
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var idx = btn.dataset.idx;
+        btns.forEach(function (b) { b.setAttribute('aria-selected', 'false'); });
+        panels.forEach(function (p) { p.hidden = true; });
+        btn.setAttribute('aria-selected', 'true');
+        var panel = tabs.querySelector('.tab-panel[data-idx="' + idx + '"]');
+        if (panel) panel.hidden = false;
+      });
+    });
+  });
+})();
+</script>

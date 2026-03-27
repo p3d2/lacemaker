@@ -9,6 +9,9 @@ analysis.log
 sim_run.lmp
 *.pdf
 *.html
+# Keep Jekyll template and include files
+!_layouts/*.html
+!_includes/*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
