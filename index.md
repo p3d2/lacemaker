@@ -6,9 +6,12 @@ permalink: /
 
 <div class="intro">
   <p>
-Explore various tessellation patterns and their dynamic behaviors through simulations. This project showcases different patterns with detailed descriptions and images.</p>
+Simulation and analysis of bobbin lace patterns under selective yarn contraction.
+Patterns are modelled as bead-spring networks and simulated with LAMMPS.
+Explore pore geometry changes interactively across 24 patterns and over 100 contraction experiments.
+  </p>
 </div>
 
-[Explore Patterns]({{ '/patterns/' | relative_url }}){: .btn .btn--primary }
+[View Results]({{ '/results/' | relative_url }}){: .btn .btn--primary }
+[Browse Patterns]({{ '/patterns/' | relative_url }}){: .btn }
 [Create a Pattern]({{ '/create/' | relative_url }}){: .btn }
-[About This Project]({{ '/about/' | relative_url }}){: .btn }
