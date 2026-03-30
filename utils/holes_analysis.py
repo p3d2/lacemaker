@@ -288,10 +288,10 @@ def plot_from_json(json_file, pattern_folder, dump_file, split_analysis=False, b
     ax3.set_xlim(0.0, data[-1]['time'])
 
     # Save the plots
-    fig_filename = os.path.join(plots_dir, dump_file + 'b_kde.png')
-    fig2_filename = os.path.join(plots_dir, dump_file + 'b_hist.pdf')
-    fig3_filename = os.path.join(plots_dir, dump_file + 'b_relArea.pdf')
-    fig4_filename = os.path.join(plots_dir, dump_file + 'b_relArea.png')
+    fig_filename = os.path.join(plots_dir, dump_file + '_kde.png')
+    fig2_filename = os.path.join(plots_dir, dump_file + '_hist.pdf')
+    fig3_filename = os.path.join(plots_dir, dump_file + '_relArea.pdf')
+    fig4_filename = os.path.join(plots_dir, dump_file + '_relArea.png')
     fig.savefig(fig_filename, format='png', dpi=300, bbox_inches='tight')
     fig2.savefig(fig2_filename, format='pdf', dpi=300, bbox_inches='tight')
     fig3.savefig(fig3_filename, format='pdf', dpi=300, bbox_inches='tight')
