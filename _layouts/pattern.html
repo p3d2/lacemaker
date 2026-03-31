@@ -31,14 +31,21 @@ layout: single
 
 {%- if page.has_mesh %}
 <h4 style="margin-top:1.5rem;">Input mesh</h4>
-<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;align-items:flex-start;">
+<div style="margin-bottom:.5rem;">
   <img src="{{ page.mesh_jpg | relative_url }}" alt="Pattern mesh"
-       style="max-height:260px;max-width:100%;border:1px solid #ddd;border-radius:4px;">
-  {%- if page.mesh_svg %}
-  <img src="{{ page.mesh_svg | relative_url }}" alt="Pattern diagram"
-       style="max-height:260px;max-width:100%;border:1px solid #ddd;border-radius:4px;background:#fff;">
-  {%- endif %}
+       style="max-width:100%;max-height:340px;border:1px solid #ddd;border-radius:4px;">
 </div>
+<p style="font-size:.8em;color:#888;margin-bottom:2rem;">
+  Yarn colours: 1&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#ffa3a3;border:1px solid #ccc;vertical-align:middle;"></span>
+  2&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#a3a3ff;border:1px solid #ccc;vertical-align:middle;"></span>
+  3&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#ffff66;border:1px solid #ccc;vertical-align:middle;"></span>
+  4&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#ffa3ff;border:1px solid #ccc;vertical-align:middle;"></span>
+  5&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#a3ff85;border:1px solid #ccc;vertical-align:middle;"></span>
+  6&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#e0ffd1;border:1px solid #ccc;vertical-align:middle;"></span>
+  7&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#d166ff;border:1px solid #ccc;vertical-align:middle;"></span>
+  8&nbsp;<span style="display:inline-block;width:12px;height:12px;background:#85ffff;border:1px solid #ccc;vertical-align:middle;"></span>
+  — contracting yarns are indicated per experiment below.
+</p>
 {%- endif %}
 
 <h4 style="margin-top:1.5rem;">Initial state (pre-contraction)</h4>
