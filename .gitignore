@@ -1,6 +1,7 @@
 output/
 test/
 temp/
+whole/
 log.lammps
 log.out
 old_files/
