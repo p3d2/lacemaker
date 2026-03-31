@@ -1,6 +1,8 @@
 ---
 title: "Sp1 — Spruce-1"
 label: "Sp1"
+has_mesh: true
+mesh_jpg: "/assets/images/3059_pattern.jpg"
 book_id: "3059"
 family: "Spruce"
 layout: pattern
